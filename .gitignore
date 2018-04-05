@@ -1,0 +1,13 @@
+# General
+.DS_Store
+
+# Thumbnails
+._*
+
+# Test binary, build with `go test -c`
+*.test
+
+node_modules
+
+# this is necessary because my npm packages resolve to a private repository
+package-lock.json
