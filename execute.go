@@ -3,20 +3,11 @@ package treetop
 import (
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"path/filepath"
-	"regexp"
-	"io"
 )
-
-var (
-	groupName *regexp.Regexp
-)
-
-func init() {
-	groupName = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9-_]*$`)
-}
 
 func executeTemplate(isPartial bool, templates []string, root Block, handlerMap map[Block]Handler, resp http.ResponseWriter, r *http.Request, w io.Writer) bool {
 	rootHandler, ok := handlerMap[root]
@@ -27,8 +18,8 @@ func executeTemplate(isPartial bool, templates []string, root Block, handlerMap 
 	}
 	hw := responseData{
 		ResponseWriter: resp,
-		handler: rootHandler,
-		handlerMap: handlerMap,
+		handler:        rootHandler,
+		handlerMap:     handlerMap,
 	}
 
 	f := rootHandler.Func()
@@ -39,20 +30,7 @@ func executeTemplate(isPartial bool, templates []string, root Block, handlerMap 
 		return false
 	}
 
-	funcMap := template.FuncMap{
-		"treetopGroup": func(name string, prepend bool) template.HTML {
-			prep := ""
-			if prepend {
-				prep = " prepend"
-			}
-			if ok := groupName.MatchString(name); !ok {
-				log.Fatalf("Invalid treetop group name: '%s'", name)
-			}
-			return template.HTML(fmt.Sprintf("<!-- treetop-group: %s%s -->", name, prep))
-		},
-	}
-
-	t, err := template.New("__init__").Funcs(funcMap).ParseFiles(templates...)
+	t, err := template.New("__init__").ParseFiles(templates...)
 	if err != nil {
 		log.Fatal("Error parsing files: ", err)
 	}
@@ -125,8 +103,8 @@ func (dw *responseData) Delegate(name string, r *http.Request) (interface{}, boo
 
 	dw2 := responseData{
 		ResponseWriter: dw.ResponseWriter,
-		handler: handler,
-		handlerMap: dw.handlerMap,
+		handler:        handler,
+		handlerMap:     dw.handlerMap,
 	}
 
 	f := handler.Func()
