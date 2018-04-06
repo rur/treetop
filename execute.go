@@ -16,7 +16,7 @@ func executeTemplate(isPartial bool, templates []string, root Block, handlerMap 
 		http.Error(resp, "Root handler was not found!", 500)
 		return false
 	}
-	hw := responseData{
+	hw := dataWriter{
 		ResponseWriter: resp,
 		handler:        rootHandler,
 		handlerMap:     handlerMap,
@@ -51,8 +51,8 @@ func executeTemplate(isPartial bool, templates []string, root Block, handlerMap 
 	return true
 }
 
-// implements treetop.go:ResponseData interface
-type responseData struct {
+// implements treetop.go:DataWriter interface
+type dataWriter struct {
 	http.ResponseWriter
 	handler     Handler
 	handlerMap  map[Block]Handler
@@ -62,22 +62,22 @@ type responseData struct {
 	wroteHeader bool
 }
 
-func (dw *responseData) Write(b []byte) (int, error) {
+func (dw *dataWriter) Write(b []byte) (int, error) {
 	dw.wroteHeader = true
 	return dw.ResponseWriter.Write(b)
 }
 
-func (dw *responseData) WriteHeader(code int) {
+func (dw *dataWriter) WriteHeader(code int) {
 	dw.wroteHeader = true
 	dw.ResponseWriter.WriteHeader(code)
 }
 
-func (dw *responseData) Data(d interface{}) {
+func (dw *dataWriter) Data(d interface{}) {
 	dw.data = d
 	dw.dataCalled = true
 }
 
-func (dw *responseData) Delegate(name string, r *http.Request) (interface{}, bool) {
+func (dw *dataWriter) Delegate(name string, r *http.Request) (interface{}, bool) {
 	if dw.wroteHeader {
 		// response has already been written, nothing to do
 		return nil, false
@@ -101,7 +101,7 @@ func (dw *responseData) Delegate(name string, r *http.Request) (interface{}, boo
 		return nil, false
 	}
 
-	dw2 := responseData{
+	dw2 := dataWriter{
 		ResponseWriter: dw.ResponseWriter,
 		handler:        handler,
 		handlerMap:     dw.handlerMap,

@@ -9,7 +9,7 @@ const (
 	ContentType = "application/x.treetop-html-partial+xml"
 )
 
-type ResponseData interface {
+type DataWriter interface {
 	http.ResponseWriter
 	// render the template with the supplied data
 	Data(interface{})
@@ -35,7 +35,7 @@ type Handler interface {
 	GetIncludes() map[Block]Handler
 }
 
-type HandlerFunc func(ResponseData, *http.Request)
+type HandlerFunc func(DataWriter, *http.Request)
 
 // assemble an index of how each block in the hierarchy is mapped to a handler based upon a 'primary' handler
 func resolveTemplatesForHandler(block Block, primary Handler) (map[Block]Handler, []string) {

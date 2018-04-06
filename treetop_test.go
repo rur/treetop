@@ -12,7 +12,7 @@ type TestBase struct {
 	Footer interface{}
 }
 
-func handler(w ResponseData, r *http.Request) {
+func handler(w DataWriter, r *http.Request) {
 	content, ok := w.Delegate("content", r)
 	if !ok {
 		content = 999
@@ -28,11 +28,11 @@ func handler(w ResponseData, r *http.Request) {
 	})
 }
 
-func contentHandler(w ResponseData, r *http.Request) {
+func contentHandler(w DataWriter, r *http.Request) {
 	w.Data(123)
 }
 
-func footerHandler(w ResponseData, r *http.Request) {
+func footerHandler(w DataWriter, r *http.Request) {
 	w.Data("This is the footer")
 }
 
