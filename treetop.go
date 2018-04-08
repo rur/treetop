@@ -1,12 +1,13 @@
 package treetop
 
 import (
-	"sort"
 	"net/http"
+	"sort"
 )
 
 const (
-	ContentType = "application/x.treetop-html-partial+xml"
+	PartialContentType  = "application/x.treetop-html-partial+xml"
+	FragmentContentType = "application/x.treetop-html-fragment+xml"
 )
 
 type DataWriter interface {
@@ -19,6 +20,7 @@ type DataWriter interface {
 
 type Block interface {
 	WithDefault(string, HandlerFunc) Block
+	SetDefault(Handler) Block
 	Default() Handler
 	Extend(string, HandlerFunc) Handler
 	Container() Handler

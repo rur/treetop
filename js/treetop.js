@@ -59,7 +59,7 @@ window.treetop = (function ($, config) {
         }
         var req = (XMLHttpRequest) ? new XMLHttpRequest() : new ActiveXObject("MSXML2.XMLHTTP");
         req.open(method.toUpperCase(), url, true);
-        req.setRequestHeader("accept", $.CONTENT_TYPE);
+        req.setRequestHeader("accept", [$.PARTIAL_CONTENT_TYPE, $.FRAGMENT_CONTENT_TYPE].join(", "));
         if (data) {
             req.setRequestHeader("content-type", encoding || "application/x-www-form-urlencoded");
         }
@@ -82,7 +82,8 @@ window.treetop = (function ($, config) {
      */
     Treetop.prototype.FormSerializer = $.FormSerializer;
 
-    Treetop.prototype.CONTENT_TYPE = $.CONTENT_TYPE;
+    Treetop.prototype.PARTIAL_CONTENT_TYPE = $.PARTIAL_CONTENT_TYPE;
+    Treetop.prototype.FRAGMENT_CONTENT_TYPE = $.FRAGMENT_CONTENT_TYPE;
 
     // api
     return new Treetop(config);
@@ -126,7 +127,8 @@ window.treetop = (function ($, config) {
      *
      * @type {String}
      */
-    CONTENT_TYPE: "application/x.treetop-html-partial+xml",
+    PARTIAL_CONTENT_TYPE: "application/x.treetop-html-partial+xml",
+    FRAGMENT_CONTENT_TYPE: "application/x.treetop-html-fragment+xml",
 
     /**
      * XHR onload handler
@@ -140,9 +142,19 @@ window.treetop = (function ($, config) {
         "use strict";
         var $ = this;
         var i, len, temp, child, old, nodes;
-        if (xhr.getResponseHeader("content-type") !== $.CONTENT_TYPE) {
+        var responseContentType = xhr.getResponseHeader("content-type");
+        var responseURL = xhr.getResponseHeader("x-response-url") || xhr.responseURL;
+        if (responseContentType != $.PARTIAL_CONTENT_TYPE && responseContentType != $.FRAGMENT_CONTENT_TYPE) {
             throw Error("Content-Type is not supported by Treetop '" + xhr.getResponseHeader("content-type") + "'");
         }
+
+        if (responseContentType == $.PARTIAL_CONTENT_TYPE && window.history) {
+            window.history.pushState({
+                treetop_url: responseURL,
+                partial: true
+            }, "", responseURL);
+        }
+
         temp = document.createElement("div");
         temp.innerHTML = xhr.responseText;
         nodes = new Array(len);
@@ -678,17 +690,9 @@ window.treetop.push(function ($) {
      */
     anchorClicked: function (evt, elm) {
         "use strict";
-        var pagePartial = elm.hasAttribute("treetop-page");
-        var partial = pagePartial || elm.hasAttribute("treetop");
-        if (elm.href && partial) {
+        if (elm.href && (elm.hasAttribute("treetop") || elm.hasAttribute("treetop-page"))) {
             evt.preventDefault();
             window.treetop.request("GET", elm.href);
-            if (pagePartial && window.history) {
-                window.history.pushState({
-                    treetop_url: elm.href,
-                    partial: true
-                }, "", elm.href);
-            }
             return false;
         }
     },
@@ -701,12 +705,10 @@ window.treetop.push(function ($) {
     formSubmit: function (evt, elm) {
         "use strict";
         var $ = this;
-        var pagePartial = elm.hasAttribute("treetop-page");
-        var partial = pagePartial || elm.hasAttribute("treetop");
-        if (elm.action && partial) {
+        if (elm.action && (elm.hasAttribute("treetop") || elm.hasAttribute("treetop-page"))) {
             evt.preventDefault();
             // TODO: If there is an immediate error serializing the form, allow event propagation to continue.
-            $.serializeFormAndSubmit(elm, pagePartial);
+            $.serializeFormAndSubmit(elm);
             return false;
         }
     },
@@ -734,7 +736,7 @@ window.treetop.push(function ($) {
      *
      * @param  {boolean} pagePartial    Flag if this form should be added to browser history
      */
-    serializeFormAndSubmit: function (form, pagePartial) {
+    serializeFormAndSubmit: function (form) {
         function dataHandler(fdata) {
             window.setTimeout(function () {
                 window.treetop.request(
@@ -743,13 +745,6 @@ window.treetop.push(function ($) {
                     fdata.data,
                     fdata.enctype
                 );
-
-                if (pagePartial && window.history) {
-                    window.history.pushState({
-                        treetop_url: fdata.action,
-                        partial: true
-                    }, "", fdata.action);
-                }
             }, 0);
         }
         new window.treetop.FormSerializer(form, dataHandler);

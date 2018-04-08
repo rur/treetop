@@ -1,18 +1,19 @@
 package treetop
 
 import (
-	"net/http"
 	"bytes"
+	"net/http"
+	"strings"
 )
 
 func NewHandler(template string, handlerFunc HandlerFunc) Handler {
 	rootBlock := blockInternal{name: "root"}
 	handler := handlerInternal{
-		template: template,
-		handlerFunc:     handlerFunc,
-		extends:  &rootBlock,
-		includes: make(map[Block]Handler),
-		blocks: make(map[string]Block),
+		template:    template,
+		handlerFunc: handlerFunc,
+		extends:     &rootBlock,
+		includes:    make(map[Block]Handler),
+		blocks:      make(map[string]Block),
 	}
 	rootBlock.defaultHandler = &handler
 	return &handler
@@ -49,11 +50,11 @@ func (h *handlerInternal) GetBlocks() map[string]Block {
 }
 func (h *handlerInternal) Includes(includes ...Handler) Handler {
 	newHandler := handlerInternal{
-		template: h.template,
-		handlerFunc:     h.handlerFunc,
-		extends:  h.extends,
-		includes: make(map[Block]Handler),
-		blocks: make(map[string]Block),
+		template:    h.template,
+		handlerFunc: h.handlerFunc,
+		extends:     h.extends,
+		includes:    make(map[Block]Handler),
+		blocks:      make(map[string]Block),
 	}
 	for block, handler := range h.includes {
 		newHandler.includes[block] = handler
@@ -72,7 +73,13 @@ func (h *handlerInternal) GetIncludes() map[Block]Handler {
 
 // Allow the use of treetop Hander as a HTTP handler
 func (h *handlerInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	isPartial := r.Header.Get("Accept") == ContentType
+	var isPartial bool
+	for _, accept := range strings.Split(r.Header.Get("Accept"), ",") {
+		if strings.Trim(accept, " ") == PartialContentType {
+			isPartial = true
+			break
+		}
+	}
 
 	root := h.extends
 	if !isPartial {
@@ -84,7 +91,7 @@ func (h *handlerInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	var render bytes.Buffer
 	blockMap, templates := resolveTemplatesForHandler(root, h)
-	if proceed := executeTemplate(isPartial, templates, root, blockMap, w, r, &render); !proceed {
+	if proceed := executeTemplate(templates, root, blockMap, w, r, &render); !proceed {
 		return
 	}
 
@@ -93,11 +100,14 @@ func (h *handlerInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		for block, handler := range h.GetIncludes() {
 			if _, found := blockMap[block]; !found {
 				partialBlockMap, partialTempl := resolveTemplatesForHandler(block, handler)
-				if proceed := executeTemplate(isPartial, partialTempl, block, partialBlockMap, w, r, &render); !proceed {
+				if proceed := executeTemplate(partialTempl, block, partialBlockMap, w, r, &render); !proceed {
 					return
 				}
 			}
 		}
+		// content type should indicate a treetop partial
+		w.Header().Set("Content-Type", PartialContentType)
+		w.Header().Set("X-Response-Url", r.URL.RequestURI())
 	}
 
 	// write response body from byte buffer

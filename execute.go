@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 )
 
-func executeTemplate(isPartial bool, templates []string, root Block, handlerMap map[Block]Handler, resp http.ResponseWriter, r *http.Request, w io.Writer) bool {
+func executeTemplate(templates []string, root Block, handlerMap map[Block]Handler, resp http.ResponseWriter, r *http.Request, w io.Writer) bool {
 	rootHandler, ok := handlerMap[root]
 	if !ok {
 		// TODO: make sure this level of error handling is correct!
@@ -35,12 +35,6 @@ func executeTemplate(isPartial bool, templates []string, root Block, handlerMap 
 		log.Fatal("Error parsing files: ", err)
 	}
 
-	if isPartial {
-		// true if "application/x.treetop-html-partial+xml" is set as the value of
-		// the `Accept` request header. To fulfill the content negotiation we must now indicate to
-		// the client that the body does indeed contain a treetop partial as requested.
-		resp.Header().Set("Content-Type", ContentType)
-	}
 	// Since we are modulating the representation based upon a header value, it is
 	// necessary to inform the caches. See https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.6
 	resp.Header().Set("Vary", "Accept")
@@ -92,12 +86,6 @@ func (dw *dataWriter) Delegate(name string, r *http.Request) (interface{}, bool)
 
 	handler, ok := dw.handlerMap[block]
 	if !ok {
-		// TODO: Add better error logging/handling and make sure this wont cause issues elsewhere!!!
-		http.Error(
-			dw,
-			fmt.Sprintf("No handler was matched to block '%s', but delegate WAS called....", name),
-			500,
-		)
 		return nil, false
 	}
 

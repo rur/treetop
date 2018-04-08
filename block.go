@@ -11,6 +11,11 @@ func (b *blockInternal) WithDefault(template string, handlerFunc HandlerFunc) Bl
 	return b
 }
 
+func (b *blockInternal) SetDefault(h Handler) Block {
+	b.defaultHandler = h
+	return b
+}
+
 func (b *blockInternal) Default() Handler {
 	return b.defaultHandler
 }
@@ -21,11 +26,11 @@ func (b *blockInternal) Container() Handler {
 
 func (b *blockInternal) Extend(template string, handlerFunc HandlerFunc) Handler {
 	h := handlerInternal{
-		template: template,
-		handlerFunc:     handlerFunc,
-		extends:  b,
-		includes: make(map[Block]Handler),
-		blocks: make(map[string]Block),
+		template:    template,
+		handlerFunc: handlerFunc,
+		extends:     b,
+		includes:    make(map[Block]Handler),
+		blocks:      make(map[string]Block),
 	}
 	return &h
 }
