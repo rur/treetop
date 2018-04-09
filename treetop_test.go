@@ -7,9 +7,9 @@ import (
 )
 
 type TestBase struct {
-	Title string
+	Title   string
 	Content interface{}
-	Footer interface{}
+	Footer  interface{}
 }
 
 func handler(w DataWriter, r *http.Request) {
@@ -22,9 +22,9 @@ func handler(w DataWriter, r *http.Request) {
 		footer = 999
 	}
 	w.Data(TestBase{
-		Title: "Base!!",
+		Title:   "Base!!",
 		Content: content,
-		Footer: footer,
+		Footer:  footer,
 	})
 }
 
@@ -37,14 +37,14 @@ func footerHandler(w DataWriter, r *http.Request) {
 }
 
 func Test_resolveTemplatesForHandler(t *testing.T) {
-	base := NewHandler("base.templ.html", handler)
+	base := NewPartial("base.templ.html", handler)
 	content := base.DefineBlock("content")
 	footer := base.DefineBlock("footer").WithDefault("footer.templ.html", footerHandler)
 	sub := content.Extend("sub.templ.html", contentHandler)
 	otherFooter := footer.Extend("other_footer.templ.html", footerHandler)
 	subWithOther := sub.Includes(otherFooter)
 	subWithOther2 := subWithOther.Includes(
-		NewHandler("orphan.templ.html", handler),
+		NewPartial("orphan.templ.html", handler),
 	)
 
 	type args struct {
@@ -52,77 +52,77 @@ func Test_resolveTemplatesForHandler(t *testing.T) {
 		primary Handler
 	}
 	tests := []struct {
-		name  string
-		args  args
-		handlerMap  map[Block]Handler
-		templates []string
+		name       string
+		args       args
+		handlerMap map[Block]Handler
+		templates  []string
 	}{
-	{
-		name: "basic",
-		args: args{
-			block: base.Extends(),
-			primary: base,
+		{
+			name: "basic",
+			args: args{
+				block:   base.Extends(),
+				primary: base,
+			},
+			handlerMap: map[Block]Handler{
+				base.Extends(): base,
+				footer:         footer.Default(),
+			},
+			templates: []string{
+				"base.templ.html",
+				"footer.templ.html",
+			},
 		},
-		handlerMap: map[Block]Handler{
-			base.Extends(): base,
-			footer: footer.Default(),
+		{
+			name: "sub",
+			args: args{
+				block:   base.Extends(),
+				primary: sub,
+			},
+			handlerMap: map[Block]Handler{
+				base.Extends(): base,
+				footer:         footer.Default(),
+				content:        sub,
+			},
+			templates: []string{
+				"base.templ.html",
+				"sub.templ.html",
+				"footer.templ.html",
+			},
 		},
-		templates: []string{
-			"base.templ.html",
-			"footer.templ.html",
+		{
+			name: "includes",
+			args: args{
+				block:   base.Extends(),
+				primary: subWithOther,
+			},
+			handlerMap: map[Block]Handler{
+				base.Extends(): base,
+				footer:         otherFooter,
+				content:        subWithOther,
+			},
+			templates: []string{
+				"base.templ.html",
+				"sub.templ.html",
+				"other_footer.templ.html",
+			},
 		},
-	},
-	{
-		name: "sub",
-		args: args{
-			block: base.Extends(),
-			primary: sub,
+		{
+			name: "ignore orphan",
+			args: args{
+				block:   base.Extends(),
+				primary: subWithOther2,
+			},
+			handlerMap: map[Block]Handler{
+				base.Extends(): base,
+				footer:         otherFooter,
+				content:        subWithOther2,
+			},
+			templates: []string{
+				"base.templ.html",
+				"sub.templ.html",
+				"other_footer.templ.html",
+			},
 		},
-		handlerMap: map[Block]Handler{
-			base.Extends(): base,
-			footer: footer.Default(),
-			content: sub,
-		},
-		templates: []string{
-			"base.templ.html",
-			"sub.templ.html",
-			"footer.templ.html",
-		},
-	},
-	{
-		name: "includes",
-		args: args{
-			block: base.Extends(),
-			primary: subWithOther,
-		},
-		handlerMap: map[Block]Handler{
-			base.Extends(): base,
-			footer: otherFooter,
-			content: subWithOther,
-		},
-		templates: []string{
-			"base.templ.html",
-			"sub.templ.html",
-			"other_footer.templ.html",
-		},
-	},
-	{
-		name: "ignore orphan",
-		args: args{
-			block: base.Extends(),
-			primary: subWithOther2,
-		},
-		handlerMap: map[Block]Handler{
-			base.Extends(): base,
-			footer: otherFooter,
-			content: subWithOther2,
-		},
-		templates: []string{
-			"base.templ.html",
-			"sub.templ.html",
-			"other_footer.templ.html",
-		},
-	},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

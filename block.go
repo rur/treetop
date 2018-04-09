@@ -24,8 +24,8 @@ func (b *blockInternal) Container() Handler {
 	return b.container
 }
 
-func (b *blockInternal) Extend(template string, handlerFunc HandlerFunc) Handler {
-	h := handlerInternal{
+func (b *blockInternal) Extend(template string, handlerFunc HandlerFunc) Partial {
+	h := partialInternal{
 		template:    template,
 		handlerFunc: handlerFunc,
 		extends:     b,

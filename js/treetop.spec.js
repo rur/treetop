@@ -39,7 +39,7 @@ describe('Treetop', function() {
       expect(req.method).to.equal("GET");
     });
 
-    it('should have added the treetop header', () => expect(req.requestHeaders["accept"]).to.equal(treetop.CONTENT_TYPE));
+    it('should have added the treetop header', () => expect(req.requestHeaders["accept"]).to.contain(treetop.PARTIAL_CONTENT_TYPE));
 
     it('should have no body', () => expect(req.requestBody).to.be.null);
   });
@@ -55,7 +55,7 @@ describe('Treetop', function() {
       expect(req).to.exist;
       expect(req.url).to.contain("/test");
       expect(req.method).to.equal("POST");
-      expect(req.requestHeaders["accept"]).to.equal(treetop.CONTENT_TYPE);
+      expect(req.requestHeaders["accept"]).to.contain(treetop.PARTIAL_CONTENT_TYPE);
       expect(req.url).to.equal("/test");
     });
 
@@ -91,7 +91,7 @@ describe('Treetop', function() {
       treetop.request("GET", "/test");
       requests[0].respond(
         200,
-        { 'content-type': treetop.CONTENT_TYPE },
+        { 'content-type': treetop.PARTIAL_CONTENT_TYPE },
         '<em id="test">after!</em>'
       );
       expect(document.body.textContent).to.equal("after!");
@@ -101,7 +101,7 @@ describe('Treetop', function() {
       treetop.request("GET", "/test");
       requests[0].respond(
         200,
-        { 'content-type': treetop.CONTENT_TYPE },
+        { 'content-type': treetop.PARTIAL_CONTENT_TYPE },
         '<em id="test_other">after!</em>'
       );
       expect(document.body.textContent).to.equal("before!");
@@ -114,7 +114,7 @@ describe('Treetop', function() {
       treetop.request("GET", "/test");
       requests[0].respond(
         200,
-        { 'content-type': treetop.CONTENT_TYPE },
+        { 'content-type': treetop.PARTIAL_CONTENT_TYPE },
         '<title>New Title!</title>'
       );
       expect(document.title).to.equal("New Title!");
@@ -143,7 +143,7 @@ describe('Treetop', function() {
         treetop.request("GET", "/test");
         requests[0].respond(
           200,
-          { 'content-type': treetop.CONTENT_TYPE },
+          { 'content-type': treetop.PARTIAL_CONTENT_TYPE },
           '<em id="test">after!</em>'
         );
         return this.nue = document.getElementById('test');
@@ -205,7 +205,7 @@ describe('Treetop', function() {
         treetop.request("GET", "/test");
         requests[0].respond(
           200,
-          { 'content-type': treetop.CONTENT_TYPE },
+          { 'content-type': treetop.PARTIAL_CONTENT_TYPE },
           '<div id="test">after!</div><div id="test2">after2!</div>'
         );
       });

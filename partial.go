@@ -6,9 +6,9 @@ import (
 	"strings"
 )
 
-func NewHandler(template string, handlerFunc HandlerFunc) Handler {
+func NewPartial(template string, handlerFunc HandlerFunc) Partial {
 	rootBlock := blockInternal{name: "root"}
-	handler := handlerInternal{
+	handler := partialInternal{
 		template:    template,
 		handlerFunc: handlerFunc,
 		extends:     &rootBlock,
@@ -19,7 +19,7 @@ func NewHandler(template string, handlerFunc HandlerFunc) Handler {
 	return &handler
 }
 
-type handlerInternal struct {
+type partialInternal struct {
 	template    string
 	handlerFunc HandlerFunc
 	// private:
@@ -28,16 +28,16 @@ type handlerInternal struct {
 	extends  Block
 }
 
-func (h *handlerInternal) Func() HandlerFunc {
+func (h *partialInternal) Func() HandlerFunc {
 	return h.handlerFunc
 }
-func (h *handlerInternal) Template() string {
+func (h *partialInternal) Template() string {
 	return h.template
 }
-func (h *handlerInternal) Extends() Block {
+func (h *partialInternal) Extends() Block {
 	return h.extends
 }
-func (h *handlerInternal) DefineBlock(name string) Block {
+func (h *partialInternal) DefineBlock(name string) Block {
 	block := blockInternal{
 		name:      name,
 		container: h,
@@ -45,11 +45,11 @@ func (h *handlerInternal) DefineBlock(name string) Block {
 	h.blocks[name] = &block
 	return &block
 }
-func (h *handlerInternal) GetBlocks() map[string]Block {
+func (h *partialInternal) GetBlocks() map[string]Block {
 	return h.blocks
 }
-func (h *handlerInternal) Includes(includes ...Handler) Handler {
-	newHandler := handlerInternal{
+func (h *partialInternal) Includes(includes ...Handler) Handler {
+	newHandler := partialInternal{
 		template:    h.template,
 		handlerFunc: h.handlerFunc,
 		extends:     h.extends,
@@ -67,12 +67,12 @@ func (h *handlerInternal) Includes(includes ...Handler) Handler {
 	}
 	return &newHandler
 }
-func (h *handlerInternal) GetIncludes() map[Block]Handler {
+func (h *partialInternal) GetIncludes() map[Block]Handler {
 	return h.includes
 }
 
 // Allow the use of treetop Hander as a HTTP handler
-func (h *handlerInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *partialInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var isPartial bool
 	for _, accept := range strings.Split(r.Header.Get("Accept"), ",") {
 		if strings.Trim(accept, " ") == PartialContentType {

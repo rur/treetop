@@ -13,7 +13,6 @@ func NewFragment(template string, handlerFunc HandlerFunc) Handler {
 		handlerFunc: handlerFunc,
 		extends:     &rootBlock,
 		includes:    make(map[Block]Handler),
-		blocks:      make(map[string]Block),
 	}
 	rootBlock.defaultHandler = &handler
 	return &handler
@@ -37,14 +36,7 @@ func (h *fragmentInternal) Template() string {
 func (h *fragmentInternal) Extends() Block {
 	return h.extends
 }
-func (h *fragmentInternal) DefineBlock(name string) Block {
-	block := blockInternal{
-		name:      name,
-		container: h,
-	}
-	h.blocks[name] = &block
-	return &block
-}
+
 func (h *fragmentInternal) GetBlocks() map[string]Block {
 	return h.blocks
 }

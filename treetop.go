@@ -22,7 +22,7 @@ type Block interface {
 	WithDefault(string, HandlerFunc) Block
 	SetDefault(Handler) Block
 	Default() Handler
-	Extend(string, HandlerFunc) Handler
+	Extend(string, HandlerFunc) Partial
 	Container() Handler
 }
 
@@ -31,10 +31,14 @@ type Handler interface {
 	Func() HandlerFunc
 	Template() string
 	Extends() Block
-	DefineBlock(string) Block
 	GetBlocks() map[string]Block
 	Includes(...Handler) Handler
 	GetIncludes() map[Block]Handler
+}
+
+type Partial interface {
+	Handler
+	DefineBlock(string) Block
 }
 
 type HandlerFunc func(DataWriter, *http.Request)
