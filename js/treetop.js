@@ -690,7 +690,7 @@ window.treetop.push(function ($) {
      */
     anchorClicked: function (evt, elm) {
         "use strict";
-        if (elm.href && (elm.hasAttribute("treetop") || elm.hasAttribute("treetop-page"))) {
+        if (elm.href && elm.hasAttribute("treetop") && elm.getAttribute("treetop").toLowerCase() != "disabled") {
             evt.preventDefault();
             window.treetop.request("GET", elm.href);
             return false;
@@ -705,7 +705,7 @@ window.treetop.push(function ($) {
     formSubmit: function (evt, elm) {
         "use strict";
         var $ = this;
-        if (elm.action && (elm.hasAttribute("treetop") || elm.hasAttribute("treetop-page"))) {
+        if (elm.action && elm.hasAttribute("treetop") && elm.getAttribute("treetop").toLowerCase() != "disabled") {
             evt.preventDefault();
             // TODO: If there is an immediate error serializing the form, allow event propagation to continue.
             $.serializeFormAndSubmit(elm);
@@ -750,3 +750,43 @@ window.treetop.push(function ($) {
         new window.treetop.FormSerializer(form, dataHandler);
     }
 }));
+
+window.treetop.push(function (treetop) {
+    function serializeFormAndSubmit(elm) {
+        function dataHandler(fdata) {
+            window.setTimeout(function () {
+                window.treetop.request(
+                    fdata.method,
+                    fdata.action,
+                    fdata.data,
+                    fdata.enctype
+                );
+            }, 0);
+        }
+        new treetop.FormSerializer(elm, dataHandler);
+    }
+    /**
+     * overload manual form submit
+     */
+    return {
+        tagName: "form",
+        mount: function (elm) {
+            if (elm.hasAttribute("treetop")) {
+                // overload form submit function to intercept
+                // script-triggered form submits
+                elm.submit = function () {
+                    // check if attribute is still there, treetop binding can disabled
+                    // by removing attribute
+                    if (elm.action && elm.hasAttribute("treetop") && elm.getAttribute("treetop").toLowerCase() != "disabled") {
+                        serializeFormAndSubmit(elm);
+                    } else {
+                        HTMLFormElement.prototype.submit.call(elm);
+                    }
+                };
+            }
+        },
+        unmount: function (el) {
+            delete el.submit;
+        }
+    };
+}(window.treetop));
