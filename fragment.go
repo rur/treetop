@@ -2,6 +2,7 @@ package treetop
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 	"strings"
 )
@@ -25,6 +26,24 @@ type fragmentInternal struct {
 	blocks   map[string]Block
 	includes map[Block]Handler
 	extends  Block
+}
+
+func (h *fragmentInternal) String() string {
+	var details []string
+
+	if h.template != "" {
+		details = append(details, fmt.Sprintf("Template: '%s'", h.template))
+	}
+
+	inclTempl := make([]string, 0, len(h.includes))
+	for _, incl := range h.includes {
+		inclTempl = append(inclTempl, incl.Template())
+	}
+	if len(inclTempl) > 0 {
+		details = append(details, fmt.Sprintf("Includes: x%d", len(inclTempl)))
+	}
+
+	return fmt.Sprintf("<Fragment %s>", strings.Join(details, " "))
 }
 
 func (h *fragmentInternal) Func() HandlerFunc {

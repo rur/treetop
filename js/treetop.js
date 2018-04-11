@@ -53,7 +53,7 @@ window.treetop = (function ($, config) {
      * @param  {string} method The request method GET|POST|...
      * @param  {string} url    The url
      */
-    Treetop.prototype.request = function (method, url, data, encoding) {
+    Treetop.prototype.request = function (method, url, data, encoding, suppressPushState) {
         if (!$.METHODS[method.toUpperCase()]) {
             throw new Error("Treetop: Unknown request method '" + method + "'");
         }
@@ -64,7 +64,7 @@ window.treetop = (function ($, config) {
             req.setRequestHeader("content-type", encoding || "application/x-www-form-urlencoded");
         }
         req.onload = function () {
-            $.ajaxSuccess(req);
+            $.ajaxSuccess(req, suppressPushState);
             onLoad.trigger();
         };
         req.send(data || null);
@@ -137,21 +137,21 @@ window.treetop = (function ($, config) {
      * figure out how to attached them to the DOM
      *
      * @param {XMLHttpRequest} xhr The xhr instance used to make the request
+     * @param {Boolean} suppressPushState Prevent new state being pushed to history
      */
-    ajaxSuccess: function (xhr) {
+    ajaxSuccess: function (xhr, suppressPushState) {
         "use strict";
         var $ = this;
         var i, len, temp, child, old, nodes;
         var responseContentType = xhr.getResponseHeader("content-type");
         var responseURL = xhr.getResponseHeader("x-response-url") || xhr.responseURL;
         if (responseContentType != $.PARTIAL_CONTENT_TYPE && responseContentType != $.FRAGMENT_CONTENT_TYPE) {
-            throw Error("Content-Type is not supported by Treetop '" + xhr.getResponseHeader("content-type") + "'");
+            window.location = responseURL;
         }
 
-        if (responseContentType == $.PARTIAL_CONTENT_TYPE && window.history) {
+        if (!suppressPushState && responseContentType == $.PARTIAL_CONTENT_TYPE && window.history) {
             window.history.pushState({
-                treetop_url: responseURL,
-                partial: true
+                treetop: true,
             }, "", responseURL);
         }
 
@@ -656,14 +656,6 @@ window.treetop.push(function ($) {
             } else {
                 throw new Error("Treetop Events: Event delegation is not supported in this browser!");
             }
-            if (window.history) {
-                // set the state so that back button will work properly
-                var url = window.location.toLocaleString();
-                window.history.replaceState({
-                    treetop_url: url,
-                    partial: false
-                }, document.title);
-            }
             window.onpopstate = onPopState;
         },
         unmount: function (el) {
@@ -720,12 +712,10 @@ window.treetop.push(function ($) {
      */
     browserPopState: function (evt) {
         "use strict";
-        if (evt.state && evt.state.treetop_url) {
-            if (evt.state.partial) {
-                window.treetop.request("GET", evt.state.treetop_url);
-            } else {
-                window.location.href = evt.state.treetop_url;
-            }
+        if (evt.state && evt.state.treetop) {
+            window.treetop.request("GET", window.location.href, null, null, true);
+        } else {
+            location.reload();
         }
     },
 

@@ -2,12 +2,13 @@ package treetop
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 	"strings"
 )
 
-func NewPartial(template string, handlerFunc HandlerFunc) Partial {
-	rootBlock := blockInternal{name: "root"}
+func NewPage(template string, handlerFunc HandlerFunc) Partial {
+	rootBlock := blockInternal{name: "page root"}
 	handler := partialInternal{
 		template:    template,
 		handlerFunc: handlerFunc,
@@ -26,6 +27,28 @@ type partialInternal struct {
 	blocks   map[string]Block
 	includes map[Block]Handler
 	extends  Block
+}
+
+func (h *partialInternal) String() string {
+	var details []string
+
+	if h.template != "" {
+		details = append(details, fmt.Sprintf("Template: '%s'", h.template))
+	}
+
+	if h.extends != nil {
+		details = append(details, fmt.Sprintf("Extends: %s", h.extends))
+	}
+
+	inclTempl := make([]string, 0, len(h.includes))
+	for _, incl := range h.includes {
+		inclTempl = append(inclTempl, incl.Template())
+	}
+	if len(inclTempl) > 0 {
+		details = append(details, fmt.Sprintf("Includes: x%d", len(inclTempl)))
+	}
+
+	return fmt.Sprintf("<Partial %s>", strings.Join(details, " "))
 }
 
 func (h *partialInternal) Func() HandlerFunc {

@@ -37,14 +37,14 @@ func footerHandler(w DataWriter, r *http.Request) {
 }
 
 func Test_resolveTemplatesForHandler(t *testing.T) {
-	base := NewPartial("base.templ.html", handler)
+	base := NewPage("base.templ.html", handler)
 	content := base.DefineBlock("content")
 	footer := base.DefineBlock("footer").WithDefault("footer.templ.html", footerHandler)
 	sub := content.Extend("sub.templ.html", contentHandler)
 	otherFooter := footer.Extend("other_footer.templ.html", footerHandler)
 	subWithOther := sub.Includes(otherFooter)
 	subWithOther2 := subWithOther.Includes(
-		NewPartial("orphan.templ.html", handler),
+		NewPage("orphan.templ.html", handler),
 	)
 
 	type args struct {

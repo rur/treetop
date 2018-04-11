@@ -1,6 +1,7 @@
 package treetop
 
 import (
+	"fmt"
 	"net/http"
 	"sort"
 )
@@ -19,6 +20,7 @@ type DataWriter interface {
 }
 
 type Block interface {
+	fmt.Stringer
 	WithDefault(string, HandlerFunc) Block
 	SetDefault(Handler) Block
 	Default() Handler
@@ -27,6 +29,7 @@ type Block interface {
 }
 
 type Handler interface {
+	fmt.Stringer
 	http.Handler
 	Func() HandlerFunc
 	Template() string

@@ -1,9 +1,19 @@
 package treetop
 
+import "fmt"
+
 type blockInternal struct {
 	name           string
 	defaultHandler Handler
 	container      Handler
+}
+
+func (b *blockInternal) String() string {
+	return fmt.Sprintf("<Block Name: '%s'>", b.name)
+}
+
+func (b *blockInternal) Name() string {
+	return b.name
 }
 
 func (b *blockInternal) WithDefault(template string, handlerFunc HandlerFunc) Block {
