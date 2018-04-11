@@ -143,6 +143,7 @@ window.treetop = (function ($, config) {
         "use strict";
         var $ = this;
         var i, len, temp, child, old, nodes;
+        i = len = temp = child = old = nodes = undefined;
         var responseContentType = xhr.getResponseHeader("content-type");
         var responseURL = xhr.getResponseHeader("x-response-url") || xhr.responseURL;
         if (responseContentType != $.PARTIAL_CONTENT_TYPE && responseContentType != $.FRAGMENT_CONTENT_TYPE) {
@@ -157,7 +158,7 @@ window.treetop = (function ($, config) {
 
         temp = document.createElement("div");
         temp.innerHTML = xhr.responseText;
-        nodes = new Array(len);
+        nodes = new Array(temp.children.length);
         for (i = 0, len = temp.children.length; i < len; i++) {
             nodes[i] = temp.children[i];
         }
@@ -710,13 +711,11 @@ window.treetop.push(function ($) {
      *
      * @param {PopStateEvent} e
      */
-    browserPopState: function (evt) {
+    browserPopState: function () {
         "use strict";
-        if (evt.state && evt.state.treetop) {
-            window.treetop.request("GET", window.location.href, null, null, true);
-        } else {
-            location.reload();
-        }
+        // force browser to refresh the page when the back
+        // nav is triggered, seems to be the best thing to do
+        location.reload();
     },
 
     /**
