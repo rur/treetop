@@ -41,6 +41,8 @@ func Test_resolveTemplatesForHandler(t *testing.T) {
 	content := base.DefineBlock("content")
 	footer := base.DefineBlock("footer").WithDefault("footer.templ.html", footerHandler)
 	sub := content.Extend("sub.templ.html", contentHandler)
+	subContent := sub.DefineBlock("subContent")
+	subSub := subContent.Extend("sub_sub.templ.html", Noop)
 	otherFooter := footer.Extend("other_footer.templ.html", footerHandler)
 	subWithOther := sub.Includes(otherFooter)
 	subWithOther2 := subWithOther.Includes(
@@ -121,6 +123,25 @@ func Test_resolveTemplatesForHandler(t *testing.T) {
 				"base.templ.html",
 				"sub.templ.html",
 				"other_footer.templ.html",
+			},
+		},
+		{
+			name: "subSub",
+			args: args{
+				block:   base.Extends(),
+				primary: subSub,
+			},
+			handlerMap: map[Block]Handler{
+				base.Extends(): base,
+				footer:         footer.Default(),
+				content:        sub,
+				subContent:     subSub,
+			},
+			templates: []string{
+				"base.templ.html",
+				"sub.templ.html",
+				"sub_sub.templ.html",
+				"footer.templ.html",
 			},
 		},
 	}

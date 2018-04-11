@@ -48,13 +48,19 @@ type HandlerFunc func(DataWriter, *http.Request)
 
 // assemble an index of how each block in the hierarchy is mapped to a handler based upon a 'primary' handler
 func resolveTemplatesForHandler(block Block, primary Handler) (map[Block]Handler, []string) {
-	var handler Handler
-	if primary != nil {
-		if block == primary.Extends() {
-			handler = primary
-		} else if include, found := primary.GetIncludes()[block]; found {
+	handler := primary
+	for handler != nil {
+		if block == handler.Extends() {
+			break
+		} else if include, found := handler.GetIncludes()[block]; found {
 			handler = include
-		} else if blockDefault := block.Default(); blockDefault != nil {
+			break
+		}
+		handler = handler.Extends().Container()
+	}
+
+	if handler == nil {
+		if blockDefault := block.Default(); blockDefault != nil {
 			handler = blockDefault
 		}
 	}
