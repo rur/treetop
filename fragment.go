@@ -8,24 +8,18 @@ import (
 )
 
 func NewFragment(template string, handlerFunc HandlerFunc) Handler {
-	rootBlock := blockInternal{name: "fragment-root"}
 	handler := fragmentInternal{
 		template:    template,
 		handlerFunc: handlerFunc,
-		extends:     &rootBlock,
-		includes:    make(map[Block]Handler),
+		execute:     DefaultTemplateExec,
 	}
-	rootBlock.defaultHandler = &handler
 	return &handler
 }
 
 type fragmentInternal struct {
 	template    string
 	handlerFunc HandlerFunc
-	// private:
-	blocks   map[string]Block
-	includes map[Block]Handler
-	extends  Block
+	execute     TemplateExec
 }
 
 func (h *fragmentInternal) String() string {
@@ -33,14 +27,6 @@ func (h *fragmentInternal) String() string {
 
 	if h.template != "" {
 		details = append(details, fmt.Sprintf("Template: '%s'", h.template))
-	}
-
-	inclTempl := make([]string, 0, len(h.includes))
-	for _, incl := range h.includes {
-		inclTempl = append(inclTempl, incl.Template())
-	}
-	if len(inclTempl) > 0 {
-		details = append(details, fmt.Sprintf("Includes: x%d", len(inclTempl)))
 	}
 
 	return fmt.Sprintf("<Fragment %s>", strings.Join(details, " "))
@@ -52,35 +38,6 @@ func (h *fragmentInternal) Func() HandlerFunc {
 func (h *fragmentInternal) Template() string {
 	return h.template
 }
-func (h *fragmentInternal) Extends() Block {
-	return h.extends
-}
-
-func (h *fragmentInternal) GetBlocks() map[string]Block {
-	return h.blocks
-}
-func (h *fragmentInternal) Includes(includes ...Handler) Handler {
-	newHandler := fragmentInternal{
-		template:    h.template,
-		handlerFunc: h.handlerFunc,
-		extends:     h.extends,
-		includes:    make(map[Block]Handler),
-		blocks:      make(map[string]Block),
-	}
-	for block, handler := range h.includes {
-		newHandler.includes[block] = handler
-	}
-	for name, block := range h.blocks {
-		newHandler.blocks[name] = block
-	}
-	for _, handler := range includes {
-		newHandler.includes[handler.Extends()] = handler
-	}
-	return &newHandler
-}
-func (h *fragmentInternal) GetIncludes() map[Block]Handler {
-	return h.includes
-}
 
 // Allow the use of treetop Hander as a HTTP handler
 func (h *fragmentInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -91,31 +48,31 @@ func (h *fragmentInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
-
-	root := h.extends
 	if !isFragment {
 		http.Error(w, "Not Acceptable", http.StatusNotAcceptable)
 		return
 	}
 
 	var render bytes.Buffer
-	blockMap, templates := resolveTemplatesForHandler(root, h)
-	if proceed := executeTemplate(templates, root, blockMap, w, r, &render); !proceed {
+
+	if data, proceed := ExecuteFragment(h, map[string]interface{}{}, w, r); proceed {
+		// data was loaded successfully, now execute the templates
+		if err := h.execute(&render, []string{h.template}, data); err != nil {
+			http.Error(w, fmt.Sprintf("Error executing templates: %s", err.Error()), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		// handler has indicated that the request has already been satisfied, do not proceed any further
 		return
 	}
 
-	// this will execute any includes that have not already been resolved
-	for block, handler := range h.GetIncludes() {
-		if _, found := blockMap[block]; !found {
-			partialBlockMap, partialTempl := resolveTemplatesForHandler(block, handler)
-			if proceed := executeTemplate(partialTempl, block, partialBlockMap, w, r, &render); !proceed {
-				return
-			}
-		}
-	}
 	// content type should indicate a treetop partial
 	w.Header().Set("Content-Type", FragmentContentType)
 	w.Header().Set("X-Response-Url", r.URL.RequestURI())
+
+	// Since we are modulating the representation based upon a header value, it is
+	// necessary to inform the caches. See https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.6
+	w.Header().Set("Vary", "Accept")
 
 	// write response body from byte buffer
 	render.WriteTo(w)

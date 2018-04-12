@@ -4,74 +4,116 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"log"
 	"net/http"
 	"path/filepath"
 )
 
-func executeTemplate(templates []string, root Block, handlerMap map[Block]Handler, resp http.ResponseWriter, r *http.Request, w io.Writer) bool {
-	rootHandler, ok := handlerMap[root]
-	if !ok {
-		// TODO: make sure this level of error handling is correct!
-		http.Error(resp, "Root handler was not found!", 500)
-		return false
+// implements TemplateExec
+func DefaultTemplateExec(w io.Writer, templates []string, data interface{}) error {
+	t, err := template.New("__init__").ParseFiles(templates...)
+	if err != nil {
+		return err
 	}
-	hw := dataWriter{
+	if err := t.ExecuteTemplate(w, filepath.Base(templates[0]), data); err != nil {
+		return err
+	}
+	return nil
+}
+
+func ExecutePartial(h Partial, handlerMap map[Block]Partial, resp http.ResponseWriter, r *http.Request) (interface{}, bool) {
+	hw := partialWriter{
 		ResponseWriter: resp,
-		handler:        rootHandler,
+		handler:        h,
 		handlerMap:     handlerMap,
 	}
 
-	f := rootHandler.Func()
-	f(&hw, r)
+	h.Func()(&hw, r)
 
 	if hw.wroteHeader {
 		// response headers have already been written in one of the handlers, do not proceed
-		return false
+		return hw.data, false
+	} else {
+		return hw.data, true
 	}
-
-	t, err := template.New("__init__").ParseFiles(templates...)
-	if err != nil {
-		log.Fatal("Error parsing files: ", err)
-	}
-
-	// Since we are modulating the representation based upon a header value, it is
-	// necessary to inform the caches. See https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.6
-	resp.Header().Set("Vary", "Accept")
-
-	if err := t.ExecuteTemplate(w, filepath.Base(templates[0]), hw.data); err != nil {
-		log.Fatal(err)
-	}
-	return true
 }
 
-// implements treetop.go:DataWriter interface
-type dataWriter struct {
+func ExecuteFragment(h Handler, dataMap map[string]interface{}, resp http.ResponseWriter, r *http.Request) (interface{}, bool) {
+	hw := fragmentWriter{
+		ResponseWriter: resp,
+		handler:        h,
+		datamap:        dataMap,
+	}
+
+	h.Func()(&hw, r)
+
+	if hw.wroteHeader {
+		// response headers have already been written in one of the handlers, do not proceed
+		return hw.data, false
+	} else {
+		return hw.data, true
+	}
+}
+
+type fragmentWriter struct {
 	http.ResponseWriter
 	handler     Handler
-	handlerMap  map[Block]Handler
+	datamap     map[string]interface{}
 	data        interface{}
 	dataCalled  bool
-	partial     bool
 	wroteHeader bool
 }
 
-func (dw *dataWriter) Write(b []byte) (int, error) {
+func (fw *fragmentWriter) Write(b []byte) (int, error) {
+	fw.wroteHeader = true
+	return fw.ResponseWriter.Write(b)
+}
+
+func (fw *fragmentWriter) WriteHeader(code int) {
+	fw.wroteHeader = true
+	fw.ResponseWriter.WriteHeader(code)
+}
+
+func (fw *fragmentWriter) Data(d interface{}) {
+	fw.data = d
+	fw.dataCalled = true
+}
+
+func (fw *fragmentWriter) Delegate(name string, r *http.Request) (interface{}, bool) {
+	if fw.wroteHeader {
+		// response has already been written, nothing to do
+		return nil, false
+	}
+
+	d, ok := fw.datamap[name]
+	return d, ok
+}
+
+// implements treetop.go:DataWriter interface
+type partialWriter struct {
+	http.ResponseWriter
+	handler     Partial
+	handlerMap  map[Block]Partial
+	data        interface{}
+	dataCalled  bool
+	wroteHeader bool
+}
+
+func (dw *partialWriter) Write(b []byte) (int, error) {
 	dw.wroteHeader = true
 	return dw.ResponseWriter.Write(b)
 }
 
-func (dw *dataWriter) WriteHeader(code int) {
+func (dw *partialWriter) WriteHeader(code int) {
 	dw.wroteHeader = true
 	dw.ResponseWriter.WriteHeader(code)
 }
 
-func (dw *dataWriter) Data(d interface{}) {
+func (dw *partialWriter) Data(d interface{}) {
 	dw.data = d
 	dw.dataCalled = true
 }
 
-func (dw *dataWriter) Delegate(name string, r *http.Request) (interface{}, bool) {
+func (dw *partialWriter) Delegate(name string, r *http.Request) (interface{}, bool) {
 	if dw.wroteHeader {
 		// response has already been written, nothing to do
 		return nil, false
@@ -89,7 +131,7 @@ func (dw *dataWriter) Delegate(name string, r *http.Request) (interface{}, bool)
 		return nil, false
 	}
 
-	dw2 := dataWriter{
+	dw2 := partialWriter{
 		ResponseWriter: dw.ResponseWriter,
 		handler:        handler,
 		handlerMap:     dw.handlerMap,

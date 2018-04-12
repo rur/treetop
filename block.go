@@ -4,8 +4,9 @@ import "fmt"
 
 type blockInternal struct {
 	name           string
-	defaultHandler Handler
-	container      Handler
+	defaultPartial Partial
+	container      Partial
+	execute        TemplateExec
 }
 
 func (b *blockInternal) String() string {
@@ -17,20 +18,20 @@ func (b *blockInternal) Name() string {
 }
 
 func (b *blockInternal) WithDefault(template string, handlerFunc HandlerFunc) Block {
-	b.defaultHandler = b.Extend(template, handlerFunc)
+	b.defaultPartial = b.Extend(template, handlerFunc)
 	return b
 }
 
-func (b *blockInternal) SetDefault(h Handler) Block {
-	b.defaultHandler = h
+func (b *blockInternal) SetDefault(h Partial) Block {
+	b.defaultPartial = h
 	return b
 }
 
-func (b *blockInternal) Default() Handler {
-	return b.defaultHandler
+func (b *blockInternal) Default() Partial {
+	return b.defaultPartial
 }
 
-func (b *blockInternal) Container() Handler {
+func (b *blockInternal) Container() Partial {
 	return b.container
 }
 
@@ -39,8 +40,9 @@ func (b *blockInternal) Extend(template string, handlerFunc HandlerFunc) Partial
 		template:    template,
 		handlerFunc: handlerFunc,
 		extends:     b,
-		includes:    make(map[Block]Handler),
+		includes:    make(map[Block]Partial),
 		blocks:      make(map[string]Block),
+		execute:     b.execute,
 	}
 	return &h
 }

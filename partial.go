@@ -4,20 +4,23 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 )
 
 func NewPage(template string, handlerFunc HandlerFunc) Partial {
 	rootBlock := blockInternal{name: "page root"}
-	handler := partialInternal{
+	partial := partialInternal{
 		template:    template,
 		handlerFunc: handlerFunc,
 		extends:     &rootBlock,
-		includes:    make(map[Block]Handler),
+		includes:    make(map[Block]Partial),
 		blocks:      make(map[string]Block),
+		execute:     DefaultTemplateExec,
 	}
-	rootBlock.defaultHandler = &handler
-	return &handler
+	rootBlock.defaultPartial = &partial
+	rootBlock.execute = partial.execute
+	return &partial
 }
 
 type partialInternal struct {
@@ -25,8 +28,9 @@ type partialInternal struct {
 	handlerFunc HandlerFunc
 	// private:
 	blocks   map[string]Block
-	includes map[Block]Handler
+	includes map[Block]Partial
 	extends  Block
+	execute  TemplateExec
 }
 
 func (h *partialInternal) String() string {
@@ -71,12 +75,13 @@ func (h *partialInternal) DefineBlock(name string) Block {
 func (h *partialInternal) GetBlocks() map[string]Block {
 	return h.blocks
 }
-func (h *partialInternal) Includes(includes ...Handler) Handler {
+func (h *partialInternal) Includes(includes ...Partial) Partial {
 	newHandler := partialInternal{
 		template:    h.template,
 		handlerFunc: h.handlerFunc,
 		extends:     h.extends,
-		includes:    make(map[Block]Handler),
+		execute:     h.execute,
+		includes:    make(map[Block]Partial),
 		blocks:      make(map[string]Block),
 	}
 	for block, handler := range h.includes {
@@ -90,7 +95,8 @@ func (h *partialInternal) Includes(includes ...Handler) Handler {
 	}
 	return &newHandler
 }
-func (h *partialInternal) GetIncludes() map[Block]Handler {
+
+func (h *partialInternal) GetIncludes() map[Block]Partial {
 	return h.includes
 }
 
@@ -113,8 +119,20 @@ func (h *partialInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var render bytes.Buffer
-	blockMap, templates := resolveTemplatesForHandler(root, h)
-	if proceed := executeTemplate(templates, root, blockMap, w, r, &render); !proceed {
+	blockMap, templates := resolveTemplatesForPartial(root, h)
+	rootHandler, ok := blockMap[root]
+	if !ok {
+		http.Error(w, fmt.Sprintf("Error resolving handler for block %s", root), http.StatusInternalServerError)
+		return
+	}
+	if data, proceed := ExecutePartial(rootHandler, blockMap, w, r); proceed {
+		// data was loaded successfully, now execute the templates
+		if err := h.execute(&render, templates, data); err != nil {
+			http.Error(w, fmt.Sprintf("Error executing templates: %s", err.Error()), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		// handler has indicated that the request has already been satisfied, do not proceed any further
 		return
 	}
 
@@ -122,8 +140,20 @@ func (h *partialInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// this will execute any includes that have not already been resolved
 		for block, handler := range h.GetIncludes() {
 			if _, found := blockMap[block]; !found {
-				partialBlockMap, partialTempl := resolveTemplatesForHandler(block, handler)
-				if proceed := executeTemplate(partialTempl, block, partialBlockMap, w, r, &render); !proceed {
+				partBlockMap, partTemplates := resolveTemplatesForPartial(block, handler)
+				partHandler, ok := partBlockMap[block]
+				if !ok {
+					http.Error(w, fmt.Sprintf("Error resolving handler for block %s", block), http.StatusInternalServerError)
+					return
+				}
+				if data, proceed := ExecutePartial(partHandler, partBlockMap, w, r); proceed {
+					// data was loaded successfully, now execute the templates
+					if err := h.execute(&render, partTemplates, data); err != nil {
+						http.Error(w, fmt.Sprintf("Error executing templates: %s", err.Error()), http.StatusInternalServerError)
+						return
+					}
+				} else {
+					// handler has indicated that the request has already been satisfied, do not proceed any further
 					return
 				}
 			}
@@ -133,6 +163,70 @@ func (h *partialInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Response-Url", r.URL.RequestURI())
 	}
 
+	// Since we are modulating the representation based upon a header value, it is
+	// necessary to inform the caches. See https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.6
+	w.Header().Set("Vary", "Accept")
+
 	// write response body from byte buffer
 	render.WriteTo(w)
+}
+
+// assemble an index of how each block in the hierarchy is mapped to a handler
+// based upon a 'primary' handler which acts as the entry point to the hierarchy.
+func resolveTemplatesForPartial(block Block, primary Partial) (map[Block]Partial, []string) {
+	handler := primary
+	for handler != nil {
+		if block == handler.Extends() {
+			break
+		} else if include, found := handler.GetIncludes()[block]; found {
+			handler = include
+			break
+		}
+		handler = handler.Extends().Container()
+	}
+
+	if handler == nil {
+		if blockDefault := block.Default(); blockDefault != nil {
+			handler = blockDefault
+		}
+	}
+
+	var templates []string
+	var blockMap map[Block]Partial
+
+	if handler != nil {
+		blockMap = map[Block]Partial{
+			block: handler,
+		}
+		templates = []string{
+			handler.Template(),
+		}
+		var subBlockMap map[Block]Partial
+		var subTemplates []string
+		var names []string
+		var childBlock Block
+		blocks := handler.GetBlocks()
+		// sort block names because we want the order of templates to be stable even if it
+		// isn't a total order in general
+		for k := range blocks {
+			names = append(names, k)
+		}
+		sort.Strings(names)
+		for _, name := range names {
+			childBlock = blocks[name]
+			subBlockMap, subTemplates = resolveTemplatesForPartial(childBlock, primary)
+			for childBlock, childHandler := range subBlockMap {
+				blockMap[childBlock] = childHandler
+			}
+			templates = append(templates, subTemplates...)
+		}
+	}
+	filtered := templates[:0]
+	for _, templ := range templates {
+		if templ != "" {
+			filtered = append(filtered, templ)
+		}
+	}
+
+	return blockMap, filtered
 }
