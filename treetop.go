@@ -28,7 +28,7 @@ type Block interface {
 	Container() Partial
 }
 
-type Handler interface {
+type Fragment interface {
 	fmt.Stringer
 	http.Handler
 	Func() HandlerFunc
@@ -36,7 +36,7 @@ type Handler interface {
 }
 
 type Partial interface {
-	Handler
+	Fragment
 	DefineBlock(string) Block
 	Extends() Block
 	GetBlocks() map[string]Block
@@ -46,7 +46,8 @@ type Partial interface {
 
 type Renderer interface {
 	NewPage(string, HandlerFunc) Partial
-	NewFragment(string, HandlerFunc) Handler
+	NewFragment(string, HandlerFunc) Fragment
+	Append(Partial, ...Fragment) http.Handler
 }
 
 type HandlerFunc func(DataWriter, *http.Request)

@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func NewFragment(template string, handlerFunc HandlerFunc) Handler {
+func NewFragment(template string, handlerFunc HandlerFunc) Fragment {
 	handler := fragmentInternal{
 		template:    template,
 		handlerFunc: handlerFunc,

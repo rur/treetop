@@ -9,7 +9,10 @@ import (
 )
 
 func NewPage(template string, handlerFunc HandlerFunc) Partial {
-	rootBlock := blockInternal{name: "page root"}
+	rootBlock := blockInternal{
+		name:    "page root",
+		execute: DefaultTemplateExec,
+	}
 	partial := partialInternal{
 		template:    template,
 		handlerFunc: handlerFunc,
@@ -68,6 +71,7 @@ func (h *partialInternal) DefineBlock(name string) Block {
 	block := blockInternal{
 		name:      name,
 		container: h,
+		execute:   h.execute,
 	}
 	h.blocks[name] = &block
 	return &block
@@ -119,12 +123,13 @@ func (h *partialInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var render bytes.Buffer
-	blockMap, templates := resolveTemplatesForPartial(root, h)
+	blockMap := resolveBlockMap(root, h)
 	rootHandler, ok := blockMap[root]
 	if !ok {
 		http.Error(w, fmt.Sprintf("Error resolving handler for block %s", root), http.StatusInternalServerError)
 		return
 	}
+	templates := resolvePartialTemplates(rootHandler, blockMap)
 	if data, proceed := ExecutePartial(rootHandler, blockMap, w, r); proceed {
 		// data was loaded successfully, now execute the templates
 		if err := h.execute(&render, templates, data); err != nil {
@@ -140,12 +145,13 @@ func (h *partialInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// this will execute any includes that have not already been resolved
 		for block, handler := range h.GetIncludes() {
 			if _, found := blockMap[block]; !found {
-				partBlockMap, partTemplates := resolveTemplatesForPartial(block, handler)
+				partBlockMap := resolveBlockMap(block, handler)
 				partHandler, ok := partBlockMap[block]
 				if !ok {
 					http.Error(w, fmt.Sprintf("Error resolving handler for block %s", block), http.StatusInternalServerError)
 					return
 				}
+				partTemplates := resolvePartialTemplates(partHandler, partBlockMap)
 				if data, proceed := ExecutePartial(partHandler, partBlockMap, w, r); proceed {
 					// data was loaded successfully, now execute the templates
 					if err := h.execute(&render, partTemplates, data); err != nil {
@@ -173,7 +179,7 @@ func (h *partialInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // assemble an index of how each block in the hierarchy is mapped to a handler
 // based upon a 'primary' handler which acts as the entry point to the hierarchy.
-func resolveTemplatesForPartial(block Block, primary Partial) (map[Block]Partial, []string) {
+func resolveBlockMap(block Block, primary Partial) map[Block]Partial {
 	handler := primary
 	for handler != nil {
 		if block == handler.Extends() {
@@ -190,19 +196,13 @@ func resolveTemplatesForPartial(block Block, primary Partial) (map[Block]Partial
 			handler = blockDefault
 		}
 	}
-
-	var templates []string
 	var blockMap map[Block]Partial
 
 	if handler != nil {
 		blockMap = map[Block]Partial{
 			block: handler,
 		}
-		templates = []string{
-			handler.Template(),
-		}
 		var subBlockMap map[Block]Partial
-		var subTemplates []string
 		var names []string
 		var childBlock Block
 		blocks := handler.GetBlocks()
@@ -214,19 +214,34 @@ func resolveTemplatesForPartial(block Block, primary Partial) (map[Block]Partial
 		sort.Strings(names)
 		for _, name := range names {
 			childBlock = blocks[name]
-			subBlockMap, subTemplates = resolveTemplatesForPartial(childBlock, primary)
+			subBlockMap = resolveBlockMap(childBlock, primary)
 			for childBlock, childHandler := range subBlockMap {
 				blockMap[childBlock] = childHandler
 			}
-			templates = append(templates, subTemplates...)
 		}
 	}
-	filtered := templates[:0]
-	for _, templ := range templates {
-		if templ != "" {
-			filtered = append(filtered, templ)
-		}
-	}
+	return blockMap
+}
 
-	return blockMap, filtered
+func resolvePartialTemplates(partial Partial, handlerMap map[Block]Partial) []string {
+	templates := []string{partial.Template()}
+	blocks := partial.GetBlocks()
+	keys := make([]string, len(blocks))
+
+	i := 0
+	for k := range blocks {
+		keys[i] = k
+		i++
+	}
+	sort.Strings(keys)
+
+	for _, name := range keys {
+		block := blocks[name]
+		if childPartial, ok := handlerMap[block]; ok {
+			for _, t := range resolvePartialTemplates(childPartial, handlerMap) {
+				templates = append(templates, t)
+			}
+		}
+	}
+	return templates
 }

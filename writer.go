@@ -18,7 +18,7 @@ func (tw *treetopWriter) Write(p []byte) (n int, err error) {
 func Writer(w http.ResponseWriter, req *http.Request) (io.Writer, bool) {
 	var isPartial bool
 	for _, accept := range strings.Split(req.Header.Get("Accept"), ",") {
-		if strings.Trim(accept, " ") == FragmentContentType {
+		if strings.TrimSpace(accept) == FragmentContentType {
 			isPartial = true
 			break
 		}

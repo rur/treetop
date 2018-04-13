@@ -147,12 +147,19 @@ func Test_resolveTemplatesForPartial(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := resolveTemplatesForPartial(tt.args.block, tt.args.primary)
-			if !reflect.DeepEqual(got, tt.handlerMap) {
-				t.Errorf("resolveTemplatesForPartial() got = %v, want %v", got, tt.handlerMap)
+			blockMap := resolveBlockMap(tt.args.block, tt.args.primary)
+			if !reflect.DeepEqual(blockMap, tt.handlerMap) {
+				t.Errorf("resolveTemplatesForPartial() got = %v, want %v", blockMap, tt.handlerMap)
 			}
-			if !reflect.DeepEqual(got1, tt.templates) {
-				t.Errorf("resolveTemplatesForPartial() got1 = %v, want %v", got1, tt.templates)
+
+			handler, ok := blockMap[tt.args.block]
+			if !ok {
+				t.Errorf("Handler was not found for root block %s", tt.args.block)
+			}
+
+			templates := resolvePartialTemplates(handler, blockMap)
+			if !reflect.DeepEqual(templates, tt.templates) {
+				t.Errorf("resolveTemplatesForPartial() got1 = %v, want %v", templates, tt.templates)
 			}
 		})
 	}

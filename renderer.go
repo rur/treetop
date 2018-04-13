@@ -1,5 +1,7 @@
 package treetop
 
+import "net/http"
+
 type renderer struct {
 	execute TemplateExec
 }
@@ -9,7 +11,10 @@ func NewRenderer(execute TemplateExec) Renderer {
 }
 
 func (r *renderer) NewPage(template string, handlerFunc HandlerFunc) Partial {
-	rootBlock := blockInternal{name: "page root"}
+	rootBlock := blockInternal{
+		name:    "page root",
+		execute: r.execute,
+	}
 	partial := partialInternal{
 		template:    template,
 		handlerFunc: handlerFunc,
@@ -19,15 +24,26 @@ func (r *renderer) NewPage(template string, handlerFunc HandlerFunc) Partial {
 		execute:     r.execute,
 	}
 	rootBlock.defaultPartial = &partial
-	rootBlock.execute = partial.execute
 	return &partial
 }
 
-func (r *renderer) NewFragment(template string, handlerFunc HandlerFunc) Handler {
+func (r *renderer) NewFragment(template string, handlerFunc HandlerFunc) Fragment {
 	fragment := fragmentInternal{
 		template:    template,
 		handlerFunc: handlerFunc,
 		execute:     r.execute,
 	}
 	return &fragment
+}
+
+func (r *renderer) Append(partial Partial, fragments ...Fragment) http.Handler {
+	fs := make([]Fragment, len(fragments))
+	for i, f := range fragments {
+		fs[i] = f
+	}
+	return &appended{
+		partial,
+		fs,
+		r.execute,
+	}
 }

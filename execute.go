@@ -6,15 +6,25 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"strings"
 )
 
 // implements TemplateExec
 func DefaultTemplateExec(w io.Writer, templates []string, data interface{}) error {
-	t, err := template.New("__init__").ParseFiles(templates...)
+	// trim strings and filter out empty
+	filtered := make([]string, 0, len(templates))
+	for _, templ := range templates {
+		s := strings.TrimSpace(templ)
+		if s != "" {
+			filtered = append(filtered, s)
+		}
+	}
+
+	t, err := template.New("__init__").ParseFiles(filtered...)
 	if err != nil {
 		return err
 	}
-	if err := t.ExecuteTemplate(w, filepath.Base(templates[0]), data); err != nil {
+	if err := t.ExecuteTemplate(w, filepath.Base(filtered[0]), data); err != nil {
 		return err
 	}
 	return nil
@@ -29,15 +39,10 @@ func ExecutePartial(h Partial, handlerMap map[Block]Partial, resp http.ResponseW
 
 	h.Func()(&hw, r)
 
-	if hw.wroteHeader {
-		// response headers have already been written in one of the handlers, do not proceed
-		return hw.data, false
-	} else {
-		return hw.data, true
-	}
+	return hw.data, !hw.wroteHeader
 }
 
-func ExecuteFragment(h Handler, dataMap map[string]interface{}, resp http.ResponseWriter, r *http.Request) (interface{}, bool) {
+func ExecuteFragment(h Fragment, dataMap map[string]interface{}, resp http.ResponseWriter, r *http.Request) (interface{}, bool) {
 	hw := fragmentWriter{
 		ResponseWriter: resp,
 		handler:        h,
@@ -46,17 +51,12 @@ func ExecuteFragment(h Handler, dataMap map[string]interface{}, resp http.Respon
 
 	h.Func()(&hw, r)
 
-	if hw.wroteHeader {
-		// response headers have already been written in one of the handlers, do not proceed
-		return hw.data, false
-	} else {
-		return hw.data, true
-	}
+	return hw.data, !hw.wroteHeader
 }
 
 type fragmentWriter struct {
 	http.ResponseWriter
-	handler     Handler
+	handler     Fragment
 	datamap     map[string]interface{}
 	data        interface{}
 	dataCalled  bool
