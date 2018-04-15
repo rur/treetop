@@ -64,7 +64,7 @@ window.treetop = (function ($, config) {
             req.setRequestHeader("content-type", encoding || "application/x-www-form-urlencoded");
         }
         req.onload = function () {
-            $.ajaxSuccess(req, suppressPushState);
+            $.xhrLoad(req, suppressPushState);
             onLoad.trigger();
         };
         req.send(data || null);
@@ -139,7 +139,7 @@ window.treetop = (function ($, config) {
      * @param {XMLHttpRequest} xhr The xhr instance used to make the request
      * @param {Boolean} suppressPushState Prevent new state being pushed to history
      */
-    ajaxSuccess: function (xhr, suppressPushState) {
+    xhrLoad: function (xhr, suppressPushState) {
         "use strict";
         var $ = this;
         var i, len, temp, child, old, nodes;
@@ -147,7 +147,11 @@ window.treetop = (function ($, config) {
         var responseContentType = xhr.getResponseHeader("content-type");
         var responseURL = xhr.getResponseHeader("x-response-url") || xhr.responseURL;
         if (responseContentType != $.PARTIAL_CONTENT_TYPE && responseContentType != $.FRAGMENT_CONTENT_TYPE) {
+            // TODO: Consider checking for 4xx and 5xx status and handle these responses differently
+            //       since the 'responseURL' may be a POST only or a treetop fragment route hence not accessible
+            //       the following way.
             window.location = responseURL;
+            return;
         }
 
         if (!suppressPushState && responseContentType == $.PARTIAL_CONTENT_TYPE && window.history) {
@@ -435,7 +439,7 @@ window.treetop = (function ($, config) {
 
             var nFile, sFieldType, oField, oSegmReq, oFile;
             var bIsPost = elm.method.toLowerCase() === "post";
-            var fFilter = window.escape;
+            var fFilter = window.encodeURIComponent;
 
             this.onRequestReady = callback;
             this.receiver = elm.action;
