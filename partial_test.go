@@ -13,11 +13,11 @@ type TestBase struct {
 }
 
 func handler(w DataWriter, r *http.Request) {
-	content, ok := w.Delegate("content", r)
+	content, ok := w.PartialData("content", r)
 	if !ok {
 		content = 999
 	}
-	footer, ok := w.Delegate("footer", r)
+	footer, ok := w.PartialData("footer", r)
 	if !ok {
 		footer = 999
 	}
@@ -38,12 +38,13 @@ func footerHandler(w DataWriter, r *http.Request) {
 
 func Test_resolveTemplatesForPartial(t *testing.T) {
 	base := NewPage("base.templ.html", handler)
-	content := base.DefineBlock("content")
-	footer := base.DefineBlock("footer").WithDefault("footer.templ.html", footerHandler)
-	sub := content.Extend("sub.templ.html", contentHandler)
-	subContent := sub.DefineBlock("subContent")
-	subSub := subContent.Extend("sub_sub.templ.html", Noop)
-	otherFooter := footer.Extend("other_footer.templ.html", footerHandler)
+	content := base.Block("content")
+	footer := base.Block("footer")
+	footer.DefaultPartial("footer.templ.html", footerHandler)
+	sub := content.Partial("sub.templ.html", contentHandler)
+	subContent := sub.Block("subContent")
+	subSub := subContent.Partial("sub_sub.templ.html", Noop)
+	otherFooter := footer.Partial("other_footer.templ.html", footerHandler)
 	subWithOther := sub.Includes(otherFooter)
 	subWithOther2 := subWithOther.Includes(
 		NewPage("orphan.templ.html", handler),

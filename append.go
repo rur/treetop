@@ -27,6 +27,7 @@ type appended struct {
 
 func (a *appended) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var isPartial bool
+	var status int
 	for _, accept := range strings.Split(r.Header.Get("Accept"), ",") {
 		if strings.Trim(accept, " ") == PartialContentType {
 			isPartial = true
@@ -51,9 +52,12 @@ func (a *appended) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	templates := resolvePartialTemplates(rootHandler, blockMap)
-	if data, proceed := ExecutePartial(rootHandler, blockMap, w, r); proceed {
+	if resp, proceed := ExecutePartial(rootHandler, blockMap, w, r); proceed {
 		// data was loaded successfully, now execute the templates
-		if err := a.execute(&render, templates, data); err != nil {
+		if resp.Status > status && status < 600 {
+			status = resp.Status
+		}
+		if err := a.execute(&render, templates, resp.Data); err != nil {
 			http.Error(w, fmt.Sprintf("Error executing templates: %s", err.Error()), http.StatusInternalServerError)
 			return
 		}
@@ -73,9 +77,12 @@ func (a *appended) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				partTemplates := resolvePartialTemplates(partHandler, partBlockMap)
-				if data, proceed := ExecutePartial(partHandler, partBlockMap, w, r); proceed {
+				if resp, proceed := ExecutePartial(partHandler, partBlockMap, w, r); proceed {
+					if resp.Status > status && status < 600 {
+						status = resp.Status
+					}
 					// data was loaded successfully, now execute the templates
-					if err := a.execute(&render, partTemplates, data); err != nil {
+					if err := a.execute(&render, partTemplates, resp.Data); err != nil {
 						http.Error(w, fmt.Sprintf("Error executing templates: %s", err.Error()), http.StatusInternalServerError)
 						return
 					}
@@ -88,9 +95,12 @@ func (a *appended) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		for _, fragment := range a.fragments {
 
-			if data, proceed := ExecuteFragment(fragment, map[string]interface{}{}, w, r); proceed {
+			if resp, proceed := ExecuteFragment(fragment, map[string]interface{}{}, w, r); proceed {
+				if resp.Status > status && status < 600 {
+					status = resp.Status
+				}
 				// data was loaded successfully, now execute the templates
-				if err := a.execute(&render, []string{fragment.Template()}, data); err != nil {
+				if err := a.execute(&render, []string{fragment.Template()}, resp.Data); err != nil {
 					http.Error(w, fmt.Sprintf("Error executing templates: %s", err.Error()), http.StatusInternalServerError)
 					return
 				}
@@ -108,6 +118,9 @@ func (a *appended) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// necessary to inform the caches. See https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.6
 	w.Header().Set("Vary", "Accept")
 
+	if status > 0 {
+		w.WriteHeader(status)
+	}
 	// write response body from byte buffer
 	render.WriteTo(w)
 }

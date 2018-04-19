@@ -10,7 +10,7 @@ func NewRenderer(execute TemplateExec) Renderer {
 	return &renderer{execute}
 }
 
-func (r *renderer) NewPage(template string, handlerFunc HandlerFunc) Partial {
+func (r *renderer) Page(template string, handlerFunc HandlerFunc) Partial {
 	rootBlock := blockInternal{
 		name:    "page root",
 		execute: r.execute,
@@ -27,7 +27,7 @@ func (r *renderer) NewPage(template string, handlerFunc HandlerFunc) Partial {
 	return &partial
 }
 
-func (r *renderer) NewFragment(template string, handlerFunc HandlerFunc) Fragment {
+func (r *renderer) Fragment(template string, handlerFunc HandlerFunc) Fragment {
 	fragment := fragmentInternal{
 		template:    template,
 		handlerFunc: handlerFunc,

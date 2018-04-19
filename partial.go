@@ -67,14 +67,19 @@ func (h *partialInternal) Template() string {
 func (h *partialInternal) Extends() Block {
 	return h.extends
 }
-func (h *partialInternal) DefineBlock(name string) Block {
-	block := blockInternal{
-		name:      name,
-		container: h,
-		execute:   h.execute,
+func (h *partialInternal) Block(name string) Block {
+	if b, ok := h.blocks[name]; ok {
+		return b
+	} else {
+		block := blockInternal{
+			name:      name,
+			container: h,
+			execute:   h.execute,
+		}
+		h.blocks[name] = &block
+		return &block
 	}
-	h.blocks[name] = &block
-	return &block
+
 }
 func (h *partialInternal) GetBlocks() map[string]Block {
 	return h.blocks
@@ -107,6 +112,7 @@ func (h *partialInternal) GetIncludes() map[Block]Partial {
 // Allow the use of treetop Hander as a HTTP handler
 func (h *partialInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var isPartial bool
+	var status int
 	for _, accept := range strings.Split(r.Header.Get("Accept"), ",") {
 		if strings.Trim(accept, " ") == PartialContentType {
 			isPartial = true
@@ -130,9 +136,12 @@ func (h *partialInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	templates := resolvePartialTemplates(rootHandler, blockMap)
-	if data, proceed := ExecutePartial(rootHandler, blockMap, w, r); proceed {
+	if resp, proceed := ExecutePartial(rootHandler, blockMap, w, r); proceed {
+		if resp.Status > status {
+			status = resp.Status
+		}
 		// data was loaded successfully, now execute the templates
-		if err := h.execute(&render, templates, data); err != nil {
+		if err := h.execute(&render, templates, resp.Data); err != nil {
 			http.Error(w, fmt.Sprintf("Error executing templates: %s", err.Error()), http.StatusInternalServerError)
 			return
 		}
@@ -152,9 +161,12 @@ func (h *partialInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				partTemplates := resolvePartialTemplates(partHandler, partBlockMap)
-				if data, proceed := ExecutePartial(partHandler, partBlockMap, w, r); proceed {
+				if resp, proceed := ExecutePartial(partHandler, partBlockMap, w, r); proceed {
+					if resp.Status > status {
+						status = resp.Status
+					}
 					// data was loaded successfully, now execute the templates
-					if err := h.execute(&render, partTemplates, data); err != nil {
+					if err := h.execute(&render, partTemplates, resp.Data); err != nil {
 						http.Error(w, fmt.Sprintf("Error executing templates: %s", err.Error()), http.StatusInternalServerError)
 						return
 					}
@@ -173,6 +185,9 @@ func (h *partialInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// necessary to inform the caches. See https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.6
 	w.Header().Set("Vary", "Accept")
 
+	if status > 0 {
+		w.WriteHeader(status)
+	}
 	// write response body from byte buffer
 	render.WriteTo(w)
 }

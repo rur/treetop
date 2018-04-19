@@ -20,6 +20,7 @@ type fragmentInternal struct {
 	template    string
 	handlerFunc HandlerFunc
 	execute     TemplateExec
+	extends     Block
 }
 
 func (h *fragmentInternal) String() string {
@@ -38,10 +39,14 @@ func (h *fragmentInternal) Func() HandlerFunc {
 func (h *fragmentInternal) Template() string {
 	return h.template
 }
+func (h *fragmentInternal) Extends() Block {
+	return h.extends
+}
 
 // Allow the use of treetop Hander as a HTTP handler
 func (h *fragmentInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var isFragment bool
+	var status int
 	for _, accept := range strings.Split(r.Header.Get("Accept"), ",") {
 		if strings.Trim(accept, " ") == FragmentContentType {
 			isFragment = true
@@ -55,9 +60,12 @@ func (h *fragmentInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	var render bytes.Buffer
 
-	if data, proceed := ExecuteFragment(h, map[string]interface{}{}, w, r); proceed {
+	if resp, proceed := ExecuteFragment(h, map[string]interface{}{}, w, r); proceed {
+		if resp.Status > status {
+			status = resp.Status
+		}
 		// data was loaded successfully, now execute the templates
-		if err := h.execute(&render, []string{h.template}, data); err != nil {
+		if err := h.execute(&render, []string{h.template}, resp.Data); err != nil {
 			http.Error(w, fmt.Sprintf("Error executing templates: %s", err.Error()), http.StatusInternalServerError)
 			return
 		}
@@ -74,6 +82,9 @@ func (h *fragmentInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// necessary to inform the caches. See https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.6
 	w.Header().Set("Vary", "Accept")
 
+	if status > 0 {
+		w.WriteHeader(status)
+	}
 	// write response body from byte buffer
 	render.WriteTo(w)
 }

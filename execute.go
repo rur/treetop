@@ -1,7 +1,6 @@
 package treetop
 
 import (
-	"fmt"
 	"html/template"
 	"io"
 	"net/http"
@@ -30,7 +29,7 @@ func DefaultTemplateExec(w io.Writer, templates []string, data interface{}) erro
 	return nil
 }
 
-func ExecutePartial(h Partial, handlerMap map[Block]Partial, resp http.ResponseWriter, r *http.Request) (interface{}, bool) {
+func ExecutePartial(h Partial, handlerMap map[Block]Partial, resp http.ResponseWriter, r *http.Request) (Response, bool) {
 	hw := partialWriter{
 		ResponseWriter: resp,
 		handler:        h,
@@ -39,10 +38,10 @@ func ExecutePartial(h Partial, handlerMap map[Block]Partial, resp http.ResponseW
 
 	h.Func()(&hw, r)
 
-	return hw.data, !hw.wroteHeader
+	return Response{hw.data, hw.status}, !hw.wroteContent
 }
 
-func ExecuteFragment(h Fragment, dataMap map[string]interface{}, resp http.ResponseWriter, r *http.Request) (interface{}, bool) {
+func ExecuteFragment(h Fragment, dataMap map[string]interface{}, resp http.ResponseWriter, r *http.Request) (Response, bool) {
 	hw := fragmentWriter{
 		ResponseWriter: resp,
 		handler:        h,
@@ -51,25 +50,26 @@ func ExecuteFragment(h Fragment, dataMap map[string]interface{}, resp http.Respo
 
 	h.Func()(&hw, r)
 
-	return hw.data, !hw.wroteHeader
+	return Response{hw.data, hw.status}, !hw.wroteContent
 }
 
 type fragmentWriter struct {
 	http.ResponseWriter
-	handler     Fragment
-	datamap     map[string]interface{}
-	data        interface{}
-	dataCalled  bool
-	wroteHeader bool
+	handler      Fragment
+	datamap      map[string]interface{}
+	data         interface{}
+	dataCalled   bool
+	wroteContent bool
+	status       int
 }
 
 func (fw *fragmentWriter) Write(b []byte) (int, error) {
-	fw.wroteHeader = true
+	fw.wroteContent = true
 	return fw.ResponseWriter.Write(b)
 }
 
 func (fw *fragmentWriter) WriteHeader(code int) {
-	fw.wroteHeader = true
+	fw.wroteContent = true
 	fw.ResponseWriter.WriteHeader(code)
 }
 
@@ -78,8 +78,12 @@ func (fw *fragmentWriter) Data(d interface{}) {
 	fw.dataCalled = true
 }
 
-func (fw *fragmentWriter) Delegate(name string, r *http.Request) (interface{}, bool) {
-	if fw.wroteHeader {
+func (fw *fragmentWriter) Status(code int) {
+	fw.status = code
+}
+
+func (fw *fragmentWriter) PartialData(name string, r *http.Request) (interface{}, bool) {
+	if fw.wroteContent {
 		// response has already been written, nothing to do
 		return nil, false
 	}
@@ -91,20 +95,21 @@ func (fw *fragmentWriter) Delegate(name string, r *http.Request) (interface{}, b
 // implements treetop.go:DataWriter interface
 type partialWriter struct {
 	http.ResponseWriter
-	handler     Partial
-	handlerMap  map[Block]Partial
-	data        interface{}
-	dataCalled  bool
-	wroteHeader bool
+	handler      Partial
+	handlerMap   map[Block]Partial
+	data         interface{}
+	dataCalled   bool
+	wroteContent bool
+	status       int
 }
 
 func (dw *partialWriter) Write(b []byte) (int, error) {
-	dw.wroteHeader = true
+	dw.wroteContent = true
 	return dw.ResponseWriter.Write(b)
 }
 
 func (dw *partialWriter) WriteHeader(code int) {
-	dw.wroteHeader = true
+	dw.wroteContent = true
 	dw.ResponseWriter.WriteHeader(code)
 }
 
@@ -113,19 +118,19 @@ func (dw *partialWriter) Data(d interface{}) {
 	dw.dataCalled = true
 }
 
-func (dw *partialWriter) Delegate(name string, r *http.Request) (interface{}, bool) {
-	if dw.wroteHeader {
+func (dw *partialWriter) Status(code int) {
+	if code >= 100 && code < 600 && code > dw.status {
+		dw.status = code
+	}
+}
+
+func (dw *partialWriter) PartialData(name string, r *http.Request) (interface{}, bool) {
+	if dw.wroteContent {
 		// response has already been written, nothing to do
 		return nil, false
 	}
 
-	block, ok := dw.handler.GetBlocks()[name]
-	if !ok {
-		// TODO: Add better error logging/handling and make sure this wont cause issues elsewhere!!!
-		http.Error(dw, fmt.Sprintf("Unable to delegate to a handler that has not been defined '%s'", name), 500)
-		return nil, false
-	}
-
+	block := dw.handler.Block(name)
 	handler, ok := dw.handlerMap[block]
 	if !ok {
 		return nil, false
@@ -140,8 +145,8 @@ func (dw *partialWriter) Delegate(name string, r *http.Request) (interface{}, bo
 	f := handler.Func()
 	f(&dw2, r)
 
-	if dw2.wroteHeader {
-		dw.wroteHeader = true
+	if dw2.wroteContent {
+		dw.wroteContent = true
 		return nil, false
 	}
 

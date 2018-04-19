@@ -17,11 +17,6 @@ func (b *blockInternal) Name() string {
 	return b.name
 }
 
-func (b *blockInternal) WithDefault(template string, handlerFunc HandlerFunc) Block {
-	b.defaultPartial = b.Extend(template, handlerFunc)
-	return b
-}
-
 func (b *blockInternal) SetDefault(h Partial) Block {
 	b.defaultPartial = h
 	return b
@@ -35,7 +30,7 @@ func (b *blockInternal) Container() Partial {
 	return b.container
 }
 
-func (b *blockInternal) Extend(template string, handlerFunc HandlerFunc) Partial {
+func (b *blockInternal) Partial(template string, handlerFunc HandlerFunc) Partial {
 	h := partialInternal{
 		template:    template,
 		handlerFunc: handlerFunc,
@@ -45,4 +40,18 @@ func (b *blockInternal) Extend(template string, handlerFunc HandlerFunc) Partial
 		execute:     b.execute,
 	}
 	return &h
+}
+
+func (b *blockInternal) DefaultPartial(template string, handlerFunc HandlerFunc) Partial {
+	b.defaultPartial = b.Partial(template, handlerFunc)
+	return b.defaultPartial
+}
+
+func (b *blockInternal) Fragment(template string, handlerFunc HandlerFunc) Fragment {
+	f := fragmentInternal{
+		template:    template,
+		handlerFunc: handlerFunc,
+		extends:     b,
+	}
+	return &f
 }

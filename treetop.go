@@ -13,18 +13,30 @@ const (
 
 type DataWriter interface {
 	http.ResponseWriter
-	// render the template with the supplied data
+	// Set the data to be passed to the template
 	Data(interface{})
+	// Indicate the http status of the response, since there are potentially
+	// multiple handling functions per request this will not necessarily be the final
+	// status code for the response. Given multiple valid calls to Status during a request,
+	// the upper bound of the ordered set (Statuses, ≤) will be chosen for the response.
+	// If no valid status is specified, the http.ResponseWriter default is 200 OK.
+	Status(int)
 	// load data from specified child handler
-	Delegate(string, *http.Request) (interface{}, bool)
+	PartialData(string, *http.Request) (interface{}, bool)
+}
+
+type Response struct {
+	Data   interface{}
+	Status int
 }
 
 type Block interface {
 	fmt.Stringer
-	WithDefault(string, HandlerFunc) Block
-	SetDefault(Partial) Block
 	Default() Partial
-	Extend(string, HandlerFunc) Partial
+	SetDefault(Partial) Block
+	Fragment(string, HandlerFunc) Fragment
+	Partial(string, HandlerFunc) Partial
+	DefaultPartial(string, HandlerFunc) Partial
 	Container() Partial
 }
 
@@ -33,20 +45,20 @@ type Fragment interface {
 	http.Handler
 	Func() HandlerFunc
 	Template() string
+	Extends() Block
 }
 
 type Partial interface {
 	Fragment
-	DefineBlock(string) Block
-	Extends() Block
+	Block(string) Block
 	GetBlocks() map[string]Block
 	Includes(...Partial) Partial
 	GetIncludes() map[Block]Partial
 }
 
 type Renderer interface {
-	NewPage(string, HandlerFunc) Partial
-	NewFragment(string, HandlerFunc) Fragment
+	Page(string, HandlerFunc) Partial
+	Fragment(string, HandlerFunc) Fragment
 	Append(Partial, ...Fragment) http.Handler
 }
 
