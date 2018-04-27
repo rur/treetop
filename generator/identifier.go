@@ -20,7 +20,7 @@ func newIdentifiers() uniqueIdentifiers {
 
 // pretty lo-fi slugify, remove all non-alphanum and lowercase first character
 func namelike(name string) string {
-	reg, err := regexp.Compile("[^a-zA-Z0-9-]+")
+	reg, err := regexp.Compile("[^a-zA-Z0-9-_]+")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -30,24 +30,21 @@ func namelike(name string) string {
 	return string(mutable)
 }
 
+func delims(r rune) bool {
+	return r == '_' || r == '-'
+}
+
 // convert a name to a valid identifier, leading digits will be stripped
 func validIdentifier(name string) string {
 	nme := namelike(name)
-	parts := strings.Split(nme, "-")
+	parts := strings.FieldsFunc(nme, delims)
 	fixed := make([]string, len(parts))
 
-	word := []rune(parts[0])
-	for {
-		if len(word) == 0 {
-			fixed[0] = "var"
-			break
-		} else if unicode.IsDigit(word[0]) {
-			word = word[1:]
-		} else {
-			word[0] = unicode.ToLower(word[0])
-			fixed[0] = string(word)
-			break
-		}
+	leading := strings.TrimLeft(parts[0], "0123456789")
+	if len(leading) == 0 {
+		fixed[0] = "var"
+	} else {
+		fixed[0] = strings.ToLower(leading)
 	}
 
 	for i := 1; i < len(parts); i++ {
