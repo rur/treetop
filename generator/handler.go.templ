@@ -6,10 +6,10 @@ import (
 	"github.com/rur/treetop"
 )
 
-{{ range _, $handler := .Handlers }}
+{{ range $index, $handler := .Handlers }}
 	{{ if len $handler.Blocks }}
-func {{ $handler.Name }}(cxt *serverContext, w treetop.DataWriter, req *http.Request) {
-	{{ range _, $block := .Blocks }}
+func {{ $handler.Identifier }}Handler(cxt *Context, w treetop.DataWriter, req *http.Request) {
+	{{ range $index, $block := .Blocks }}
 	{{ $block.Identifier }}, ok := w.PartialData("{{ $block.Name }}", req)
 	if !ok {
 		// default {{ $block.Name }} data
@@ -18,16 +18,16 @@ func {{ $handler.Name }}(cxt *serverContext, w treetop.DataWriter, req *http.Req
 	{{ end }}
 	w.Data(struct {
 		HandlerInfo string,
-		{{ range _, $block := .Blocks }}{{ $block.FieldName }} interface{}
+		{{ range $index, $block := .Blocks }}{{ $block.FieldName }} interface{}
 		{{ end }}
 	}{
 		HandlerInfo: "{{ $handler.Info }}",
-		{{ range _, $block := .Blocks }}{{ $block.FieldName }} {{ $block.Identifier }},
+		{{ range $index, $block := .Blocks }}{{ $block.FieldName }} {{ $block.Identifier }},
 		{{ end }}
 	})
 }
 	{{ else }}
-func {{ $handler.Name }}(cxt *serverContext, w treetop.DataWriter, req *http.Request) {
+func {{ $handler.Identifier }}Handler(cxt *Context, w treetop.DataWriter, req *http.Request) {
 	w.Data("{{ $handler.Info }}")
 }
 	{{ end }}

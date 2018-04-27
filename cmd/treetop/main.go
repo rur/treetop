@@ -85,17 +85,17 @@ func generate(defs []generator.PartialDef) (string, []string, error) {
 	}
 	created = append(created, prependEach(files, "templates")...)
 
-	files, err = generator.CreateServer(templatesDir, defs)
+	serverDir := filepath.Join(outDir, "server")
+	if err := os.Mkdir(serverDir, os.ModePerm); err != nil {
+		return outDir, created, err
+	}
+
+	files, err = generator.CreateSeverFiles(serverDir, defs)
 	if err != nil {
 		return outDir, created, err
 	}
 	created = append(created, prependEach(files, "server")...)
 
-	files, err = generator.CreateHandlers(templatesDir, defs)
-	if err != nil {
-		return outDir, created, err
-	}
-	created = append(created, prependEach(files, "server")...)
 	return outDir, created, nil
 }
 

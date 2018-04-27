@@ -5,11 +5,11 @@ import (
 )
 
 type PartialDef struct {
-	Name     string                  `json:"name"`
-	Default  bool                    `json:"default"`
-	Path     string                  `json:"path"`
-	Template string                  `json:"template"`
-	Blocks   map[string][]PartialDef `json:"blocks"`
+	Name     string                  `yaml:"name"`
+	Default  bool                    `yaml:"default"`
+	Path     string                  `yaml:"path"`
+	Template string                  `yaml:"template"`
+	Blocks   map[string][]PartialDef `yaml:"blocks"`
 }
 
 func LoadPartialDef(data []byte) ([]PartialDef, error) {

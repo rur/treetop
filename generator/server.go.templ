@@ -6,48 +6,49 @@ import (
 	"github.com/rur/treetop"
 )
 
-type serverContext struct {
+type Context struct {
 	Example bool
 }
 
-func (s *serverContext) bind(f func(*serverContext, treetop.DataWriter, *http.Request)) treetop.HandlerFunc {
+func (c *Context) bind(f func(*Context, treetop.DataWriter, *http.Request)) treetop.HandlerFunc {
 	return func(w treetop.DataWriter, req *http.Request) {
-		f(s, w, req)
+		f(c, w, req)
 	}
 }
 
-func NewTreetopServer() http.Handler {
-	server := serverContext{true}
-	mux := http.NewServeMux()
-	renderer := treetop.NewRenderer(treetop.DefaultTemplateExec)
-{{ range _, $page := .Pages }}
-	{{ $page.Identifier }}Page(&server, mux, renderer)
-{{ end }}
-	return mux
+type mux interface {
+	Handle(pattern string, handler http.Handler)
 }
 
+func NewTreetopServer(m mux, cxt Context) {
+	renderer := treetop.NewRenderer(treetop.DefaultTemplateExec)
+{{ range $index, $page := .Pages }}
+	{{ $page.Identifier }}Page(&cxt, m, renderer)
+{{- end }}
+}
 
-{{ range _, $page := .Pages -}}
-func {{ $page.Identifier }}Page(context *serverContext, mux *http.ServeMux, renderer treetop.Renderer) {
-	page := treetop.NewPage("base", context.bind(baseHandler))
-	{{ range _, $block := $page.Blocks -}}
+{{ range $index, $page := .Pages -}}
+func {{ $page.Identifier }}Page(context *Context, m mux, renderer treetop.Renderer) {
+	{{ $page.Identifier }} := renderer.Page("{{ $page.Template }}", context.bind({{ $page.Identifier }}Handler))
+	{{ range $index, $block := $page.Blocks -}}
 		{{ $block.Identifier }} := {{ $page.Identifier }}.Block("{{ $block.Name }}")
 	{{ end }}
-	{{ range _, $entry := $page.Entries -}}
-		{{ if eq $entry.Type "Block" -}}
-			{{ $entry.Identifier }} := {{ $entry.Extends }}.Block("{{ $entry.Value }}")
-		{{ else if eq $entry.Type "DefaultPartial" -}}
-			{{ $entry.Identifier }} := {{ $entry.Extends }}.DefaultPartial("{{ $entry.Value }}", context.bind({{ $entry.Handler }}))
-		{{ else if eq $entry.Type "Partial" -}}
-			{{ $entry.Identifier }} := {{ $entry.Extends }}.Partial("{{ $entry.Value }}", context.bind({{ $entry.Handler }}))
-		{{ else if eq $entry.Type "Fragment" -}}
-			{{ $entry.Identifier }} := {{ $entry.Extends }}.Fragment("{{ $entry.Value }}", context.bind({{ $entry.Handler }}))
-		{{ else -}}
-			// unknown entry type: {{ $entry.Type }}
-		{{ end }}
+	{{ range $index, $entry := $page.Entries -}}
+	{{ if eq $entry.Type "Block" -}}
+	{{ $entry.Identifier }} := {{ $entry.Extends }}.Block("{{ $entry.Value }}")
+	{{- else if eq $entry.Type "DefaultPartial" -}}
+	{{ $entry.Identifier }} := {{ $entry.Extends }}.DefaultPartial("{{ $entry.Value }}", context.bind({{ $entry.Identifier }}Handler))
+	{{- else if eq $entry.Type "Partial" -}}
+	{{ $entry.Identifier }} := {{ $entry.Extends }}.Partial("{{ $entry.Value }}", context.bind({{ $entry.Identifier }}Handler))
+	{{- else if eq $entry.Type "Fragment" -}}
+	{{ $entry.Identifier }} := {{ $entry.Extends }}.Fragment("{{ $entry.Value }}", context.bind({{ $entry.Identifier }}Handler))
+{{- else if eq $entry.Type "Spacer" }}{{ else -}}
+	nil // unknown entry type: {{ $entry.Type }}
+	{{- end }}
 	{{ end }}
-	{{ range _, $route := .Routes -}}
-		mux.Handle("{{ $route.Path }}", {{ $route.Handler }})
-	{{ end }}
+	{{ range $index, $route := .Routes -}}
+		m.Handle("{{ $route.Path }}", {{ $route.Identifier }}Handler)
+	{{- end }}
 }
+
 {{ end }}

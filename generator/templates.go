@@ -53,7 +53,7 @@ func CreateTemplateFiles(dir string, defs []PartialDef) ([]string, error) {
 	return created, nil
 }
 
-func handleDef(def PartialDef, prefix string, folder string, extends string) ([]string, error) {
+func handleDef(def PartialDef, prefix, folder, extends string) ([]string, error) {
 	created := make([]string, 0, 1+len(def.Blocks))
 	var filename string
 	if prefix != "" {
