@@ -26,18 +26,22 @@
             - default: true
               name: user-roles-list
               path: /admin/users/{user}/roles
-              name: user-roles-edit
+
+            - name: user-roles-edit
               path: /admin/users/{user}/edit
-              name: user-assign-roles
+
+            - name: user-assign-roles
               path: /admin/users/{user}/assign
 
             - fragment: true
               name: user-find-roles-results
               path: /admin/users/{user}/find-role-roles
-              fragment: true
+
+            - fragment: true
               name: user-assign-role-complete
               path: /admin/users/{user}/assign-roles-complete
-              fragment: true
+
+            - fragment: true
               name: user-revoke-role-complete
               path: /admin/users/{user}/revoke-roles-complete
 
@@ -48,21 +52,26 @@
             - default: true
               name: role-users-list
               path: /admin/roles/{role}/users
-              name: role-users-edit
+
+            - name: role-users-edit
               path: /admin/roles/{role}/edit
-              name: role-assign-users
+
+            - name: role-assign-users
               path: /admin/roles/{role}/assign
 
             - fragment: true
               name: role-assign-results-roles
               path: /admin/roles/{role}/find-user-roles-results
-              fragment: true
+
+            - fragment: true
               name: role-assign-results-users
               path: /admin/roles/{role}/find-users-results
-              fragment: true
+
+            - fragment: true
               name: role-assign-role-complete
               path: /admin/roles/{role}/assign-role-users-complete
-              fragment: true
+
+            - fragment: true
               name: role-revoke-users-complete
               path: /admin/roles/{role}/assign-users-complete
 

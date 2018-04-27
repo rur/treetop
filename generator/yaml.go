@@ -6,6 +6,7 @@ import (
 
 type PartialDef struct {
 	Name     string                  `yaml:"name"`
+	Fragment bool                    `yaml:"fragment"`
 	Default  bool                    `yaml:"default"`
 	Path     string                  `yaml:"path"`
 	Template string                  `yaml:"template"`

@@ -46,8 +46,8 @@ func {{ $page.Identifier }}Page(context *Context, m mux, renderer treetop.Render
 	nil // unknown entry type: {{ $entry.Type }}
 	{{- end }}
 	{{ end }}
-	{{ range $index, $route := .Routes -}}
-		m.Handle("{{ $route.Path }}", {{ $route.Identifier }}Handler)
+	{{ range $index, $route := .Routes }}
+	m.Handle("{{ $route.Path }}", {{ $route.Identifier }})
 	{{- end }}
 }
 

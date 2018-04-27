@@ -75,8 +75,14 @@ func CreateSeverFiles(dir string, pageDefs []PartialDef) ([]string, error) {
 			Identifier: idents.new(def.Name, "Page"),
 			Template:   fmt.Sprintf("%s.templ.html", namelike(def.Name)),
 			Entries:    make([]entry, 0),
-			Routes:     make([]route, 0),
 			Blocks:     make([]block, 0, len(def.Blocks)),
+		}
+
+		if def.Path != "" {
+			newPage.Routes = []route{route{
+				Identifier: newPage.Identifier,
+				Path:       def.Path,
+			}}
 		}
 
 		for blockName, partials := range def.Blocks {
@@ -87,11 +93,12 @@ func CreateSeverFiles(dir string, pageDefs []PartialDef) ([]string, error) {
 			}
 			newPage.Blocks = append(newPage.Blocks, newBlock)
 			for _, partial := range partials {
-				entries, err := aggregateEntries(&idents, namelike(def.Name), newBlock.Identifier, partial)
+				entries, partRoutes, err := aggregateEntries(&idents, namelike(def.Name), newBlock.Identifier, partial)
 				if err != nil {
 					return created, err
 				}
 				newPage.Entries = append(newPage.Entries, entries...)
+				newPage.Routes = append(newPage.Routes, partRoutes...)
 			}
 		}
 		pages = append(pages, newPage)
@@ -134,7 +141,7 @@ func CreateSeverFiles(dir string, pageDefs []PartialDef) ([]string, error) {
 	return created, nil
 }
 
-func aggregateEntries(idents *uniqueIdentifiers, prefix, extends string, part PartialDef) ([]entry, error) {
+func aggregateEntries(idents *uniqueIdentifiers, prefix, extends string, part PartialDef) ([]entry, []route, error) {
 	var prefixN string
 	if prefix != "" {
 		prefixN = strings.Join([]string{prefix, namelike(part.Name)}, "_")
@@ -142,14 +149,32 @@ func aggregateEntries(idents *uniqueIdentifiers, prefix, extends string, part Pa
 		prefixN = namelike(part.Name)
 	}
 
+	var entryType string
+	if part.Fragment {
+		entryType = "Fragment"
+	} else if part.Default {
+		entryType = "DefaultPartial"
+	} else {
+		entryType = "Partial"
+	}
+
 	newEntry := entry{
 		Extends:    extends,
-		Identifier: idents.new(part.Name, "Partial"),
-		Type:       "Partial",
+		Identifier: idents.new(part.Name, entryType),
+		Type:       entryType,
 		Value:      fmt.Sprintf("%s.templ.html", prefixN),
 	}
 
+	var routes []route
 	entries := []entry{newEntry}
+
+	if part.Path != "" {
+		routes = []route{route{
+			Identifier: newEntry.Identifier,
+			Path:       part.Path,
+		}}
+	}
+
 	for blockName, partials := range part.Blocks {
 		blockEntry := entry{
 			Extends:    newEntry.Identifier,
@@ -165,16 +190,17 @@ func aggregateEntries(idents *uniqueIdentifiers, prefix, extends string, part Pa
 			blockEntry,
 		)
 		for _, partial := range partials {
-			subEntries, err := aggregateEntries(idents, prefixN, blockEntry.Identifier, partial)
+			subEntries, subRoutes, err := aggregateEntries(idents, prefixN, blockEntry.Identifier, partial)
 			if err != nil {
-				return entries, err
+				return entries, routes, err
 			}
 			entries = append(entries, subEntries...)
+			routes = append(routes, subRoutes...)
 		}
 		entries = append(entries, entry{
 			Type: "Spacer",
 		})
 	}
 
-	return entries, nil
+	return entries, routes, nil
 }
