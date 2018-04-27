@@ -1,0 +1,35 @@
+package server
+
+import (
+	"net/http"
+
+	"github.com/rur/treetop"
+)
+
+{{ range _, $handler := .Handlers }}
+	{{ if len $handler.Blocks }}
+func {{ $handler.Name }}(cxt *serverContext, w treetop.DataWriter, req *http.Request) {
+	{{ range _, $block := .Blocks }}
+	{{ $block.Identifier }}, ok := w.PartialData("{{ $block.Name }}", req)
+	if !ok {
+		// default {{ $block.Name }} data
+		{{ $block.Identifier }} = nil
+	}
+	{{ end }}
+	w.Data(struct {
+		HandlerInfo string,
+		{{ range _, $block := .Blocks }}{{ $block.FieldName }} interface{}
+		{{ end }}
+	}{
+		HandlerInfo: "{{ $handler.Info }}",
+		{{ range _, $block := .Blocks }}{{ $block.FieldName }} {{ $block.Identifier }},
+		{{ end }}
+	})
+}
+	{{ else }}
+func {{ $handler.Name }}(cxt *serverContext, w treetop.DataWriter, req *http.Request) {
+	w.Data("{{ $handler.Info }}")
+}
+	{{ end }}
+
+{{ end }}

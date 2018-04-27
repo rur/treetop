@@ -68,19 +68,41 @@ func main() {
 }
 
 func generate(defs []generator.PartialDef) (string, []string, error) {
+	created := make([]string, 0)
 	outDir, err := ioutil.TempDir("", "")
 	if err != nil {
-		log.Fatal(err)
+		return outDir, created, err
 	}
 
 	templatesDir := filepath.Join(outDir, "templates")
 	if err := os.Mkdir(templatesDir, os.ModePerm); err != nil {
-		log.Fatal(err)
+		return outDir, created, err
 	}
 
-	created, err := generator.CreateTemplateFiles(templatesDir, defs)
+	files, err := generator.CreateTemplateFiles(templatesDir, defs)
 	if err != nil {
 		return outDir, created, err
 	}
+	created = append(created, prependEach(files, "templates")...)
+
+	files, err = generator.CreateServer(templatesDir, defs)
+	if err != nil {
+		return outDir, created, err
+	}
+	created = append(created, prependEach(files, "server")...)
+
+	files, err = generator.CreateHandlers(templatesDir, defs)
+	if err != nil {
+		return outDir, created, err
+	}
+	created = append(created, prependEach(files, "server")...)
 	return outDir, created, nil
+}
+
+func prependEach(files []string, prefix string) []string {
+	out := make([]string, len(files))
+	for i := 0; i < len(files); i++ {
+		out[i] = filepath.Join(prefix, files[i])
+	}
+	return out
 }
