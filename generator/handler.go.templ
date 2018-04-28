@@ -7,9 +7,10 @@ import (
 )
 
 {{ range $index, $handler := .Handlers }}
-	{{ if len $handler.Blocks }}
+{{ if $handler.Doc }}// {{ $handler.Doc }}
+{{- end }}{{ if len $handler.Blocks}}
 func {{ $handler.Identifier }}Handler(cxt *Context, w treetop.DataWriter, req *http.Request) {
-	{{ range $index, $block := .Blocks }}
+	{{ range $index, $block := .Blocks -}}
 	{{ $block.Identifier }}, ok := w.PartialData("{{ $block.Name }}", req)
 	if !ok {
 		// default {{ $block.Name }} data
@@ -17,19 +18,16 @@ func {{ $handler.Identifier }}Handler(cxt *Context, w treetop.DataWriter, req *h
 	}
 	{{ end }}
 	w.Data(struct {
-		HandlerInfo string,
-		{{ range $index, $block := .Blocks }}{{ $block.FieldName }} interface{}
-		{{ end }}
+		HandlerInfo string{{ range $index, $block := .Blocks }}
+		{{ $block.FieldName }} interface{}
+		{{- end }}
 	}{
-		HandlerInfo: "{{ $handler.Info }}",
-		{{ range $index, $block := .Blocks }}{{ $block.FieldName }} {{ $block.Identifier }},
-		{{ end }}
+		HandlerInfo: "{{ $handler.Info }}",{{ range $index, $block := .Blocks }}
+		{{ $block.FieldName }}: {{ $block.Identifier }},
+		{{- end }}
 	})
-}
-	{{ else }}
+}{{ else }}
 func {{ $handler.Identifier }}Handler(cxt *Context, w treetop.DataWriter, req *http.Request) {
-	w.Data("{{ $handler.Info }}")
-}
-	{{ end }}
-
+	w.Data("{{ $handler.Info }} template data here!")
+}{{ end }}
 {{ end }}

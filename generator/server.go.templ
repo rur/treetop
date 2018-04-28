@@ -21,8 +21,7 @@ type mux interface {
 }
 
 func NewTreetopServer(m mux, cxt Context) {
-	renderer := treetop.NewRenderer(treetop.DefaultTemplateExec)
-{{ range $index, $page := .Pages }}
+	renderer := treetop.NewRenderer(treetop.DefaultTemplateExec){{ range $index, $page := .Pages }}
 	{{ $page.Identifier }}Page(&cxt, m, renderer)
 {{- end }}
 }
@@ -45,8 +44,7 @@ func {{ $page.Identifier }}Page(context *Context, m mux, renderer treetop.Render
 {{- else if eq $entry.Type "Spacer" }}{{ else -}}
 	nil // unknown entry type: {{ $entry.Type }}
 	{{- end }}
-	{{ end }}
-	{{ range $index, $route := .Routes }}
+	{{ end }}{{ range $index, $route := .Routes }}
 	m.Handle("{{ $route.Path }}", {{ $route.Identifier }})
 	{{- end }}
 }

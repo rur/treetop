@@ -1,9 +1,18 @@
 
 - name: base
+  doc: Assemble application configuration including user authorization details
   blocks:
+    nav:
+      - name: main-nav
+        default: true
+        doc: principle navigation for site
+      - name: settings-nav
+        doc: navigation while in settings view
+
     wrapper:
       - name: landing
         default: true
+        doc: General admin search area
         path: /admin
         blocks:
           landing-results:
@@ -14,12 +23,15 @@
               path: /admin/role-search
 
       - name: history
+        doc: Allow history log to be searched
         path: /admin/history
 
       - name: account
+        doc: Administer admin user account
         path: /admin/account
 
       - name: user
+        doc: Display user information
         path: /admin/user/{user}/
         blocks:
           user-content:
@@ -74,10 +86,3 @@
             - fragment: true
               name: role-revoke-users-complete
               path: /admin/roles/{role}/assign-users-complete
-
-      - name: message
-
-
-  flash:
-
-- name: admin

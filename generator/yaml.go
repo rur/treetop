@@ -10,6 +10,7 @@ type PartialDef struct {
 	Default  bool                    `yaml:"default"`
 	Path     string                  `yaml:"path"`
 	Template string                  `yaml:"template"`
+	Doc      string                  `yaml:"doc"`
 	Blocks   map[string][]PartialDef `yaml:"blocks"`
 }
 

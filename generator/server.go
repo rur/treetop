@@ -28,9 +28,10 @@ type block struct {
 }
 
 type handler struct {
-	Blocks []block
-	Info   string
-	Name   string
+	Blocks     []*block
+	Info       string
+	Doc        string
+	Identifier string
 }
 
 type route struct {
@@ -43,9 +44,9 @@ type page struct {
 	Template   string
 	Handler    string
 	Doc        string
-	Entries    []entry
-	Routes     []route
-	Blocks     []block
+	Entries    []*entry
+	Routes     []*route
+	Blocks     []*block
 }
 
 func init() {
@@ -65,7 +66,7 @@ func init() {
 func CreateSeverFiles(dir string, pageDefs []PartialDef) ([]string, error) {
 	var created []string
 	pages := make([]page, 0, len(pageDefs))
-	var handlers []handler
+	var handlers []*handler
 
 	// all 'identifiers' must be unique,
 	idents := newIdentifiers()
@@ -74,31 +75,44 @@ func CreateSeverFiles(dir string, pageDefs []PartialDef) ([]string, error) {
 		newPage := page{
 			Identifier: idents.new(def.Name, "Page"),
 			Template:   fmt.Sprintf("%s.templ.html", namelike(def.Name)),
-			Entries:    make([]entry, 0),
-			Blocks:     make([]block, 0, len(def.Blocks)),
+			Entries:    make([]*entry, 0),
+			Blocks:     make([]*block, 0, len(def.Blocks)),
+		}
+		pageHandler := handler{
+			Info:       def.Name,
+			Doc:        def.Doc,
+			Identifier: newPage.Identifier,
 		}
 
+		handlers = append(handlers, &pageHandler)
+
 		if def.Path != "" {
-			newPage.Routes = []route{route{
+			newPage.Routes = []*route{&route{
 				Identifier: newPage.Identifier,
 				Path:       def.Path,
 			}}
 		}
 
 		for blockName, partials := range def.Blocks {
+			pageHandler.Blocks = append(pageHandler.Blocks, &block{
+				Identifier: validIdentifier(blockName),
+				Name:       blockName,
+				FieldName:  validPublicIdentifier(blockName),
+			})
 			newBlock := block{
 				FieldName:  blockName,
 				Identifier: idents.new(blockName, "Block"),
 				Name:       blockName,
 			}
-			newPage.Blocks = append(newPage.Blocks, newBlock)
+			newPage.Blocks = append(newPage.Blocks, &newBlock)
 			for _, partial := range partials {
-				entries, partRoutes, err := aggregateEntries(&idents, namelike(def.Name), newBlock.Identifier, partial)
+				entries, routes, partHandlers, err := aggregateEntries(&idents, namelike(def.Name), newBlock.Identifier, partial)
 				if err != nil {
 					return created, err
 				}
 				newPage.Entries = append(newPage.Entries, entries...)
-				newPage.Routes = append(newPage.Routes, partRoutes...)
+				newPage.Routes = append(newPage.Routes, routes...)
+				handlers = append(handlers, partHandlers...)
 			}
 		}
 		pages = append(pages, newPage)
@@ -121,7 +135,7 @@ func CreateSeverFiles(dir string, pageDefs []PartialDef) ([]string, error) {
 		return created, err
 	}
 
-	handlerFile := "handler.go"
+	handlerFile := "handlers.go"
 	handlerPath := filepath.Join(dir, handlerFile)
 	hf, err := os.Create(handlerPath)
 	if err != nil {
@@ -130,7 +144,7 @@ func CreateSeverFiles(dir string, pageDefs []PartialDef) ([]string, error) {
 	created = append(created, handlerFile)
 	defer hf.Close()
 	err = handlerTemplate.Execute(hf, struct {
-		Handlers []handler
+		Handlers []*handler
 	}{
 		Handlers: handlers,
 	})
@@ -141,7 +155,7 @@ func CreateSeverFiles(dir string, pageDefs []PartialDef) ([]string, error) {
 	return created, nil
 }
 
-func aggregateEntries(idents *uniqueIdentifiers, prefix, extends string, part PartialDef) ([]entry, []route, error) {
+func aggregateEntries(idents *uniqueIdentifiers, prefix, extends string, part PartialDef) ([]*entry, []*route, []*handler, error) {
 	var prefixN string
 	if prefix != "" {
 		prefixN = strings.Join([]string{prefix, namelike(part.Name)}, "_")
@@ -165,17 +179,29 @@ func aggregateEntries(idents *uniqueIdentifiers, prefix, extends string, part Pa
 		Value:      fmt.Sprintf("%s.templ.html", prefixN),
 	}
 
-	var routes []route
-	entries := []entry{newEntry}
+	var routes []*route
+	entries := []*entry{&newEntry}
 
 	if part.Path != "" {
-		routes = []route{route{
+		routes = []*route{&route{
 			Identifier: newEntry.Identifier,
 			Path:       part.Path,
 		}}
 	}
 
+	partHandler := handler{
+		Info:       part.Name,
+		Doc:        part.Doc,
+		Identifier: newEntry.Identifier,
+	}
+	handlers := []*handler{&partHandler}
+
 	for blockName, partials := range part.Blocks {
+		partHandler.Blocks = append(partHandler.Blocks, &block{
+			Identifier: validIdentifier(blockName),
+			Name:       blockName,
+			FieldName:  validPublicIdentifier(blockName),
+		})
 		blockEntry := entry{
 			Extends:    newEntry.Identifier,
 			Identifier: idents.new(blockName, "Block"),
@@ -184,23 +210,24 @@ func aggregateEntries(idents *uniqueIdentifiers, prefix, extends string, part Pa
 		}
 		entries = append(
 			entries,
-			entry{
+			&entry{
 				Type: "Spacer",
 			},
-			blockEntry,
+			&blockEntry,
 		)
 		for _, partial := range partials {
-			subEntries, subRoutes, err := aggregateEntries(idents, prefixN, blockEntry.Identifier, partial)
+			subEntries, subRoutes, subHandlers, err := aggregateEntries(idents, prefixN, blockEntry.Identifier, partial)
 			if err != nil {
-				return entries, routes, err
+				return entries, routes, handlers, err
 			}
 			entries = append(entries, subEntries...)
 			routes = append(routes, subRoutes...)
+			handlers = append(handlers, subHandlers...)
 		}
-		entries = append(entries, entry{
+		entries = append(entries, &entry{
 			Type: "Spacer",
 		})
 	}
 
-	return entries, routes, nil
+	return entries, routes, handlers, nil
 }

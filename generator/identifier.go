@@ -55,6 +55,27 @@ func validIdentifier(name string) string {
 	return strings.Join(fixed, "")
 }
 
+// convert a name to a valid public identifier, leading digits will be stripped
+func validPublicIdentifier(name string) string {
+	nme := namelike(name)
+	parts := strings.FieldsFunc(nme, delims)
+	fixed := make([]string, len(parts))
+
+	leading := strings.TrimLeft(parts[0], "0123456789")
+	if len(leading) == 0 {
+		fixed[0] = "var"
+	} else {
+		fixed[0] = strings.Title(leading)
+	}
+
+	for i := 1; i < len(parts); i++ {
+		mutable := []rune(parts[i])
+		mutable[0] = unicode.ToUpper(mutable[0])
+		fixed[i] = string(mutable)
+	}
+	return strings.Join(fixed, "")
+}
+
 // create a new identifier that is unique relative to uI instance
 func (u *uniqueIdentifiers) new(name, qualifier string) string {
 	var found bool
