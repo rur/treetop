@@ -67,7 +67,7 @@ func NewTreetopServer(m mux, cxt Context) {
 
 {{ range $index, $page := .Pages -}}
 func {{ $page.Identifier }}Page(context *Context, m mux, renderer treetop.Renderer) {
-	{{ $page.Identifier }} := renderer.Page("{{ $page.Template }}", context.bind({{ $page.Handler }}))
+	{{ $page.Identifier }} := renderer.Page("{{ $page.Template.Path }}", context.bind({{ $page.Handler }}))
 	{{ range $index, $block := $page.Blocks -}}
 		{{ $block.Identifier }} := {{ $page.Identifier }}.Block("{{ $block.Name }}")
 	{{ end }}

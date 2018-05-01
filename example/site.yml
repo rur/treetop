@@ -7,9 +7,11 @@
         handler: baseNavHandler
         default: true
         doc: principle navigation for site
+        template: templates/nav.templ.html
       - name: settings-nav
         handler: baseNavHandler
         doc: navigation while in settings view
+        template: templates/nav.templ.html
 
     wrapper:
       - name: landing
