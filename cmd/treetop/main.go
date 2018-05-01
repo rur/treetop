@@ -57,7 +57,7 @@ func main() {
 			log.Fatalf("Treetop: filed to generate data from sitemap %s\n%s\n", config, err.Error())
 		}
 		if human {
-			fmt.Printf("Generated Treetop file in folder: %s\n\nTemplates:\n\t%s\n", outfolder, strings.Join(createdFiles, "\n\t"))
+			fmt.Printf("Generated Treetop file in folder: %s\n\nFiles:\n\t%s\n", outfolder, strings.Join(createdFiles, "\n\t"))
 		} else {
 			fmt.Print(outfolder)
 		}
@@ -88,15 +88,7 @@ func generate(defs []generator.PartialDef) (string, []string, error) {
 	if err != nil {
 		return outDir, created, err
 	}
-	created = append(created, prependEach(files, "server")...)
+	created = append(created, files...)
 
 	return outDir, created, nil
-}
-
-func prependEach(files []string, prefix string) []string {
-	out := make([]string, len(files))
-	for i := 0; i < len(files); i++ {
-		out[i] = filepath.Join(prefix, files[i])
-	}
-	return out
 }

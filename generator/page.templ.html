@@ -4,23 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Page [[ .Page.Name ]]</title>
+    <title>Page [[ .Name ]]</title>
 </head>
 <body>
-<h1>Page [[ .Page.Name ]]</h1>
-[[ range $index, $block := .Page.Blocks ]]
+<h1>Page [[ .Name ]]</h1>[[ range $index, $block := .Blocks ]]
     <h2>Block [[ $block.Name ]]</h2>
-    <ul>
-    [[ range $partial := $block.Partials ]]
-        [[ if $partial.Path ]]
-        [[ if $partial.Default -]]
+    <ul>[[ range $partial := $block.Partials ]][[ if $partial.Path ]][[ if $partial.Default ]]
         <li style="display: inline;"><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]*</a></li>
-        [[- else ]]
+        [[- else -]]
         <li style="display: inline;"><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]</a></li>
-        [[- end ]]
-        [[- end ]]
-    [[ end ]]
-    </ul>
+        [[- end ]][[- end ]]
+    [[ end ]]</ul>
     {{ block "[[ $block.Name ]]" .[[ $block.FieldName ]] }}
     <div id="[[ $block.Name  ]]" style="background-color: lightsalmon;">
         <p>default for block named [[ $block.Name ]]</p>

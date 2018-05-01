@@ -34,13 +34,13 @@ func {{ $page.Identifier }}Page(context *Context, m mux, renderer treetop.Render
 	{{ end }}
 	{{ range $index, $entry := $page.Entries -}}
 	{{ if eq $entry.Type "Block" -}}
-	{{ $entry.Identifier }} := {{ $entry.Extends }}.Block("{{ $entry.Value }}")
+	{{ $entry.Identifier }} := {{ $entry.Extends }}.Block("{{ $entry.Name }}")
 	{{- else if eq $entry.Type "DefaultPartial" -}}
-	{{ $entry.Identifier }} := {{ $entry.Extends }}.DefaultPartial("{{ $entry.Value }}", context.bind({{ $entry.Handler }}))
+	{{ $entry.Identifier }} := {{ $entry.Extends }}.DefaultPartial("{{ $entry.Template }}", context.bind({{ $entry.Handler }}))
 	{{- else if eq $entry.Type "Partial" -}}
-	{{ $entry.Identifier }} := {{ $entry.Extends }}.Partial("{{ $entry.Value }}", context.bind({{ $entry.Handler }}))
+	{{ $entry.Identifier }} := {{ $entry.Extends }}.Partial("{{ $entry.Template }}", context.bind({{ $entry.Handler }}))
 	{{- else if eq $entry.Type "Fragment" -}}
-	{{ $entry.Identifier }} := {{ $entry.Extends }}.Fragment("{{ $entry.Value }}", context.bind({{ $entry.Handler }}))
+	{{ $entry.Identifier }} := {{ $entry.Extends }}.Fragment("{{ $entry.Template }}", context.bind({{ $entry.Handler }}))
 {{- else if eq $entry.Type "Spacer" }}{{ else -}}
 	nil // unknown entry type: {{ $entry.Type }}
 	{{- end }}

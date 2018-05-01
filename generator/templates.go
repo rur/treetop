@@ -73,13 +73,13 @@ func {{ $page.Identifier }}Page(context *Context, m mux, renderer treetop.Render
 	{{ end }}
 	{{ range $index, $entry := $page.Entries -}}
 	{{ if eq $entry.Type "Block" -}}
-	{{ $entry.Identifier }} := {{ $entry.Extends }}.Block("{{ $entry.Value }}")
+	{{ $entry.Identifier }} := {{ $entry.Extends }}.Block("{{ $entry.Name }}")
 	{{- else if eq $entry.Type "DefaultPartial" -}}
-	{{ $entry.Identifier }} := {{ $entry.Extends }}.DefaultPartial("{{ $entry.Value }}", context.bind({{ $entry.Handler }}))
+	{{ $entry.Identifier }} := {{ $entry.Extends }}.DefaultPartial("{{ $entry.Template }}", context.bind({{ $entry.Handler }}))
 	{{- else if eq $entry.Type "Partial" -}}
-	{{ $entry.Identifier }} := {{ $entry.Extends }}.Partial("{{ $entry.Value }}", context.bind({{ $entry.Handler }}))
+	{{ $entry.Identifier }} := {{ $entry.Extends }}.Partial("{{ $entry.Template }}", context.bind({{ $entry.Handler }}))
 	{{- else if eq $entry.Type "Fragment" -}}
-	{{ $entry.Identifier }} := {{ $entry.Extends }}.Fragment("{{ $entry.Value }}", context.bind({{ $entry.Handler }}))
+	{{ $entry.Identifier }} := {{ $entry.Extends }}.Fragment("{{ $entry.Template }}", context.bind({{ $entry.Handler }}))
 {{- else if eq $entry.Type "Spacer" }}{{ else -}}
 	nil // unknown entry type: {{ $entry.Type }}
 	{{- end }}
@@ -97,23 +97,16 @@ var pageTempl = `<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Page [[ .Page.Name ]]</title>
+    <title>Page [[ .Name ]]</title>
 </head>
 <body>
-<h1>Page [[ .Page.Name ]]</h1>
-[[ range $index, $block := .Page.Blocks ]]
+<h1>Page [[ .Name ]]</h1>[[ range $index, $block := .Blocks ]]
     <h2>Block [[ $block.Name ]]</h2>
-    <ul>
-    [[ range $partial := $block.Partials ]]
-        [[ if $partial.Path ]]
-        [[ if $partial.Default -]]
-        <li style="display: inline;"><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]*</a></li>
-        [[- else ]]
+    <ul>[[ range $partial := $block.Partials ]][[ if $partial.Path ]][[ if $partial.Default ]]
+        <li style="display: inline;"><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]*</a></li>[[ else ]]
         <li style="display: inline;"><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]</a></li>
-        [[- end ]]
-        [[- end ]]
-    [[ end ]]
-    </ul>
+        [[- end ]][[- end ]]
+    [[ end ]]</ul>
     {{ block "[[ $block.Name ]]" .[[ $block.FieldName ]] }}
     <div id="[[ $block.Name  ]]" style="background-color: lightsalmon;">
         <p>default for block named [[ $block.Name ]]</p>
@@ -127,18 +120,17 @@ var pageTempl = `<!DOCTYPE html>
 
 var partialTempl = `{{ block "[[ .Extends ]]" . }}
 <div id="[[ .Extends ]]" style="background-color: rgba(0, 0, 0, 0.1)">
-    <p>View named [[.Name]]</p>
-[[ range $blockName, $partials := .Blocks ]]
-    <ul>
-    [[ range $index, $def := $partials ]]
-        <li style="display: inline;"><a href="[[ $def.Path ]]" treetop>[[ $def.Name ]]</a></li>
-    [[ end ]]
-    </ul>
-    {{ block "[[ $blockName ]]" . }}
-    <div id="[[ $blockName  ]]" style="background-color: lightsalmon;">
-        <p>default for block named [[$blockName ]]</p>
-    </div>
-    {{ end }}
+    <p>View named [[.Name]]</p>[[ range $index, $block := .Blocks ]]
+<ul>[[ range $partial := $block.Partials ]][[ if $partial.Path ]][[ if $partial.Default ]]
+    <li style="display: inline;"><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]*</a></li>[[ else ]]
+    <li style="display: inline;"><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]</a></li>
+    [[- end ]][[- end ]]
+[[ end ]]</ul>
+{{ block "[[ $block.Name ]]" .[[ $block.FieldName ]] }}
+<div id="[[ $block.Name  ]]" style="background-color: lightsalmon;">
+    <p>default for block named [[ $block.Name ]]</p>
+</div>
+{{ end }}
 [[ end ]]
 </div>
 {{ end }}

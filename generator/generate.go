@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 	text "text/template"
 )
 
@@ -21,17 +20,16 @@ type entry struct {
 	Extends    string
 	Identifier string
 	Handler    string
+	Template   string
 	Type       string
-	Value      string
+	Name       string
 }
 
 type blockPartial struct {
-	Identifier string
-	Path       string
-	Name       string
-	Fragment   bool
-	Default    bool
-	Blocks     []*block
+	Path     string
+	Name     string
+	Fragment bool
+	Default  bool
 }
 
 type block struct {
@@ -55,7 +53,7 @@ type route struct {
 
 type page struct {
 	Identifier string
-	Template   string
+	Template   *template
 	Handler    string
 	Doc        string
 	Name       string
@@ -63,11 +61,14 @@ type page struct {
 	Routes     []*route
 	Blocks     []*block
 	Handlers   []*handler
+	Templates  []*template
 }
 
 type template struct {
-	Path string
-	Page page
+	Path    string
+	Extends string
+	Name    string
+	Blocks  []*block
 }
 
 func init() {
@@ -111,14 +112,24 @@ func CreateSeverFiles(dir string, pageDefs []PartialDef) ([]string, error) {
 				pageHandler.Blocks = append(pageHandler.Blocks, &newBlock)
 			}
 			newPage.Blocks = append(newPage.Blocks, &newBlock)
+			newPage.Template.Blocks = append(newPage.Template.Blocks, &newBlock)
+
 			for _, partial := range partials {
-				entries, routes, handlers, err := createEntries(&idents, lowercaseName(def.Name), newBlock.Identifier, partial)
+				newBlock.Partials = append(newBlock.Partials, &blockPartial{
+					Path:     partial.Path,
+					Name:     partial.Name,
+					Fragment: partial.Fragment,
+					Default:  partial.Default,
+				})
+
+				entries, routes, handlers, templates, err := createEntries(&idents, lowercaseName(def.Name), newBlock.Identifier, partial)
 				if err != nil {
 					return created, err
 				}
 				newPage.Entries = append(newPage.Entries, entries...)
 				newPage.Routes = append(newPage.Routes, routes...)
 				newPage.Handlers = append(newPage.Handlers, handlers...)
+				newPage.Templates = append(newPage.Templates, templates...)
 			}
 		}
 		site = append(site, newPage)
@@ -142,39 +153,11 @@ func CreateSeverFiles(dir string, pageDefs []PartialDef) ([]string, error) {
 	}
 
 	for _, sitePage := range site {
-		handlerFile := filepath.Join("server", sitePage.Identifier+"_handlers.go")
-		handlerPath := filepath.Join(dir, handlerFile)
-		hf, err := os.Create(handlerPath)
+		pageFiles, err := writePageFiles(dir, sitePage)
 		if err != nil {
 			return created, err
 		}
-		created = append(created, handlerFile)
-		defer hf.Close()
-		err = handlerTemplate.Execute(hf, struct {
-			Handlers []*handler
-		}{
-			Handlers: sitePage.Handlers,
-		})
-		if err != nil {
-			return created, err
-		}
-		// page template
-		templateFile := filepath.Join("templates", sitePage.Identifier+".templ.html")
-		path := filepath.Join(dir, templateFile)
-		tf, err := os.Create(path)
-		if err != nil {
-			return created, err
-		}
-		created = append(created, templateFile)
-		defer tf.Close()
-		err = pageTemplate.Execute(tf, struct {
-			Page page
-		}{
-			Page: sitePage,
-		})
-		if err != nil {
-			return created, err
-		}
+		created = append(created, pageFiles...)
 	}
 
 	return created, nil
@@ -185,9 +168,19 @@ func createPage(idents *uniqueIdentifiers, def PartialDef) (page, *handler) {
 	newPage := page{
 		Name:       def.Name,
 		Identifier: idents.new(def.Name, "Page"),
-		Template:   fmt.Sprintf("%s.templ.html", lowercaseName(def.Name)),
 		Entries:    make([]*entry, 0),
 		Blocks:     make([]*block, 0, len(def.Blocks)),
+	}
+	if def.Template == "" {
+		newPage.Template = &template{
+			Path: filepath.Join("templates", fmt.Sprintf("%s.templ.html", lowercaseName(def.Name))),
+			Name: def.Name,
+		}
+	} else {
+		newPage.Template = &template{
+			Path: def.Template,
+			Name: def.Name,
+		}
 	}
 	if def.Handler == "" {
 		// no specific handler name appears in the definition, create a unique one
@@ -219,10 +212,10 @@ func createPage(idents *uniqueIdentifiers, def PartialDef) (page, *handler) {
 	return newPage, pageHandler
 }
 
-func createEntries(idents *uniqueIdentifiers, prefix, extends string, def PartialDef) ([]*entry, []*route, []*handler, error) {
+func createEntries(idents *uniqueIdentifiers, prefix, extends string, def PartialDef) ([]*entry, []*route, []*handler, []*template, error) {
 	var prefixN string
 	if prefix != "" {
-		prefixN = strings.Join([]string{prefix, lowercaseName(def.Name)}, "_")
+		prefixN = fmt.Sprintf("%s_%s", prefix, lowercaseName(def.Name))
 	} else {
 		prefixN = lowercaseName(def.Name)
 	}
@@ -240,8 +233,20 @@ func createEntries(idents *uniqueIdentifiers, prefix, extends string, def Partia
 		Extends:    extends,
 		Identifier: idents.new(def.Name, entryType),
 		Type:       entryType,
-		Value:      fmt.Sprintf("%s.templ.html", prefixN),
+		Template:   def.Template,
+		Name:       def.Name,
 	}
+
+	if newEntry.Template == "" {
+		newEntry.Template = filepath.Join("templates", fmt.Sprintf("%s.templ.html", prefixN))
+	}
+
+	partTemplate := template{
+		Path:    newEntry.Template,
+		Extends: extends,
+		Name:    def.Name,
+	}
+	templates := []*template{&partTemplate}
 
 	var routes []*route
 	entries := []*entry{&newEntry}
@@ -280,18 +285,21 @@ func createEntries(idents *uniqueIdentifiers, prefix, extends string, def Partia
 	}
 
 	for blockName, partials := range def.Blocks {
-		if partHandler != nil {
-			partHandler.Blocks = append(partHandler.Blocks, &block{
-				Identifier: validIdentifier(blockName),
-				Name:       blockName,
-				FieldName:  validPublicIdentifier(blockName),
-			})
+		partBlock := block{
+			Identifier: validIdentifier(blockName),
+			Name:       blockName,
+			FieldName:  validPublicIdentifier(blockName),
 		}
+		if partHandler != nil {
+			partHandler.Blocks = append(partHandler.Blocks, &partBlock)
+		}
+		partTemplate.Blocks = append(partTemplate.Blocks, &partBlock)
+
 		blockEntry := entry{
 			Extends:    newEntry.Identifier,
 			Identifier: idents.new(blockName, "Block"),
 			Type:       "Block",
-			Value:      blockName,
+			Name:       blockName,
 		}
 		entries = append(
 			entries,
@@ -301,18 +309,76 @@ func createEntries(idents *uniqueIdentifiers, prefix, extends string, def Partia
 			&blockEntry,
 		)
 		for _, partial := range partials {
-			subEntries, subRoutes, subHandlers, err := createEntries(idents, prefixN, blockEntry.Identifier, partial)
+			partBlock.Partials = append(partBlock.Partials, &blockPartial{
+				Path:     partial.Path,
+				Name:     partial.Name,
+				Fragment: partial.Fragment,
+				Default:  partial.Default,
+			})
+
+			subEntries, subRoutes, subHandlers, subTemplates, err := createEntries(idents, prefixN, blockEntry.Identifier, partial)
 			if err != nil {
-				return entries, routes, handlers, err
+				return entries, routes, handlers, templates, err
 			}
 			entries = append(entries, subEntries...)
 			routes = append(routes, subRoutes...)
 			handlers = append(handlers, subHandlers...)
+			templates = append(templates, subTemplates...)
 		}
 		entries = append(entries, &entry{
 			Type: "Spacer",
 		})
 	}
 
-	return entries, routes, handlers, nil
+	return entries, routes, handlers, templates, nil
+}
+
+func writePageFiles(dir string, p page) ([]string, error) {
+	var created []string
+	handlerFile := filepath.Join("server", p.Identifier+"_handlers.go")
+	handlerPath := filepath.Join(dir, handlerFile)
+	hf, err := os.Create(handlerPath)
+	if err != nil {
+		return created, err
+	}
+	created = append(created, handlerFile)
+	defer hf.Close()
+	err = handlerTemplate.Execute(hf, struct {
+		Handlers []*handler
+	}{
+		Handlers: p.Handlers,
+	})
+	if err != nil {
+		return created, err
+	}
+	if p.Template != nil {
+		// page template
+		pt := p.Template
+		path := filepath.Join(dir, pt.Path)
+		tf, err := os.Create(path)
+		if err != nil {
+			return created, err
+		}
+		created = append(created, pt.Path)
+		defer tf.Close()
+		err = pageTemplate.Execute(tf, pt)
+		if err != nil {
+			return created, err
+		}
+	}
+	for _, templ := range p.Templates {
+		// partial template
+		path := filepath.Join(dir, templ.Path)
+		tf, err := os.Create(path)
+		if err != nil {
+			return created, err
+		}
+		created = append(created, templ.Path)
+		defer tf.Close()
+		err = partialTemplate.Execute(tf, templ)
+		if err != nil {
+			return created, err
+		}
+	}
+	return created, err
 }
