@@ -122,7 +122,16 @@ func CreateSeverFiles(dir string, pageDefs []PartialDef) ([]string, error) {
 					Default:  partial.Default,
 				})
 
-				entries, routes, handlers, templates, err := createEntries(&idents, lowercaseName(def.Name), newBlock.Identifier, partial)
+				entries, routes, handlers, templates, err := createEntries(
+					&idents,
+					lowercaseName(def.Name),
+					entry{
+						Identifier: newBlock.Identifier,
+						Type:       "Block",
+						Name:       newBlock.Name,
+					},
+					partial,
+				)
 				if err != nil {
 					return created, err
 				}
@@ -212,7 +221,7 @@ func createPage(idents *uniqueIdentifiers, def PartialDef) (page, *handler) {
 	return newPage, pageHandler
 }
 
-func createEntries(idents *uniqueIdentifiers, prefix, extends string, def PartialDef) ([]*entry, []*route, []*handler, []*template, error) {
+func createEntries(idents *uniqueIdentifiers, prefix string, extends entry, def PartialDef) ([]*entry, []*route, []*handler, []*template, error) {
 	var prefixN string
 	if prefix != "" {
 		prefixN = fmt.Sprintf("%s_%s", prefix, lowercaseName(def.Name))
@@ -230,7 +239,7 @@ func createEntries(idents *uniqueIdentifiers, prefix, extends string, def Partia
 	}
 
 	newEntry := entry{
-		Extends:    extends,
+		Extends:    extends.Identifier,
 		Identifier: idents.new(def.Name, entryType),
 		Type:       entryType,
 		Template:   def.Template,
@@ -243,7 +252,7 @@ func createEntries(idents *uniqueIdentifiers, prefix, extends string, def Partia
 
 	partTemplate := template{
 		Path:    newEntry.Template,
-		Extends: extends,
+		Extends: extends.Name,
 		Name:    def.Name,
 	}
 	templates := []*template{&partTemplate}
@@ -316,7 +325,7 @@ func createEntries(idents *uniqueIdentifiers, prefix, extends string, def Partia
 				Default:  partial.Default,
 			})
 
-			subEntries, subRoutes, subHandlers, subTemplates, err := createEntries(idents, prefixN, blockEntry.Identifier, partial)
+			subEntries, subRoutes, subHandlers, subTemplates, err := createEntries(idents, prefixN, blockEntry, partial)
 			if err != nil {
 				return entries, routes, handlers, templates, err
 			}

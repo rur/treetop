@@ -58,14 +58,14 @@ func (h *fragmentInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var render bytes.Buffer
+	render := bytes.NewBuffer(make([]byte, 0))
 
 	if resp, proceed := ExecuteFragment(h, map[string]interface{}{}, w, r); proceed {
 		if resp.Status > status {
 			status = resp.Status
 		}
 		// data was loaded successfully, now execute the templates
-		if err := h.execute(&render, []string{h.template}, resp.Data); err != nil {
+		if err := h.execute(render, []string{h.template}, resp.Data); err != nil {
 			http.Error(w, fmt.Sprintf("Error executing templates: %s", err.Error()), http.StatusInternalServerError)
 			return
 		}
