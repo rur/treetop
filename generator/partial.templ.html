@@ -1,0 +1,17 @@
+{{ block "[[ .Extends ]]" . }}
+<div id="[[ .Extends ]]" style="background-color: rgba(0, 0, 0, 0.1)">
+    <p>View named [[.Name]]</p>
+[[ range $blockName, $partials := .Blocks ]]
+    <ul>
+    [[ range $index, $def := $partials ]]
+        <li style="display: inline;"><a href="[[ $def.Path ]]" treetop>[[ $def.Name ]]</a></li>
+    [[ end ]]
+    </ul>
+    {{ block "[[ $blockName ]]" . }}
+    <div id="[[ $blockName  ]]" style="background-color: lightsalmon;">
+        <p>default for block named [[$blockName ]]</p>
+    </div>
+    {{ end }}
+[[ end ]]
+</div>
+{{ end }

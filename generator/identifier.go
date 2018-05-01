@@ -19,32 +19,30 @@ func newIdentifiers() uniqueIdentifiers {
 }
 
 // pretty lo-fi slugify, remove all non-alphanum and lowercase first character
-func namelike(name string) string {
+func lowercaseName(name string) string {
 	reg, err := regexp.Compile("[^a-zA-Z0-9-_]+")
 	if err != nil {
 		log.Fatal(err)
 	}
-	stripped := reg.ReplaceAllString(name, "")
-	mutable := []rune(stripped)
-	mutable[0] = unicode.ToLower(mutable[0])
-	return string(mutable)
+	return strings.ToLower(reg.ReplaceAllString(name, ""))
 }
 
 func delims(r rune) bool {
-	return r == '_' || r == '-'
+	return !unicode.IsLetter(r) && !unicode.IsNumber(r)
 }
 
 // convert a name to a valid identifier, leading digits will be stripped
 func validIdentifier(name string) string {
-	nme := namelike(name)
-	parts := strings.FieldsFunc(nme, delims)
+	parts := strings.FieldsFunc(name, delims)
 	fixed := make([]string, len(parts))
 
 	leading := strings.TrimLeft(parts[0], "0123456789")
 	if len(leading) == 0 {
 		fixed[0] = "var"
 	} else {
-		fixed[0] = strings.ToLower(leading)
+		mutable := []rune(parts[0])
+		mutable[0] = unicode.ToLower(mutable[0])
+		fixed[0] = string(mutable)
 	}
 
 	for i := 1; i < len(parts); i++ {
@@ -57,8 +55,7 @@ func validIdentifier(name string) string {
 
 // convert a name to a valid public identifier, leading digits will be stripped
 func validPublicIdentifier(name string) string {
-	nme := namelike(name)
-	parts := strings.FieldsFunc(nme, delims)
+	parts := strings.FieldsFunc(name, delims)
 	fixed := make([]string, len(parts))
 
 	leading := strings.TrimLeft(parts[0], "0123456789")
@@ -106,4 +103,22 @@ func (u *uniqueIdentifiers) new(name, qualifier string) string {
 		}
 		i += 1
 	}
+}
+
+func (u *uniqueIdentifiers) reserve(ident string) {
+	ref := <-u.ref
+	defer func() {
+		u.ref <- ref
+	}()
+	ref[ident] = true
+}
+
+func (u *uniqueIdentifiers) exists(ident string) bool {
+	// this is a statefull method so I'm using a channel as a locking mechanism
+	ref := <-u.ref
+	defer func() {
+		u.ref <- ref
+	}()
+	_, found := ref[ident]
+	return found
 }

@@ -4,9 +4,11 @@
   blocks:
     nav:
       - name: main-nav
+        handler: baseNavHandler
         default: true
         doc: principle navigation for site
       - name: settings-nav
+        handler: baseNavHandler
         doc: navigation while in settings view
 
     wrapper:
