@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Page [[ .Name ]]</title>
+    <style>
+
+    .block-extended {
+        background-color: rgba(0, 0, 0, 0.1);
+        padding: 0.5rem;
+    }
+
+    .block-default {
+        background-color: lightsalmon;
+        padding: 0.5rem;
+    }
+
+    </style>
 </head>
 <body>
 <h1>Page [[ .Name ]]</h1>[[ range $index, $block := .Blocks ]]
@@ -16,7 +29,7 @@
         [[- end ]][[- end ]]
     [[ end ]]</ul>
     {{ block "[[ $block.Name ]]" .[[ $block.FieldName ]] }}
-    <div id="[[ $block.Name  ]]" style="background-color: lightsalmon;">
+    <div id="[[ $block.Name  ]]" class="block-default">
         <p>default for block named [[ $block.Name ]]</p>
     </div>
     {{ end }}

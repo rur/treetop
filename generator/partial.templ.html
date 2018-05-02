@@ -1,5 +1,5 @@
 {{ block "[[ .Extends ]]" . }}
-<div id="[[ .Extends ]]" style="background-color: rgba(0, 0, 0, 0.1)">
+<div id="[[ .Extends ]]" class="block-extended">
     <p>View named [[.Name]]</p>[[ range $index, $block := .Blocks ]]
 <ul>[[ range $partial := $block.Partials ]][[ if $partial.Path ]][[ if $partial.Default ]]
     <li style="display: inline;"><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]*</a></li>[[ else ]]
@@ -7,7 +7,7 @@
     [[- end ]][[- end ]]
 [[ end ]]</ul>
 {{ block "[[ $block.Name ]]" .[[ $block.FieldName ]] }}
-<div id="[[ $block.Name  ]]" style="background-color: lightsalmon;">
+<div id="[[ $block.Name  ]]" class="block-default">
     <p>default for block named [[ $block.Name ]]</p>
 </div>
 {{ end }}
