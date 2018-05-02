@@ -51,6 +51,7 @@ func (b *blockInternal) Fragment(template string, handlerFunc HandlerFunc) Fragm
 	f := fragmentInternal{
 		template:    template,
 		handlerFunc: handlerFunc,
+		execute:     b.execute,
 		extends:     b,
 	}
 	return &f
