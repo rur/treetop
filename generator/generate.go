@@ -1,5 +1,7 @@
 package generator
 
+//go:generate go run gen.go
+
 import (
 	"fmt"
 	html "html/template"

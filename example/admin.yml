@@ -1,15 +1,15 @@
 
-- name: base
+- name: admin
   doc: Assemble application configuration including user authorization details
   blocks:
     nav:
       - name: main-nav
-        handler: baseNavHandler
+        handler: adminNavHandler
         default: true
         doc: principle navigation for site
         template: templates/nav.templ.html
       - name: settings-nav
-        handler: baseNavHandler
+        handler: adminNavHandler
         doc: navigation while in settings view
         template: templates/nav.templ.html
 
