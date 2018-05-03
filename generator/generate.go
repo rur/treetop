@@ -366,6 +366,9 @@ func writePageFiles(dir string, p page) ([]string, error) {
 		// page template
 		pt := p.Template
 		path := filepath.Join(dir, pt.Path)
+		if err = os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
+			return created, err
+		}
 		tf, err := os.Create(path)
 		if err != nil {
 			return created, err
@@ -380,6 +383,9 @@ func writePageFiles(dir string, p page) ([]string, error) {
 	for _, templ := range p.Templates {
 		// partial template
 		path := filepath.Join(dir, templ.Path)
+		if err = os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
+			return created, err
+		}
 		tf, err := os.Create(path)
 		if err != nil {
 			return created, err
