@@ -6,13 +6,18 @@ import (
 	"github.com/rur/treetop"
 )
 
-type Context struct {
+type ServerContext struct {
 	Example bool
 }
 
-func (c *Context) bind(f func(*Context, treetop.DataWriter, *http.Request)) treetop.HandlerFunc {
+type RequestContext struct {
+	Example bool
+}
+
+func (s *ServerContext) bind(f func(*RequestContext, treetop.DataWriter, *http.Request)) treetop.HandlerFunc {
 	return func(w treetop.DataWriter, req *http.Request) {
-		f(c, w, req)
+		cxt := RequestContext{s.Example}
+		f(&cxt, w, req)
 	}
 }
 
@@ -20,15 +25,15 @@ type mux interface {
 	Handle(pattern string, handler http.Handler)
 }
 
-func NewTreetopServer(m mux, cxt Context) {
+func NewTreetopServer(m mux, s ServerContext) {
 	renderer := treetop.NewRenderer(treetop.DefaultTemplateExec){{ range $index, $page := .Pages }}
-	{{ $page.Identifier }}Page(&cxt, m, renderer)
+	{{ $page.Identifier }}Page(&s, m, renderer)
 {{- end }}
 }
 
 {{ range $index, $page := .Pages -}}
-func {{ $page.Identifier }}Page(context *Context, m mux, renderer treetop.Renderer) {
-	{{ $page.Identifier }} := renderer.Page("{{ $page.Template.Path }}", context.bind({{ $page.Handler }}))
+func {{ $page.Identifier }}Page(server *ServerContext, m mux, renderer treetop.Renderer) {
+	{{ $page.Identifier }} := renderer.Page("{{ $page.Template.Path }}", server.bind({{ $page.Handler }}))
 	{{ range $index, $block := $page.Blocks -}}
 		{{ $block.Identifier }} := {{ $page.Identifier }}.Block("{{ $block.Name }}")
 	{{ end }}
@@ -36,11 +41,11 @@ func {{ $page.Identifier }}Page(context *Context, m mux, renderer treetop.Render
 	{{ if eq $entry.Type "Block" -}}
 	{{ $entry.Identifier }} := {{ $entry.Extends }}.Block("{{ $entry.Name }}")
 	{{- else if eq $entry.Type "DefaultPartial" -}}
-	{{ $entry.Identifier }} := {{ $entry.Extends }}.DefaultPartial("{{ $entry.Template }}", context.bind({{ $entry.Handler }}))
+	{{ $entry.Identifier }} := {{ $entry.Extends }}.DefaultPartial("{{ $entry.Template }}", server.bind({{ $entry.Handler }}))
 	{{- else if eq $entry.Type "Partial" -}}
-	{{ $entry.Identifier }} := {{ $entry.Extends }}.Partial("{{ $entry.Template }}", context.bind({{ $entry.Handler }}))
+	{{ $entry.Identifier }} := {{ $entry.Extends }}.Partial("{{ $entry.Template }}", server.bind({{ $entry.Handler }}))
 	{{- else if eq $entry.Type "Fragment" -}}
-	{{ $entry.Identifier }} := {{ $entry.Extends }}.Fragment("{{ $entry.Template }}", context.bind({{ $entry.Handler }}))
+	{{ $entry.Identifier }} := {{ $entry.Extends }}.Fragment("{{ $entry.Template }}", server.bind({{ $entry.Handler }}))
 {{- else if eq $entry.Type "Spacer" }}{{ else -}}
 	nil // unknown entry type: {{ $entry.Type }}
 	{{- end }}

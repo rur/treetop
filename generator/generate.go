@@ -101,6 +101,10 @@ func CreateSeverFiles(dir string, pageDefs []PartialDef) ([]string, error) {
 
 	// all 'identifiers' must be unique,
 	idents := newIdentifiers()
+	// add reserved names
+	for _, name := range []string{"server", "renderer", "m"} {
+		idents.reserve(name)
+	}
 
 	for _, def := range pageDefs {
 		newPage, pageHandler := createPage(&idents, def)
