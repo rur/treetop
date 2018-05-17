@@ -112,7 +112,7 @@ func CreateSeverFiles(dir string, pageDefs []PartialDef) ([]string, error) {
 			pageIdents := newIdentifiers()
 			newBlock := block{
 				FieldName:  validPublicIdentifier(blockName),
-				Identifier: pageIdents.new(blockName, "Block"),
+				Identifier: pageIdents.new(blockName, []string{}),
 				Name:       blockName,
 			}
 			if pageHandler != nil {
@@ -131,8 +131,7 @@ func CreateSeverFiles(dir string, pageDefs []PartialDef) ([]string, error) {
 
 				entries, routes, handlers, templates, err := createEntries(
 					&pageIdents,
-					lowercaseName(newPage.Identifier),
-					"",
+					[]string{newPage.Name, blockName},
 					entry{
 						Identifier: newBlock.Identifier,
 						Type:       "Block",
@@ -184,7 +183,7 @@ func createPage(idents *uniqueIdentifiers, def PartialDef) (page, *handler) {
 	var pageHandler *handler
 	newPage := page{
 		Name:       def.Name,
-		Identifier: idents.new(def.Name, "Page"),
+		Identifier: idents.new(def.Name, []string{}),
 		Entries:    make([]*entry, 0),
 		Blocks:     make([]*block, 0, len(def.Blocks)),
 	}
@@ -204,7 +203,7 @@ func createPage(idents *uniqueIdentifiers, def PartialDef) (page, *handler) {
 		pageHandler = &handler{
 			Info:       def.Name,
 			Doc:        def.Doc,
-			Identifier: idents.new(newPage.Identifier+"Handler", "Func"),
+			Identifier: idents.new(newPage.Identifier+"Handler", []string{}),
 		}
 	} else if !idents.exists(def.Handler) {
 		// a handler name was specified, create a new definition if it does not already exist
@@ -229,14 +228,7 @@ func createPage(idents *uniqueIdentifiers, def PartialDef) (page, *handler) {
 	return newPage, pageHandler
 }
 
-func createEntries(idents *uniqueIdentifiers, page, prefix string, extends entry, def PartialDef) ([]*entry, []*route, []*handler, []*template, error) {
-	var prefixN string
-	if prefix != "" {
-		prefixN = fmt.Sprintf("%s_%s", prefix, lowercaseName(def.Name))
-	} else {
-		prefixN = lowercaseName(def.Name)
-	}
-
+func createEntries(idents *uniqueIdentifiers, prefix []string, extends entry, def PartialDef) ([]*entry, []*route, []*handler, []*template, error) {
 	var entryType string
 	if def.Fragment {
 		entryType = "Fragment"
@@ -248,14 +240,14 @@ func createEntries(idents *uniqueIdentifiers, page, prefix string, extends entry
 
 	newEntry := entry{
 		Extends:    extends.Identifier,
-		Identifier: idents.new(def.Name, entryType),
+		Identifier: idents.new(def.Name, prefix),
 		Type:       entryType,
 		Template:   def.Template,
 		Name:       def.Name,
 	}
 
 	if newEntry.Template == "" {
-		newEntry.Template = filepath.Join("templates", page, fmt.Sprintf("%s.templ.html", prefixN))
+		newEntry.Template = filepath.Join("templates", filepath.Join(prefix...), fmt.Sprintf("%s.templ.html", lowercaseName(def.Name)))
 	} else {
 		newEntry.Template = filepath.Join("templates", newEntry.Template)
 	}
@@ -284,7 +276,7 @@ func createEntries(idents *uniqueIdentifiers, page, prefix string, extends entry
 		partHandler = &handler{
 			Info:       def.Name,
 			Doc:        def.Doc,
-			Identifier: idents.new(newEntry.Identifier+"Handler", "Func"),
+			Identifier: newEntry.Identifier + "Handler",
 		}
 		handlers = []*handler{partHandler}
 	} else if !idents.exists(def.Handler) {
@@ -316,7 +308,7 @@ func createEntries(idents *uniqueIdentifiers, page, prefix string, extends entry
 
 		blockEntry := entry{
 			Extends:    newEntry.Identifier,
-			Identifier: idents.new(blockName, "Block"),
+			Identifier: idents.new(blockName, []string{}),
 			Type:       "Block",
 			Name:       blockName,
 		}
@@ -335,7 +327,12 @@ func createEntries(idents *uniqueIdentifiers, page, prefix string, extends entry
 				Default:  partial.Default,
 			})
 
-			subEntries, subRoutes, subHandlers, subTemplates, err := createEntries(idents, page, prefixN, blockEntry, partial)
+			subEntries, subRoutes, subHandlers, subTemplates, err := createEntries(
+				idents,
+				append(prefix, blockName),
+				blockEntry,
+				partial,
+			)
 			if err != nil {
 				return entries, routes, handlers, templates, err
 			}

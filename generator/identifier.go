@@ -73,8 +73,8 @@ func validPublicIdentifier(name string) string {
 	return strings.Join(fixed, "")
 }
 
-// create a new identifier that is unique relative to uI instance
-func (u *uniqueIdentifiers) new(name, qualifier string) string {
+// create a new identifier that is unique relative to u instance
+func (u *uniqueIdentifiers) new(name string, qualifier []string) string {
 	var found bool
 	// this is a statefull method so I'm using a channel as a locking mechanism
 	ref := <-u.ref
@@ -84,19 +84,18 @@ func (u *uniqueIdentifiers) new(name, qualifier string) string {
 
 	ident := validIdentifier(name)
 
+	if len(qualifier) > 0 {
+		ident = validIdentifier(strings.Join(qualifier, " ")) + "_" + strings.Title(ident)
+	}
+
 	if _, found = ref[ident]; !found {
 		ref[ident] = true
 		return ident
 	}
-	identQlf := ident + strings.Title(qualifier)
-	if _, found = ref[identQlf]; !found {
-		ref[identQlf] = true
-		return identQlf
-	}
 	i := 1
 	var identI string
 	for {
-		identI = fmt.Sprintf("%s%v", identQlf, i)
+		identI = fmt.Sprintf("%s%v", ident, i)
 		if _, found = ref[identI]; !found {
 			ref[identI] = true
 			return identI

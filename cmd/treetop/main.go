@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -24,23 +26,25 @@ FLAGS:
 func main() {
 
 	if len(os.Args) < 2 {
-		log.Fatalln("Usage: treetop [cmd] args... \n")
+		fmt.Printf("Usage: treetop [cmd] args... \n")
 		return
 	}
 	if os.Args[1] == "generate" {
 		if len(os.Args) < 3 {
-			log.Fatalln(generateUsage)
+			fmt.Printf(generateUsage)
 			return
 		}
 		config := os.Args[2]
 
 		data, err := ioutil.ReadFile(config)
 		if err != nil {
-			log.Fatalf("Error loading YAML config: %v", err)
+			fmt.Printf("Error loading YAML config: %v", err)
+			return
 		}
 		defs, err := generator.LoadPartialDef(data)
 		if err != nil {
-			log.Fatalf("Error parsing config: %v", err)
+			fmt.Printf("Error parsing config: %v", err)
+			return
 		}
 
 		human := false
@@ -48,14 +52,30 @@ func main() {
 			if arg == "--human" {
 				human = true
 			} else {
-				log.Fatalf("Unknown flag '%s'\n\n%s", arg, generateUsage)
+				fmt.Printf("Unknown flag '%s'\n\n%s", arg, generateUsage)
+				return
 			}
 		}
 
 		outfolder, createdFiles, err := generate(defs)
 		if err != nil {
-			log.Fatalf("Treetop: filed to generate data from sitemap %s\n%s\n", config, err.Error())
+			fmt.Printf("Treetop: filed to generate data from sitemap %s\n%s\n", config, err.Error())
+			return
+		} else {
+			// attempt to format the go code
+			// this should not cause the generate command to fail if go fmt fails for some reason
+			for i := range createdFiles {
+				if strings.HasSuffix(createdFiles[i], ".go") {
+					cmd := exec.Command("go", "fmt", path.Join(outfolder, createdFiles[i]))
+					err := cmd.Run()
+					if err != nil {
+						log.Fatal(err)
+					}
+				}
+			}
+
 		}
+
 		if human {
 			fmt.Printf("Generated Treetop file in folder: %s\n\nFiles:\n\t%s\n", outfolder, strings.Join(createdFiles, "\n\t"))
 		} else {
@@ -63,7 +83,8 @@ func main() {
 		}
 
 	} else {
-		log.Fatalf("Treetop: unknown command %s\n\n", os.Args[1])
+		fmt.Printf("Treetop: unknown command %s\n\n", os.Args[1])
+		return
 	}
 }
 
