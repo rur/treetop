@@ -94,7 +94,7 @@ func init() {
 	}
 }
 
-// create server files inside supplied dir and returns a list of all files created
+// create server files inside supplied dir and return a list of all files created
 func CreateSeverFiles(dir string, pageDefs []PartialDef) ([]string, error) {
 	var created []string
 	site := make([]page, 0, len(pageDefs))
@@ -109,9 +109,10 @@ func CreateSeverFiles(dir string, pageDefs []PartialDef) ([]string, error) {
 	for _, def := range pageDefs {
 		newPage, pageHandler := createPage(&idents, def)
 		for blockName, partials := range def.Blocks {
+			pageIdents := newIdentifiers()
 			newBlock := block{
 				FieldName:  validPublicIdentifier(blockName),
-				Identifier: idents.new(blockName, "Block"),
+				Identifier: pageIdents.new(blockName, "Block"),
 				Name:       blockName,
 			}
 			if pageHandler != nil {
@@ -129,8 +130,9 @@ func CreateSeverFiles(dir string, pageDefs []PartialDef) ([]string, error) {
 				})
 
 				entries, routes, handlers, templates, err := createEntries(
-					&idents,
-					lowercaseName(def.Name),
+					&pageIdents,
+					lowercaseName(newPage.Identifier),
+					"",
 					entry{
 						Identifier: newBlock.Identifier,
 						Type:       "Block",
@@ -193,7 +195,7 @@ func createPage(idents *uniqueIdentifiers, def PartialDef) (page, *handler) {
 		}
 	} else {
 		newPage.Template = &template{
-			Path: def.Template,
+			Path: filepath.Join("templates", def.Template),
 			Name: def.Name,
 		}
 	}
@@ -227,7 +229,7 @@ func createPage(idents *uniqueIdentifiers, def PartialDef) (page, *handler) {
 	return newPage, pageHandler
 }
 
-func createEntries(idents *uniqueIdentifiers, prefix string, extends entry, def PartialDef) ([]*entry, []*route, []*handler, []*template, error) {
+func createEntries(idents *uniqueIdentifiers, page, prefix string, extends entry, def PartialDef) ([]*entry, []*route, []*handler, []*template, error) {
 	var prefixN string
 	if prefix != "" {
 		prefixN = fmt.Sprintf("%s_%s", prefix, lowercaseName(def.Name))
@@ -253,7 +255,9 @@ func createEntries(idents *uniqueIdentifiers, prefix string, extends entry, def 
 	}
 
 	if newEntry.Template == "" {
-		newEntry.Template = filepath.Join("templates", fmt.Sprintf("%s.templ.html", prefixN))
+		newEntry.Template = filepath.Join("templates", page, fmt.Sprintf("%s.templ.html", prefixN))
+	} else {
+		newEntry.Template = filepath.Join("templates", newEntry.Template)
 	}
 
 	partTemplate := template{
@@ -331,7 +335,7 @@ func createEntries(idents *uniqueIdentifiers, prefix string, extends entry, def 
 				Default:  partial.Default,
 			})
 
-			subEntries, subRoutes, subHandlers, subTemplates, err := createEntries(idents, prefixN, blockEntry, partial)
+			subEntries, subRoutes, subHandlers, subTemplates, err := createEntries(idents, page, prefixN, blockEntry, partial)
 			if err != nil {
 				return entries, routes, handlers, templates, err
 			}
