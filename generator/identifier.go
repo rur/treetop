@@ -104,6 +104,20 @@ func (u *uniqueIdentifiers) new(name string, qualifier []string) string {
 	}
 }
 
+func (u *uniqueIdentifiers) copy() *uniqueIdentifiers {
+	ref := <-u.ref
+	defer func() {
+		u.ref <- ref
+	}()
+	newIdent := newIdentifiers()
+	newRef := <-newIdent.ref
+	for k, v := range ref {
+		newRef[k] = v
+	}
+	newIdent.ref <- newRef
+	return &newIdent
+}
+
 func (u *uniqueIdentifiers) reserve(ident string) {
 	ref := <-u.ref
 	defer func() {

@@ -4,8 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Page [[ .Name ]]</title>
+    <title>Page [[ .Page.Name ]]</title>
     <style>
+
+    .page-nav {
+        float: right;
+    }
+
+    .nav li {
+        display: inline-block;
+        margin-right: 1rem;
+        margin-bottom: 1rem;
+        background-color: aqua;
+        padding: 0.2rem 1rem;
+    }
+
+    .page-nav li {
+        background-color: greenyellow;
+    }
 
     .block-extended {
         background-color: rgba(0, 0, 0, 0.1);
@@ -20,12 +36,16 @@
     </style>
 </head>
 <body>
-<h1>Page [[ .Name ]]</h1>[[ range $index, $block := .Blocks ]]
+    <ul class="page-nav nav">[[ range $link := .SiteLinks ]]
+        [[ if $link.URI ]]<li><a href="[[ $link.URI ]]">[[ $link.Label ]]</a></li>[[ else ]]
+        <li>[[ $link.Label ]]</li>[[ end ]][[ end ]]
+    </ul>
+    <h1>[[ .Page.Name ]] page</h1>[[ range $index, $block := .Page.Blocks ]]
     <h2>Block [[ $block.Name ]]</h2>
-    <ul>[[ range $partial := $block.Partials ]][[ if $partial.Path ]][[ if $partial.Default ]]
-        <li style="display: inline;"><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]*</a></li>
+    <ul class="nav">[[ range $partial := $block.Partials ]][[ if $partial.Path ]][[ if $partial.Default ]]
+        <li><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]*</a></li>
         [[- else -]]
-        <li style="display: inline;"><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]</a></li>
+        <li><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]</a></li>
         [[- end ]][[- end ]]
     [[ end ]]</ul>
     {{ block "[[ $block.Name ]]" .[[ $block.FieldName ]] }}

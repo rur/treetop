@@ -13,6 +13,7 @@ type PartialDef struct {
 	Handler  string                  `yaml:"handler"`
 	Doc      string                  `yaml:"doc"`
 	Blocks   map[string][]PartialDef `yaml:"blocks"`
+	URI      string                  `yaml:"uri"`
 }
 
 func LoadPartialDef(data []byte) ([]PartialDef, error) {

@@ -1,9 +1,10 @@
 {{ block "[[ .Extends ]]" . }}
 <div id="[[ .Extends ]]" class="block-extended">
     <p>View named [[.Name]]</p>[[ range $index, $block := .Blocks ]]
-<ul>[[ range $partial := $block.Partials ]][[ if $partial.Path ]][[ if $partial.Default ]]
-    <li style="display: inline;"><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]*</a></li>[[ else ]]
-    <li style="display: inline;"><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]</a></li>
+<h3>Block [[ $block.Name ]]</h3>
+<ul class="nav">[[ range $partial := $block.Partials ]][[ if $partial.Path ]][[ if $partial.Default ]]
+    <li><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]*</a></li>[[ else ]]
+    <li><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]</a></li>
     [[- end ]][[- end ]]
 [[ end ]]</ul>
 {{ block "[[ $block.Name ]]" .[[ $block.FieldName ]] }}

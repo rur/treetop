@@ -64,6 +64,12 @@ type page struct {
 	Blocks     []*block
 	Handlers   []*handler
 	Templates  []*template
+	URI        string
+}
+
+type siteLink struct {
+	Label string
+	URI   string
 }
 
 type template struct {
@@ -108,8 +114,8 @@ func CreateSeverFiles(dir string, pageDefs []PartialDef) ([]string, error) {
 
 	for _, def := range pageDefs {
 		newPage, pageHandler := createPage(&idents, def)
+		pageIdents := idents.copy()
 		for blockName, partials := range def.Blocks {
-			pageIdents := newIdentifiers()
 			newBlock := block{
 				FieldName:  validPublicIdentifier(blockName),
 				Identifier: pageIdents.new(blockName, []string{}),
@@ -130,7 +136,7 @@ func CreateSeverFiles(dir string, pageDefs []PartialDef) ([]string, error) {
 				})
 
 				entries, routes, handlers, templates, err := createEntries(
-					&pageIdents,
+					pageIdents,
 					[]string{newPage.Name, blockName},
 					entry{
 						Identifier: newBlock.Identifier,
@@ -168,8 +174,22 @@ func CreateSeverFiles(dir string, pageDefs []PartialDef) ([]string, error) {
 		return created, err
 	}
 
-	for _, sitePage := range site {
-		pageFiles, err := writePageFiles(dir, sitePage)
+	for i := range site {
+		links := make([]siteLink, 0, len(site)-1)
+		for j := range site {
+			if j != i && site[j].URI != "" {
+				links = append(links, siteLink{
+					Label: site[j].Name,
+					URI:   site[j].URI,
+				})
+			} else {
+				links = append(links, siteLink{
+					Label: site[j].Name,
+				})
+			}
+		}
+
+		pageFiles, err := writePageFiles(dir, site[i], links)
 		if err != nil {
 			return created, err
 		}
@@ -186,10 +206,14 @@ func createPage(idents *uniqueIdentifiers, def PartialDef) (page, *handler) {
 		Identifier: idents.new(def.Name, []string{}),
 		Entries:    make([]*entry, 0),
 		Blocks:     make([]*block, 0, len(def.Blocks)),
+		URI:        def.URI,
 	}
 	if def.Template == "" {
 		newPage.Template = &template{
-			Path: filepath.Join("templates", fmt.Sprintf("%s.templ.html", lowercaseName(def.Name))),
+			Path: filepath.Join(
+				"templates",
+				fmt.Sprintf("%s.templ.html", idents.new(lowercaseName(def.Name), []string{})),
+			),
 			Name: def.Name,
 		}
 	} else {
@@ -247,7 +271,14 @@ func createEntries(idents *uniqueIdentifiers, prefix []string, extends entry, de
 	}
 
 	if newEntry.Template == "" {
-		newEntry.Template = filepath.Join("templates", filepath.Join(prefix...), fmt.Sprintf("%s.templ.html", lowercaseName(def.Name)))
+		newEntry.Template = filepath.Join(
+			"templates",
+			filepath.Join(prefix...),
+			fmt.Sprintf(
+				"%s.templ.html",
+				idents.new(lowercaseName(def.Name), []string{}),
+			),
+		)
 	} else {
 		newEntry.Template = filepath.Join("templates", newEntry.Template)
 	}
@@ -349,7 +380,7 @@ func createEntries(idents *uniqueIdentifiers, prefix []string, extends entry, de
 	return entries, routes, handlers, templates, nil
 }
 
-func writePageFiles(dir string, p page) ([]string, error) {
+func writePageFiles(dir string, p page, links []siteLink) ([]string, error) {
 	var created []string
 	handlerFile := filepath.Join("server", p.Identifier+"_handlers.go")
 	handlerPath := filepath.Join(dir, handlerFile)
@@ -380,7 +411,13 @@ func writePageFiles(dir string, p page) ([]string, error) {
 		}
 		created = append(created, pt.Path)
 		defer tf.Close()
-		err = pageTemplate.Execute(tf, pt)
+		err = pageTemplate.Execute(tf, struct {
+			Page      *template
+			SiteLinks []siteLink
+		}{
+			Page:      pt,
+			SiteLinks: links,
+		})
 		if err != nil {
 			return created, err
 		}

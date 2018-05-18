@@ -1,15 +1,14 @@
 
 - name: home
   doc: Assemble application configuration including user authorization details
+  uri: /admin
   handler: adminHandler
-  template:
   blocks:
     nav:
-      - name: main-nav
-        handler: adminNavHandler
+      - name: nav
+        handler: navHandler
         default: true
-        doc: principle navigation for site
-        template: nav.templ.html
+        doc: principle navigatio
 
     wrapper:
       - name: landing
@@ -26,52 +25,55 @@
 
 - name: history
   doc: Assemble application configuration including user authorization details
+  uri: /admin/history
   handler: adminHandler
-  template: admin_base.templ.html
   blocks:
     nav:
       - name: nav
         default: true
-        handler: adminNavHandler
-        template: admin-nav.templ.html
+        handler: navHandler
 
     wrapper:
       - name: search
+        default: true
         doc: Allow history log to be searched
         path: /admin/history
 
 - name: account
   doc: Assemble application configuration including user authorization details
+  uri: /admin/account
   handler: adminHandler
-  template: admin_base.templ.html
   blocks:
     nav:
       - name: nav
         default: true
-        handler: adminNavHandler
-        template: admin-nav.templ.html
+        handler: navHandler
 
     wrapper:
       - name: landing
+        default: true
         doc: Administer admin user account
         path: /admin/account
 
 
 - name: user
   doc: Assemble application configuration including user authorization details
+  uri: /admin/users
   handler: adminHandler
-  template: admin_base.templ.html
   blocks:
     nav:
       - name: nav
         default: true
-        handler: adminNavHandler
-        template: admin-nav.templ.html
+        handler: navHandler
 
     wrapper:
+      - name: all-users
+        default: true
+        path: /admin/users
+
       - name: base
         doc: Display user information
-        path: /admin/user/{user}
+        path: /admin/users/{user}
         blocks:
           content:
             - default: true
@@ -98,17 +100,21 @@
 
 - name: role
   doc: Assemble application configuration including user authorization details
+  uri: /admin/roles
   handler: adminHandler
-  template: admin_base.templ.html
   blocks:
     nav:
       - name: nav
         default: true
-        handler: adminNavHandler
-        template: admin-nav.templ.html
+        handler: navHandler
 
     wrapper:
-      - name: landing
+      - name: all-roles
+        doc: show summary of all roles
+        default: true
+        path: /admin/roles
+
+      - name: role
         path: /admin/roles/{role}
         blocks:
           content:
