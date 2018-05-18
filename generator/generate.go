@@ -203,7 +203,7 @@ func createPage(idents *uniqueIdentifiers, def PartialDef) (page, *handler) {
 	var pageHandler *handler
 	newPage := page{
 		Name:       def.Name,
-		Identifier: idents.new(def.Name, []string{}),
+		Identifier: idents.new(def.Name+"Page", []string{}),
 		Entries:    make([]*entry, 0),
 		Blocks:     make([]*block, 0, len(def.Blocks)),
 		URI:        def.URI,
@@ -212,7 +212,7 @@ func createPage(idents *uniqueIdentifiers, def PartialDef) (page, *handler) {
 		newPage.Template = &template{
 			Path: filepath.Join(
 				"templates",
-				fmt.Sprintf("%s.templ.html", idents.new(lowercaseName(def.Name), []string{})),
+				fmt.Sprintf("%s.templ.html", idents.reserve(snakify(def.Name+"_page"))),
 			),
 			Name: def.Name,
 		}
@@ -276,7 +276,7 @@ func createEntries(idents *uniqueIdentifiers, prefix []string, extends entry, de
 			filepath.Join(prefix...),
 			fmt.Sprintf(
 				"%s.templ.html",
-				idents.new(lowercaseName(def.Name), []string{}),
+				idents.reserve(snakify(def.Name)),
 			),
 		)
 	} else {

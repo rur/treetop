@@ -19,12 +19,12 @@ func newIdentifiers() uniqueIdentifiers {
 }
 
 // pretty lo-fi slugify, remove all non-alphanum and lowercase first character
-func lowercaseName(name string) string {
+func snakify(name string) string {
 	reg, err := regexp.Compile("[^a-zA-Z0-9-_]+")
 	if err != nil {
 		log.Fatal(err)
 	}
-	return strings.ToLower(reg.ReplaceAllString(name, ""))
+	return strings.ToLower(reg.ReplaceAllString(name, "-"))
 }
 
 func delims(r rune) bool {
@@ -118,12 +118,13 @@ func (u *uniqueIdentifiers) copy() *uniqueIdentifiers {
 	return &newIdent
 }
 
-func (u *uniqueIdentifiers) reserve(ident string) {
+func (u *uniqueIdentifiers) reserve(ident string) string {
 	ref := <-u.ref
 	defer func() {
 		u.ref <- ref
 	}()
 	ref[ident] = true
+	return ident
 }
 
 func (u *uniqueIdentifiers) exists(ident string) bool {
