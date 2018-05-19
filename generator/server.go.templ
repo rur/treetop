@@ -50,7 +50,7 @@ func {{ $page.Identifier }}(server *ServerContext, m mux, renderer treetop.Rende
 	nil // unknown entry type: {{ $entry.Type }}
 	{{- end }}
 	{{ end }}{{ range $index, $route := .Routes }}
-	m.Handle("{{ $route.Path }}", {{ $route.Identifier }})
+	m.Handle("{{ $route.Path }}", {{ $route.Identifier }})  // {{ $route.Type }}
 	{{- end }}
 }
 

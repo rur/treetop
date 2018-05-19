@@ -51,6 +51,7 @@ type handler struct {
 type route struct {
 	Path       string
 	Identifier string
+	Type       string
 }
 
 type page struct {
@@ -247,6 +248,7 @@ func createPage(idents *uniqueIdentifiers, def PartialDef) (page, *handler) {
 		newPage.Routes = []*route{&route{
 			Identifier: newPage.Identifier,
 			Path:       def.Path,
+			Type:       "Page",
 		}}
 	}
 	return newPage, pageHandler
@@ -264,7 +266,7 @@ func createEntries(idents *uniqueIdentifiers, prefix []string, extends entry, de
 
 	newEntry := entry{
 		Extends:    extends.Identifier,
-		Identifier: idents.new(def.Name, prefix),
+		Identifier: idents.new(def.Name, []string{}),
 		Type:       entryType,
 		Template:   def.Template,
 		Name:       def.Name,
@@ -297,6 +299,7 @@ func createEntries(idents *uniqueIdentifiers, prefix []string, extends entry, de
 		routes = []*route{&route{
 			Identifier: newEntry.Identifier,
 			Path:       def.Path,
+			Type:       entryType,
 		}}
 	}
 
@@ -307,7 +310,7 @@ func createEntries(idents *uniqueIdentifiers, prefix []string, extends entry, de
 		partHandler = &handler{
 			Info:       def.Name,
 			Doc:        def.Doc,
-			Identifier: newEntry.Identifier + "Handler",
+			Identifier: idents.new(newEntry.Identifier+"Handler", prefix),
 		}
 		handlers = []*handler{partHandler}
 	} else if !idents.exists(def.Handler) {

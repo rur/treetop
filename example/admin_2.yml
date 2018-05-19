@@ -2,11 +2,9 @@
 - name: home
   doc: Assemble application configuration including user authorization details
   uri: /admin
-  handler: adminHandler
   blocks:
     nav:
       - name: nav
-        handler: navHandler
         default: true
         doc: principle navigatio
 
@@ -26,12 +24,10 @@
 - name: history
   doc: Assemble application configuration including user authorization details
   uri: /admin/history
-  handler: adminHandler
   blocks:
     nav:
       - name: nav
         default: true
-        handler: navHandler
 
     wrapper:
       - name: search
@@ -42,12 +38,10 @@
 - name: account
   doc: Assemble application configuration including user authorization details
   uri: /admin/account
-  handler: adminHandler
   blocks:
     nav:
       - name: nav
         default: true
-        handler: navHandler
 
     wrapper:
       - name: landing
@@ -59,12 +53,10 @@
 - name: user
   doc: Assemble application configuration including user authorization details
   uri: /admin/users
-  handler: adminHandler
   blocks:
     nav:
       - name: nav
         default: true
-        handler: navHandler
 
     wrapper:
       - name: all-users
@@ -101,12 +93,10 @@
 - name: role
   doc: Assemble application configuration including user authorization details
   uri: /admin/roles
-  handler: adminHandler
   blocks:
     nav:
       - name: nav
         default: true
-        handler: navHandler
 
     wrapper:
       - name: all-roles
