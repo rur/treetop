@@ -1,7 +1,11 @@
 package treetop
 
 import (
+	"fmt"
+	"html"
+	"log"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -19,20 +23,42 @@ func RequestHandler(f func(*http.Request) interface{}) HandlerFunc {
 	}
 }
 
-func ForcedRedirect(dw DataWriter, req *http.Request, url string, statusCode int) {
-	var isXHR bool
+func IsTreetopRequest(req *http.Request) bool {
 	for _, accept := range strings.Split(req.Header.Get("Accept"), ",") {
-		if strings.Trim(accept, " ") == FragmentContentType || strings.Trim(accept, " ") == PartialContentType {
-			isXHR = true
-			break
+		if strings.TrimSpace(accept) == FragmentContentType {
+			return true
+		}
+		if strings.TrimSpace(accept) == PartialContentType {
+			return true
 		}
 	}
-	if isXHR {
+	return false
+}
+
+func FullRedirect(w http.ResponseWriter, req *http.Request, uri string, statusCode int) {
+	if IsTreetopRequest(req) {
 		// This is an XMLHttpRequest, force redirect
-		dw.Header().Set("X-Response-Url", url)
-		dw.WriteHeader(http.StatusNoContent)
+		redir, err := url.Parse(uri)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			log.Printf("")
+			return
+		}
+
+		w.Header().Set("X-Treetop-Redirect", redir.EscapedPath())
+		w.WriteHeader(http.StatusNoContent)
+		if req.Method == "GET" {
+			note := "<a href=\"" + html.EscapeString(redir.EscapedPath()) + "\">Redirect</a>.\n"
+			fmt.Fprintln(w, note)
+		}
 	} else {
-		// normal http redirect
-		http.Redirect(dw, req, url, statusCode)
+		http.Redirect(w, req, uri, statusCode)
+	}
+}
+
+func Delegate(block string) HandlerFunc {
+	return func(dw DataWriter, req *http.Request) {
+		data, _ := dw.PartialData(block, req)
+		dw.Data(data)
 	}
 }
