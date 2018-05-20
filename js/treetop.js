@@ -64,7 +64,7 @@ window.treetop = (function ($, config) {
             req.setRequestHeader("content-type", encoding || "application/x-www-form-urlencoded");
         }
         req.onload = function () {
-            $.xhrLoad(req, suppressPushState);
+            $.xhrLoad(req, suppressPushState, method.toUpperCase());
             onLoad.trigger();
         };
         req.send(data || null);
@@ -139,7 +139,7 @@ window.treetop = (function ($, config) {
      * @param {XMLHttpRequest} xhr The xhr instance used to make the request
      * @param {Boolean} suppressPushState Prevent new state being pushed to history
      */
-    xhrLoad: function (xhr, suppressPushState) {
+    xhrLoad: function (xhr, suppressPushState, method) {
         "use strict";
         var $ = this;
         var i, len, temp, child, old, nodes;
@@ -150,8 +150,15 @@ window.treetop = (function ($, config) {
             // TODO: Consider checking for 4xx and 5xx status and handle these responses differently
             //       since the 'responseURL' may be a POST only or a treetop fragment route hence not accessible
             //       the following way.
-            window.location = responseURL;
-            return;
+            if (xhr.getResponseHeader("x-treetop-redirect") != null) {
+                if (method == "GET") {
+                    window.location = xhr.getResponseHeader("x-treetop-redirect");
+                    return;
+                } else {
+                    throw Error("Treetop client cannot redirect a non-GET request");
+                }
+            }
+            throw Error("Non-treetop response from URL: " + responseURL);
         }
 
         if (!suppressPushState && responseContentType == $.PARTIAL_CONTENT_TYPE && window.history) {
