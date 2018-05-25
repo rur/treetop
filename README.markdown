@@ -94,7 +94,7 @@ The Treetop library includes a `Page` abstraction for creating more complex netw
     mux.Handler("/contact", contactForm)
     mux.Handler("/contact/submit", thanks)
 
-Notice that each template path is paired with a function. This handler function is responsible for yielding the template data from the request. For example,
+Notice that each template file path is paired with a function. This handler function is responsible for yielding the template data from the request. For example,
 
     func contactSubmitHandler(dw treetop.DataWriter, req *http.Request) {
         // do stuff...
@@ -103,24 +103,96 @@ Notice that each template path is paired with a function. This handler function 
 
 The standard Go [html/template](https://golang.org/pkg/html/template/) library is used under the hood, however a preferred engine can be configured without much fuss (once it supports inheritance).
 
-See [Handling Inheritance](#TODO) documentation for more details.
+See [Handling Inheritance](#TODO) for more details.
 
 ## Client Library
 
-The __treetop.js__ script must be src'ed by the browser to enable in-page navigation. It exposes the `window.treetop` instance with the following methods:
+The __treetop.js__ script must be sourced by the browser to enable in-page navigation.
 
+### The `treetop` Attribute
 
-### Trigger treetop navigation,
+The most convenient way to enable in-page nav is declaratively. The behavior of specific elements can be overloaded by adding a `treetop` attribute. This allows your template to decide which navigation actions should trigger full-page vs. in-page loading.
+
+Here are two examples:
 
 ```
-treetop.request(method, url, data, encoding, suppressPushState)
+<a treetop href="/some/path">treetop link</a>
+
+<script>
+// equivalent to
+treetop.request("GET", "/some/path")
+</script>
+
+<form treetop action="/some/path" method="POST">
+    <input name="field" value="123"  type="submit"/>
+</form>
+
+<script>
+// equivalent to
+treetop.request("POST", "/some/path", {field: 123})
+</script>
 ```
 
+### Client Library API
+
+The client library exposes the `window.treetop` instance with the following methods:
+
+#### treetop.request
+Issue a treetop request. Notice that no callback mechanism is available. This is by design. Response handling is mandated by the protocol, see [Treetop Request](#Treetop+Request)
+
+##### Usage
+```
+treetop.request( [method], [url], [data], [encoding], [suppressPushState])
+```
+
+##### Arguments:
+
+| Param             | Type    | Details                                          |
+|-------------------|---------|--------------------------------------------------|
+| method            | string  | The HTTP request method  to use                  |
+| url               | string  | The URL path                                     |
+| data              | *any       | the request data, pre-encoding                   |
+| encoding          | *string  | encoding request data serialized as, default urlencoded |
+| suppressPushState | *boolean | stipulate that a history entry must NOT be created |
+
+_*optional_
+
+### treetop.push
+
+Mount our un-mount a component script to any element matching either tagName or attrName property after it has be inserted (mount) or removed (unmount) by treetop during the course of handing a DOM update. This is useful for bootstrapping/deconstructing custom components.
+
+All child elements are 'mounted' and 'unmounted', not just the fragment root.
+
+#### Usage
+```
+window.treetop = (window.treetop || []).push({
+    tagName: "",
+    attrName: "",
+    mount: (el) => {},
+    unmount: (el) => {},
+})
+```
+
+#### Arguments:
+
+| Param             |  Type      | Details                                         |
+|-------------------|------------|-------------------------------------------------|
+| tagName           | *string    | Case insensitive HTMLElement tag name           |
+| attrName          | *string    | Case insensitive HTMLElement attr name          |
+| mount             | *function  | Function accepting the HTMLElement as parameter |
+| unmount           | *function  | Function accepting the HTMLElement as parameter |
+
+_*optional_
 
 ### Browser support
 
-(TODO)
+__TODO: More browser testing is needed, please help!__
 
+The client library aims to be backwards compatible with legacy browsers for the most part. A HTML5 history shim is needed for the full experience in older browsers.
+
+## Handling Inheritance
+
+(TODO)
 
 ## References
 1. Go supports template inheritance through [nested template definitions](https://tip.golang.org/pkg/text/template/#hdr-Nested_template_definitions)
