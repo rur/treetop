@@ -10,7 +10,7 @@ Treetop is a library for managing HTTP requests that enable in-page browser navi
 
 Try it yourself, clone the repo and run the example server.
 
-    $ go run example/main.go
+    $ go run example/greeter.go
 
 _Example requires Go 1.6 or greater._
 
@@ -24,7 +24,7 @@ Treetop is a prototype which aims to bridge this gap by extending the standard m
 
 ### No client configuration necessary
 
-A lightweight JS library is the only thing required on the client to facilitate in-page navigation. It is fairly unobtrusive and follows an 'opt in' activation principle. Configuration is not required. Simple declarative-style script bindings are available for custom components.
+A lightweight JS library is the only thing required on the client to facilitate in-page navigation. It is fairly unobtrusive and follows an 'opt in' activation principle. Configuration is not required. Bindings are available for custom components.
 
 See [Client Library](#TODO) for more information.
 
@@ -35,12 +35,19 @@ The client library uses XHR to fullfil in-page requests. These can be triggered 
     // JavaScript
     treetop.request("GET", "/some/path")
 
-The client library will be expecting a response from the server that looks like this,
+The request sent by the client will include the following headers
+
+    GET /some/path HTTP/1.1
+    Host: [...]
+    Accept: application/x.treetop-html-partial+xml, application/x.treetop-html-fragment+xml
+    [...]
+
+The client library will be expecting the response from the server to looks like this,
 
     HTTP/1.1 200 OK
     [...]
     Content-Type: application/x.treetop-html-fragment+xml
-    Vary: Content-Type
+    Vary: Accept
     X-Response-URL: /some/path
     [...]
 
@@ -113,24 +120,28 @@ The __treetop.js__ script must be sourced by the browser to enable in-page navig
 
 The most convenient way to enable in-page nav is declaratively. The behavior of specific elements can be overloaded by adding a `treetop` attribute. This allows your template to decide which navigation actions should trigger full-page vs. in-page loading.
 
-Here are two examples:
+Here is an example of an anchor tag:
 
 ```
 <a treetop href="/some/path">treetop link</a>
 
-<script>
-// equivalent to
+```
+Click event trigger the following treetop request, as you might expect.
+```
 treetop.request("GET", "/some/path")
-</script>
+```
+Here is an example of a form tag:
+```
 
 <form treetop action="/some/path" method="POST">
-    <input name="field" value="123"  type="submit"/>
+    <input name="foo" value="bar" type="text"/>
+    <input type="submit"/>
 </form>
 
-<script>
-// equivalent to
-treetop.request("POST", "/some/path", {field: 123})
-</script>
+```
+Submit event will trigger the following request,
+```
+treetop.request("POST", "/some/path", "foo=bar", "application/x-www-form-urlencoded")
 ```
 
 ### Client Library API
@@ -142,7 +153,7 @@ Issue a treetop request. Notice that no callback mechanism is available. This is
 
 ##### Usage
 ```
-treetop.request( [method], [url], [data], [encoding], [suppressPushState])
+treetop.request( [method], [url], [body], [contentType])
 ```
 
 ##### Arguments:
@@ -151,17 +162,16 @@ treetop.request( [method], [url], [data], [encoding], [suppressPushState])
 |-------------------|---------|--------------------------------------------------|
 | method            | string  | The HTTP request method  to use                  |
 | url               | string  | The URL path                                     |
-| data              | *any       | the request data, pre-encoding                   |
-| encoding          | *string  | encoding request data serialized as, default urlencoded |
-| suppressPushState | *boolean | stipulate that a history entry must NOT be created |
+| body              | *string | the request body, encoded string                 |
+| contentType       | *string | describe the encoding of the request body        |
 
 _*optional_
 
 ### treetop.push
 
-Mount our un-mount a component script to any element matching either tagName or attrName property after it has be inserted (mount) or removed (unmount) by treetop during the course of handing a DOM update. This is useful for bootstrapping/deconstructing custom components.
+Register a mount and unmount function for custom components. Elements are matching by either tagName or attrName. The mounting functions will be called by treetop during the course of replacing a region of the DOM.
 
-All child elements are 'mounted' and 'unmounted', not just the fragment root.
+Fragment child elements are 'mounted' and 'unmounted' recursively in depth first order.
 
 #### Usage
 ```
@@ -186,13 +196,10 @@ _*optional_
 
 ### Browser support
 
+Backwards compatibility is a priority for the client library. It has been designed to rely on well supported APIs for the most part. However, you should use a HTML5 `history.pushState` shim to enable the the full navigation experience in legacy browsers.
+
 __TODO: More browser testing is needed, please help!__
 
-The client library aims to be backwards compatible with legacy browsers for the most part. A HTML5 history shim is needed for the full experience in older browsers.
-
-## Handling Inheritance
-
-(TODO)
 
 ## References
 1. Go supports template inheritance through [nested template definitions](https://tip.golang.org/pkg/text/template/#hdr-Nested_template_definitions)

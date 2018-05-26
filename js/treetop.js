@@ -52,22 +52,24 @@ window.treetop = (function ($, config) {
      * @public
      * @param  {string} method The request method GET|POST|...
      * @param  {string} url    The url
+     * @param  {string} body   Encoded request body
+     * @param  {string} contentType    Encoding of the request body
      */
-    Treetop.prototype.request = function (method, url, data, encoding, suppressPushState) {
+    Treetop.prototype.request = function (method, url, body, contentType) {
         if (!$.METHODS[method.toUpperCase()]) {
             throw new Error("Treetop: Unknown request method '" + method + "'");
         }
         var req = (XMLHttpRequest) ? new XMLHttpRequest() : new ActiveXObject("MSXML2.XMLHTTP");
         req.open(method.toUpperCase(), url, true);
         req.setRequestHeader("accept", [$.PARTIAL_CONTENT_TYPE, $.FRAGMENT_CONTENT_TYPE].join(", "));
-        if (data) {
-            req.setRequestHeader("content-type", encoding || "application/x-www-form-urlencoded");
+        if (contentType) {
+            req.setRequestHeader("content-type", contentType);
         }
         req.onload = function () {
-            $.xhrLoad(req, suppressPushState, method.toUpperCase());
+            $.xhrLoad(req, method);
             onLoad.trigger();
         };
-        req.send(data || null);
+        req.send(body || null);
     };
 
     Treetop.prototype.onLoad = onLoad.add;
@@ -137,9 +139,9 @@ window.treetop = (function ($, config) {
      * figure out how to attached them to the DOM
      *
      * @param {XMLHttpRequest} xhr The xhr instance used to make the request
-     * @param {Boolean} suppressPushState Prevent new state being pushed to history
+     * @param {string} method HTTP method used
      */
-    xhrLoad: function (xhr, suppressPushState, method) {
+    xhrLoad: function (xhr, method) {
         "use strict";
         var $ = this;
         var i, len, temp, child, old, nodes;
@@ -151,7 +153,7 @@ window.treetop = (function ($, config) {
             //       since the 'responseURL' may be a POST only or a treetop fragment route hence not accessible
             //       the following way.
             if (xhr.getResponseHeader("x-treetop-redirect") != null) {
-                if (method == "GET") {
+                if (method.toUpperCase() == "GET") {
                     window.location = xhr.getResponseHeader("x-treetop-redirect");
                     return;
                 } else {
@@ -161,7 +163,7 @@ window.treetop = (function ($, config) {
             throw Error("Non-treetop response from URL: " + responseURL);
         }
 
-        if (!suppressPushState && responseContentType == $.PARTIAL_CONTENT_TYPE && window.history) {
+        if (responseContentType == $.PARTIAL_CONTENT_TYPE && window.history) {
             window.history.pushState({
                 treetop: true,
             }, "", responseURL);

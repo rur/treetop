@@ -81,6 +81,42 @@ func TemplateFileSystem(fs http.FileSystem) TemplateExec {
 	}
 }
 
+func StringTemplateExec(w io.Writer, templates []string, data interface{}) error {
+	// trim strings and filter out empty
+	filtered := make([]string, 0, len(templates))
+	for _, templ := range templates {
+		s := strings.TrimSpace(templ)
+		if s != "" {
+			filtered = append(filtered, s)
+		}
+	}
+	if len(filtered) == 0 {
+		return fmt.Errorf("No non-empty templates were yielded for this route")
+	}
+	var t *template.Template
+	// snippet based upon https://golang.org/pkg/html/template/#ParseFiles implementation
+	for i, s := range filtered {
+		name := fmt.Sprintf("Template[%v]", i)
+		var tmpl *template.Template
+		if t == nil {
+			// first file in the list is used as the root template
+			t = template.New(name)
+			tmpl = t
+		} else {
+			tmpl = t.New(name)
+		}
+		_, err := tmpl.Parse(s)
+		if err != nil {
+			return fmt.Errorf("Error parsing template %s, error %s", name, err.Error())
+		}
+	}
+
+	if err := t.ExecuteTemplate(w, t.Name(), data); err != nil {
+		return err
+	}
+	return nil
+}
+
 func ExecutePartial(h Partial, handlerMap map[Block]Partial, resp http.ResponseWriter, r *http.Request) (Response, bool) {
 	hw := partialWriter{
 		ResponseWriter: resp,
