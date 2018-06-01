@@ -167,7 +167,7 @@ treetop.request( [method], [url], [body], [contentType])
 
 _*optional_
 
-### treetop.push
+### `treetop.push` Component
 
 Register a mount and unmount function for custom components. Elements are matching by either tagName or attrName. The mounting functions will be called by treetop during the course of replacing a region of the DOM.
 
@@ -191,6 +191,27 @@ window.treetop = (window.treetop || []).push({
 | attrName          | *string    | Case insensitive HTMLElement attr name          |
 | mount             | *function  | Function accepting the HTMLElement as parameter |
 | unmount           | *function  | Function accepting the HTMLElement as parameter |
+
+
+### `treetop.push` Composition
+
+Register a method for use in conjunction with `treetop-compose` attribute.
+
+#### Usage
+```
+window.treetop = (window.treetop || []).push({
+    composition: {
+        "custom-compose": (next, prev) => {
+            prev.parentNode.replaceChild(next, prev)
+
+            // optional async component mounting
+            return (done) => {
+                done();
+            }
+        }
+    }
+})
+```
 
 _*optional_
 

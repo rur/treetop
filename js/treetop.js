@@ -106,6 +106,12 @@ window.treetop = (function ($, config) {
     bindAttrName: null,
 
     /**
+     * Store the treetop composition definitions
+     * @type {Object} object reference
+     */
+    composition: {},
+
+    /**
      * White-list of request methods types
      * @type {Array}
      */
@@ -181,22 +187,68 @@ window.treetop = (function ($, config) {
                 if ($.SINGLETONS[child.nodeName.toUpperCase()]) {
                     old = document.getElementsByTagName(child.nodeName)[0];
                     if (old) {
-                        old.parentNode.replaceChild(child, old);
-                        $.unmount(old);
-                        $.mount(child);
+                        $.compose(child, old);
                         continue node_loop;
                     }
                 }
                 if (child.id) {
                     old = document.getElementById(child.id);
                     if (old) {
-                        old.parentNode.replaceChild(child, old);
-                        $.unmount(old);
-                        $.mount(child);
+                        $.compose(child, old);
                         continue node_loop;
                     }
                 }
             }
+    },
+
+    /**
+     * Default treetop composition method
+     *
+     * @param  {HTMLElement} next The element recently loaded from the API
+     * @param  {HTMLElement} prev The element currently within the DOM
+     */
+    defaultComposition: function(next, prev) {
+        prev.parentNode.replaceChild(next, prev);
+    },
+
+    /**
+     * Apply a recently loaded element to an existing one attached to the DOM
+     *
+     * @param  {HTMLElement} next The element recently loaded from the API
+     * @param  {HTMLElement} prev The element currently within the DOM
+    */
+    compose: function(next, prev) {
+        var $ = this;
+        var nextCompose = next.getAttribute("treetop-compose");
+        var prevCompose = prev.getAttribute("treetop-compose");
+        var compose = $.defaultComposition;
+        if (typeof nextCompose === "string" || typeof prevCompose === "string") {
+            nextCompose = nextCompose.toLowerCase();
+            prevCompose = prevCompose.toLowerCase();
+            if (nextCompose === prevCompose && nextCompose in $.composition && typeof $.composition[nextCompose] === "function") {
+                compose = $.composition[nextCompose];
+            }
+        }
+
+        var asyncMount = compose(next, prev);
+        if (typeof asyncMount === "function") {
+            asyncMount($.asyncMountFn(next, prev));
+        } else {
+            $.mount(next);
+            $.unmount(prev);
+        }
+    },
+
+    asyncMountFn: function (n, p) {
+        var $ = this;
+        return function () {
+            if (n !== null && p !== null) {
+                $.mount(n);
+                $.unmount(p);
+                n = null;
+                p = null;
+            }
+        };
     },
 
     /**
@@ -281,11 +333,19 @@ window.treetop = (function ($, config) {
         $.bindAttrName = $.index();
         for (i = 0; i < len; i++) {
             def = setup[i];
-            if (def.tagName) {
-                $.bindTagName.get(def.tagName.toUpperCase()).push(def);
-            }
-            if (def.attrName) {
-                $.bindAttrName.get(def.attrName.toUpperCase()).push(def);
+            if (def.composition instanceof Object) {
+                for (var prop in def.composition) {
+                    if (def.composition.hasOwnProperty(prop) && typeof def.composition[prop] === "function") {
+                        $.composition[prop.toLowerCase()] = def.composition[prop];
+                    }
+                }
+            } else {
+                if (def.tagName) {
+                    $.bindTagName.get(def.tagName.toUpperCase()).push(def);
+                }
+                if (def.attrName) {
+                    $.bindAttrName.get(def.attrName.toUpperCase()).push(def);
+                }
             }
         }
         $.mount(document.body);
