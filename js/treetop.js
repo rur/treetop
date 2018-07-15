@@ -52,22 +52,24 @@ window.treetop = (function ($, config) {
      * @public
      * @param  {string} method The request method GET|POST|...
      * @param  {string} url    The url
+     * @param  {string} body   Encoded request body
+     * @param  {string} contentType    Encoding of the request body
      */
-    Treetop.prototype.request = function (method, url, data, encoding, suppressPushState) {
+    Treetop.prototype.request = function (method, url, body, contentType) {
         if (!$.METHODS[method.toUpperCase()]) {
             throw new Error("Treetop: Unknown request method '" + method + "'");
         }
         var req = (XMLHttpRequest) ? new XMLHttpRequest() : new ActiveXObject("MSXML2.XMLHTTP");
         req.open(method.toUpperCase(), url, true);
         req.setRequestHeader("accept", [$.PARTIAL_CONTENT_TYPE, $.FRAGMENT_CONTENT_TYPE].join(", "));
-        if (data) {
-            req.setRequestHeader("content-type", encoding || "application/x-www-form-urlencoded");
+        if (contentType) {
+            req.setRequestHeader("content-type", contentType);
         }
         req.onload = function () {
-            $.xhrLoad(req, suppressPushState, method.toUpperCase());
+            $.xhrLoad(req, method);
             onLoad.trigger();
         };
-        req.send(data || null);
+        req.send(body || null);
     };
 
     Treetop.prototype.onLoad = onLoad.add;
@@ -104,6 +106,12 @@ window.treetop = (function ($, config) {
     bindAttrName: null,
 
     /**
+     * Store the treetop composition definitions
+     * @type {Object} object reference
+     */
+    composition: {},
+
+    /**
      * White-list of request methods types
      * @type {Array}
      */
@@ -137,9 +145,9 @@ window.treetop = (function ($, config) {
      * figure out how to attached them to the DOM
      *
      * @param {XMLHttpRequest} xhr The xhr instance used to make the request
-     * @param {Boolean} suppressPushState Prevent new state being pushed to history
+     * @param {string} method HTTP method used
      */
-    xhrLoad: function (xhr, suppressPushState, method) {
+    xhrLoad: function (xhr, method) {
         "use strict";
         var $ = this;
         var i, len, temp, child, old, nodes;
@@ -151,7 +159,7 @@ window.treetop = (function ($, config) {
             //       since the 'responseURL' may be a POST only or a treetop fragment route hence not accessible
             //       the following way.
             if (xhr.getResponseHeader("x-treetop-redirect") != null) {
-                if (method == "GET") {
+                if (method.toUpperCase() == "GET") {
                     window.location = xhr.getResponseHeader("x-treetop-redirect");
                     return;
                 } else {
@@ -161,7 +169,7 @@ window.treetop = (function ($, config) {
             throw Error("Non-treetop response from URL: " + responseURL);
         }
 
-        if (!suppressPushState && responseContentType == $.PARTIAL_CONTENT_TYPE && window.history) {
+        if (responseContentType == $.PARTIAL_CONTENT_TYPE && window.history) {
             window.history.pushState({
                 treetop: true,
             }, "", responseURL);
@@ -179,22 +187,68 @@ window.treetop = (function ($, config) {
                 if ($.SINGLETONS[child.nodeName.toUpperCase()]) {
                     old = document.getElementsByTagName(child.nodeName)[0];
                     if (old) {
-                        old.parentNode.replaceChild(child, old);
-                        $.unmount(old);
-                        $.mount(child);
+                        $.compose(child, old);
                         continue node_loop;
                     }
                 }
                 if (child.id) {
                     old = document.getElementById(child.id);
                     if (old) {
-                        old.parentNode.replaceChild(child, old);
-                        $.unmount(old);
-                        $.mount(child);
+                        $.compose(child, old);
                         continue node_loop;
                     }
                 }
             }
+    },
+
+    /**
+     * Default treetop composition method
+     *
+     * @param  {HTMLElement} next The element recently loaded from the API
+     * @param  {HTMLElement} prev The element currently within the DOM
+     */
+    defaultComposition: function(next, prev) {
+        prev.parentNode.replaceChild(next, prev);
+    },
+
+    /**
+     * Apply a recently loaded element to an existing one attached to the DOM
+     *
+     * @param  {HTMLElement} next The element recently loaded from the API
+     * @param  {HTMLElement} prev The element currently within the DOM
+    */
+    compose: function(next, prev) {
+        var $ = this;
+        var nextCompose = next.getAttribute("treetop-compose");
+        var prevCompose = prev.getAttribute("treetop-compose");
+        var compose = $.defaultComposition;
+        if (typeof nextCompose === "string" && typeof prevCompose === "string") {
+            nextCompose = nextCompose.toLowerCase();
+            prevCompose = prevCompose.toLowerCase();
+            if (nextCompose === prevCompose && nextCompose in $.composition && typeof $.composition[nextCompose] === "function") {
+                compose = $.composition[nextCompose];
+            }
+        }
+
+        var asyncMount = compose(next, prev);
+        if (typeof asyncMount === "function") {
+            asyncMount($.asyncMountFn(next, prev));
+        } else {
+            $.mount(next);
+            $.unmount(prev);
+        }
+    },
+
+    asyncMountFn: function (n, p) {
+        var $ = this;
+        return function () {
+            if (n !== null && p !== null) {
+                $.mount(n);
+                $.unmount(p);
+                n = null;
+                p = null;
+            }
+        };
     },
 
     /**
@@ -279,11 +333,19 @@ window.treetop = (function ($, config) {
         $.bindAttrName = $.index();
         for (i = 0; i < len; i++) {
             def = setup[i];
-            if (def.tagName) {
-                $.bindTagName.get(def.tagName.toUpperCase()).push(def);
-            }
-            if (def.attrName) {
-                $.bindAttrName.get(def.attrName.toUpperCase()).push(def);
+            if (def.composition instanceof Object) {
+                for (var prop in def.composition) {
+                    if (def.composition.hasOwnProperty(prop) && typeof def.composition[prop] === "function") {
+                        $.composition[prop.toLowerCase()] = def.composition[prop];
+                    }
+                }
+            } else {
+                if (def.tagName) {
+                    $.bindTagName.get(def.tagName.toUpperCase()).push(def);
+                }
+                if (def.attrName) {
+                    $.bindAttrName.get(def.attrName.toUpperCase()).push(def);
+                }
             }
         }
         $.mount(document.body);
@@ -642,6 +704,13 @@ window.treetop.push(function ($) {
         $.anchorClicked(evt, elm);
     }
 
+    function updateModifiers(_kevt) {
+        var kevt = _kevt || window.event;
+        $.shiftKey =  kevt.shiftKey;
+        $.ctrlKey =  kevt.ctrlKey;
+        $.metaKey =  kevt.metaKey;
+    }
+
     function onSubmit(_evt) {
         var evt = _evt || window.event;
         var elm = _evt.target || _evt.srcElement;
@@ -662,9 +731,13 @@ window.treetop.push(function ($) {
             if (el.addEventListener) {
                 el.addEventListener("click", documentClick, false);
                 el.addEventListener("submit", onSubmit, false);
+                el.addEventListener("keydown", updateModifiers, false);
+                el.addEventListener("keyup", updateModifiers, false);
             } else if (el.attachEvent) {
                 el.attachEvent("onclick", documentClick);
                 el.attachEvent("onsubmit", onSubmit);
+                el.attachEvent("onkeydown", updateModifiers);
+                el.attachEvent("onkeyup", updateModifiers);
             } else {
                 throw new Error("Treetop Events: Event delegation is not supported in this browser!");
             }
@@ -674,9 +747,13 @@ window.treetop.push(function ($) {
             if (el.removeEventListener) {
                 el.removeEventListener("click", documentClick);
                 el.removeEventListener("submit", onSubmit);
+                el.removeEventListener("keydown", updateModifiers);
+                el.removeEventListener("keyup", updateModifiers);
             } else if (el.detachEvent) {
                 el.detachEvent("onclick", documentClick);
                 el.detachEvent("onsubmit", onSubmit);
+                el.detachEvent("onkeydown", updateModifiers);
+                el.detachEvent("onkeyup", updateModifiers);
             }
             if(window.onpopstate === onPopState) {
                 window.onpopstate = null;
@@ -687,6 +764,12 @@ window.treetop.push(function ($) {
     //
     // Private
     //
+
+    // track modifier key state
+    shiftKey: false,
+    ctrlKey: false,
+    metaKey: false,
+
     /**
      * document submit event handler
      *
@@ -694,7 +777,22 @@ window.treetop.push(function ($) {
      */
     anchorClicked: function (evt, elm) {
         "use strict";
-        if (elm.href && elm.hasAttribute("treetop") && elm.getAttribute("treetop").toLowerCase() != "disabled") {
+        if (this.shiftKey || this.ctrlKey || this.metaKey ||
+            (elm.getAttribute("treetop") || "").toLowerCase() === "disabled"
+        ) {
+            // Use default browser behaviour when a modifier key is pressed
+            // or treetop has been explicity disabled
+            return
+        }
+        if (elm.hasAttribute("treetop-click")) {
+            // 'treetop-click' attribute can be used as an alternative to 'href' attribute.
+            // This is useful when default 'href' behavior is undesirable.
+            evt.preventDefault();
+            window.treetop.request("GET", elm.getAttribute("treetop-click"));
+            return false;
+        } else if (elm.href && elm.hasAttribute("treetop")) {
+            // hijack standard link click, extract href of link and
+            // trigger a Treetop XHR request instead
             evt.preventDefault();
             window.treetop.request("GET", elm.href);
             return false;

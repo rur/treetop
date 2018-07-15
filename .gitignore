@@ -18,5 +18,5 @@ package-lock.json
 .sublime-*
 
 treetop
-
 temp/
+idea/
