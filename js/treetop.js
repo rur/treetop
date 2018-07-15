@@ -222,7 +222,7 @@ window.treetop = (function ($, config) {
         var nextCompose = next.getAttribute("treetop-compose");
         var prevCompose = prev.getAttribute("treetop-compose");
         var compose = $.defaultComposition;
-        if (typeof nextCompose === "string" || typeof prevCompose === "string") {
+        if (typeof nextCompose === "string" && typeof prevCompose === "string") {
             nextCompose = nextCompose.toLowerCase();
             prevCompose = prevCompose.toLowerCase();
             if (nextCompose === prevCompose && nextCompose in $.composition && typeof $.composition[nextCompose] === "function") {
@@ -704,6 +704,13 @@ window.treetop.push(function ($) {
         $.anchorClicked(evt, elm);
     }
 
+    function updateModifiers(_kevt) {
+        var kevt = _kevt || window.event;
+        $.shiftKey =  kevt.shiftKey;
+        $.ctrlKey =  kevt.ctrlKey;
+        $.metaKey =  kevt.metaKey;
+    }
+
     function onSubmit(_evt) {
         var evt = _evt || window.event;
         var elm = _evt.target || _evt.srcElement;
@@ -724,9 +731,13 @@ window.treetop.push(function ($) {
             if (el.addEventListener) {
                 el.addEventListener("click", documentClick, false);
                 el.addEventListener("submit", onSubmit, false);
+                el.addEventListener("keydown", updateModifiers, false);
+                el.addEventListener("keyup", updateModifiers, false);
             } else if (el.attachEvent) {
                 el.attachEvent("onclick", documentClick);
                 el.attachEvent("onsubmit", onSubmit);
+                el.attachEvent("onkeydown", updateModifiers);
+                el.attachEvent("onkeyup", updateModifiers);
             } else {
                 throw new Error("Treetop Events: Event delegation is not supported in this browser!");
             }
@@ -736,9 +747,13 @@ window.treetop.push(function ($) {
             if (el.removeEventListener) {
                 el.removeEventListener("click", documentClick);
                 el.removeEventListener("submit", onSubmit);
+                el.removeEventListener("keydown", updateModifiers);
+                el.removeEventListener("keyup", updateModifiers);
             } else if (el.detachEvent) {
                 el.detachEvent("onclick", documentClick);
                 el.detachEvent("onsubmit", onSubmit);
+                el.detachEvent("onkeydown", updateModifiers);
+                el.detachEvent("onkeyup", updateModifiers);
             }
             if(window.onpopstate === onPopState) {
                 window.onpopstate = null;
@@ -749,6 +764,12 @@ window.treetop.push(function ($) {
     //
     // Private
     //
+
+    // track modifier key state
+    shiftKey: false,
+    ctrlKey: false,
+    metaKey: false,
+
     /**
      * document submit event handler
      *
@@ -756,7 +777,22 @@ window.treetop.push(function ($) {
      */
     anchorClicked: function (evt, elm) {
         "use strict";
-        if (elm.href && elm.hasAttribute("treetop") && elm.getAttribute("treetop").toLowerCase() != "disabled") {
+        if (this.shiftKey || this.ctrlKey || this.metaKey ||
+            (elm.getAttribute("treetop") || "").toLowerCase() === "disabled"
+        ) {
+            // Use default browser behaviour when a modifier key is pressed
+            // or treetop has been explicity disabled
+            return
+        }
+        if (elm.hasAttribute("treetop-click")) {
+            // 'treetop-click' attribute can be used as an alternative to 'href' attribute.
+            // This is useful when default 'href' behavior is undesirable.
+            evt.preventDefault();
+            window.treetop.request("GET", elm.getAttribute("treetop-click"));
+            return false;
+        } else if (elm.href && elm.hasAttribute("treetop")) {
+            // hijack standard link click, extract href of link and
+            // trigger a Treetop XHR request instead
             evt.preventDefault();
             window.treetop.request("GET", elm.href);
             return false;
