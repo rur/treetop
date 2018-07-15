@@ -175,7 +175,7 @@ Fragment child elements are 'mounted' and 'unmounted' recursively in depth first
 
 #### Usage
 ```
-window.treetop = (window.treetop || []).push({
+(window.treetop = window.treetop || []).push({
     tagName: "",
     attrName: "",
     mount: (el) => {},
@@ -199,7 +199,7 @@ Register a method for use in conjunction with `treetop-compose` attribute.
 
 #### Usage
 ```
-window.treetop = (window.treetop || []).push({
+(window.treetop = window.treetop || []).push({
     composition: {
         "custom-compose": (next, prev) => {
             prev.parentNode.replaceChild(next, prev)
