@@ -75,14 +75,22 @@ window.treetop = (function ($, config) {
     Treetop.prototype.onLoad = onLoad.add;
 
     /**
-     * FormSerializer can be used to serialize form input data for XHR
-     *
-     * The aim is to handle the widest possible variety of methods and browser capabilities.
-     * However currently AJAX file upload will not work without either FileReader or FormData.
-     *
-     * adapted from: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Submitting_forms_and_uploading_files
+     * treetop.submit will trigger an XHR request derived from the state
+     * of a supplied HTML Form element.
      */
-    Treetop.prototype.FormSerializer = $.FormSerializer;
+    Treetop.prototype.submit = function (formElement, submitInputElement) {
+        function dataHandler(fdata) {
+            window.setTimeout(function () {
+                window.treetop.request(
+                    fdata.method,
+                    fdata.action,
+                    fdata.data,
+                    fdata.enctype
+                );
+            }, 0);
+        }
+        new $.FormSerializer(formElement, dataHandler);
+    }
 
     Treetop.prototype.PARTIAL_CONTENT_TYPE = $.PARTIAL_CONTENT_TYPE;
     Treetop.prototype.FRAGMENT_CONTENT_TYPE = $.FRAGMENT_CONTENT_TYPE;
@@ -784,11 +792,11 @@ window.treetop.push(function ($) {
             // or treetop has been explicity disabled
             return
         }
-        if (elm.hasAttribute("treetop-click")) {
-            // 'treetop-click' attribute can be used as an alternative to 'href' attribute.
+        if (elm.hasAttribute("treetop-link")) {
+            // 'treetop-link' attribute can be used as an alternative to 'href' attribute.
             // This is useful when default 'href' behavior is undesirable.
             evt.preventDefault();
-            window.treetop.request("GET", elm.getAttribute("treetop-click"));
+            window.treetop.request("GET", elm.getAttribute("treetop-link"));
             return false;
         } else if (elm.href && elm.hasAttribute("treetop")) {
             // hijack standard link click, extract href of link and
@@ -806,11 +814,14 @@ window.treetop.push(function ($) {
      */
     formSubmit: function (evt, elm) {
         "use strict";
-        var $ = this;
         if (elm.action && elm.hasAttribute("treetop") && elm.getAttribute("treetop").toLowerCase() != "disabled") {
             evt.preventDefault();
-            // TODO: If there is an immediate error serializing the form, allow event propagation to continue.
-            $.serializeFormAndSubmit(elm);
+
+            // Serialize HTML form including file inputs and trigger a treetop request.
+            // The request will be executed asynchronously.
+            // TODO: If an error occurs during serialization there should be some logging/recovery mechanism in the API
+            window.treetop.submit(elm);
+
             return false;
         }
     },
@@ -825,66 +836,6 @@ window.treetop.push(function ($) {
         // force browser to refresh the page when the back
         // nav is triggered, seems to be the best thing to do
         location.reload();
-    },
-
-    /**
-     * Serialize HTML form including file inputs and trigger a treetop request.
-     *
-     * The request will be triggered asynchronously.
-     *
-     * @param  {boolean} pagePartial    Flag if this form should be added to browser history
-     */
-    serializeFormAndSubmit: function (form) {
-        function dataHandler(fdata) {
-            window.setTimeout(function () {
-                window.treetop.request(
-                    fdata.method,
-                    fdata.action,
-                    fdata.data,
-                    fdata.enctype
-                );
-            }, 0);
-        }
-        new window.treetop.FormSerializer(form, dataHandler);
     }
 }));
 
-window.treetop.push(function (treetop) {
-    function serializeFormAndSubmit(elm) {
-        function dataHandler(fdata) {
-            window.setTimeout(function () {
-                window.treetop.request(
-                    fdata.method,
-                    fdata.action,
-                    fdata.data,
-                    fdata.enctype
-                );
-            }, 0);
-        }
-        new treetop.FormSerializer(elm, dataHandler);
-    }
-    /**
-     * overload manual form submit
-     */
-    return {
-        tagName: "form",
-        mount: function (elm) {
-            if (elm.hasAttribute("treetop")) {
-                // overload form submit function to intercept
-                // script-triggered form submits
-                elm.submit = function () {
-                    // check if attribute is still there, treetop binding can disabled
-                    // by removing attribute
-                    if (elm.action && elm.hasAttribute("treetop") && elm.getAttribute("treetop").toLowerCase() != "disabled") {
-                        serializeFormAndSubmit(elm);
-                    } else {
-                        HTMLFormElement.prototype.submit.call(elm);
-                    }
-                };
-            }
-        },
-        unmount: function (el) {
-            delete el.submit;
-        }
-    };
-}(window.treetop));
