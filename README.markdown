@@ -31,19 +31,15 @@ See [Client Library](https://github.com/rur/treetop-client) for more information
 
 ## How Treetop Requests Work
 
-The client library uses XHR to fullfil in-page requests. These can be triggered explicitly in the browser like so,
+The client library uses XHR to fullfil in-page requests. Each treetop request includes the following Accept header,
 
-    // JavaScript
-    treetop.request("GET", "/some/path")
-
-The request sent by the client will include the following headers
-
-    GET /some/path HTTP/1.1
+    GET [...] HTTP/1.1
     Host: [...]
     Accept: application/x.treetop-html-partial+xml, application/x.treetop-html-fragment+xml
     [...]
 
-The client library will be expecting the response from the server to looks like this,
+If the server handler supports the treetop content type, it will respond with a corresponding header and a list of HTML snippets
+to be applied to the current document. For example,
 
     HTTP/1.1 200 OK
     [...]
@@ -53,16 +49,16 @@ The client library will be expecting the response from the server to looks like 
     [...]
 
     <section id="content"><p>Hello, Treetop!</p></section>
-
     <div id="sidebar"><a href="/">Go Home</a></div>
 
-Once the `Content-Type` is a recognized (see below) the response body will be parsed as a list of HTMLElements. Each of which will be matched to an existing node in the document using element ID.
+Once the `Content-Type` has been recognized in the response headers, the client will parse the body as a list of HTMLElements.
+The `id` attribute of each root element will be matched to an existing node in the document.
 
 * Matched elements in the current DOM will be replaced.
-* Unmatched elements from the response will be silently discarded.
+* Unmatched elements from the response will be discarded.
 
 
-#### Fragment vs Partial
+### Fragment vs Partial
 
 Fragment content type, `application/x.treetop-html-fragment+xml`
 
