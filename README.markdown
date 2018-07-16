@@ -12,6 +12,8 @@ Try it yourself, clone the repo and run the example server.
 
     $ go run example/greeter.go
 
+Tip. Activate your network tab to observe what's going on.
+
 _Example requires Go 1.6 or greater._
 
 ## Introduction
