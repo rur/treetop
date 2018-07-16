@@ -24,7 +24,7 @@ var (
 		</form>
 	</div>
 {{ block "message" .Message}}{{ end }}
-<script src="https://rawgit.com/rur/treetop/master/js/treetop.js" async></script>
+<script src="https://rawgit.com/rur/treetop-client/master/treetop.js" async></script>
 </body>
 </html>
 	`
@@ -52,8 +52,8 @@ func main() {
 
 	http.Handle("/", greetForm)
 	http.Handle("/greet", greetMessage)
-	fmt.Println("serving on http://localhost:7777/")
-	log.Fatal(http.ListenAndServe("localhost:7777", nil))
+	fmt.Println("serving on http://0.0.0.0:3000/")
+	log.Fatal(http.ListenAndServe(":3000", nil))
 }
 
 func baseHandler(w treetop.DataWriter, req *http.Request) {
