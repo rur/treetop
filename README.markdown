@@ -1,12 +1,12 @@
 # Treetop
 
-### Modern web UX for server side applications
+### Modern web UX for multi-page applications
 
 _N.B. This is a prototype. The API is not stable and has not yet been extensively tested._
 
 ## TL;DR
 
-Treetop is a library for managing HTTP requests that enable in-page browser navigation with server side templates.
+Treetop is a library for managing HTTP requests that enable in-page browser navigation with server-side templates.
 
 Try it yourself, clone the repo and run the example server.
 
@@ -20,7 +20,7 @@ _Example requires Go 1.6 or greater._
 
 ### Why was this created?
 
-Integrating a modern web UI with a server side application can be frustrating. The single-page application approach ([SPA](https://en.wikipedia.org/wiki/Single-page_application)) is not always a good option. Treetop is a prototype which aims to extend the navigation model for multi-page apps with HTML partials and fragments. Insted of returning a full HTML page, the server can respond with 'updates' for the current web page.
+Integrating a modern web UI with a mainly server-side app can be frustrating. The single-page application approach ([SPA](https://en.wikipedia.org/wiki/Single-page_application)) is not always a good option. Treetop is a prototype which aims to extend the navigation model for multi-page apps with HTML partials and fragments. Instead of generating a full HTML page, the server can respond with 'updates' for the current web page.
 
 #### No client configuration necessary
 
@@ -38,7 +38,7 @@ The client library uses XHR to fullfil in-page requests. Each treetop request in
     Accept: application/x.treetop-html-partial+xml, application/x.treetop-html-fragment+xml
     [...]
 
-If the server handler supports the treetop content type, it will respond with a corresponding header and a list of HTML snippets
+If this endpoint supports the treetop content type, the response will include corresponding headers and a list of HTML snippets
 to be applied to the current document. For example,
 
     HTTP/1.1 200 OK
@@ -63,7 +63,7 @@ The `id` attribute of each root element will be matched to an existing node in t
 Fragment content type, `application/x.treetop-html-fragment+xml`
 
 * Transient view update,
-* This endpoint is not necessarily capable of yielding a valid html document.
+* This endpoint is not necessarily capable of yielding a valid HTML document.
 
 Partial content type, `application/x.treetop-html-partial+xml`
 
@@ -105,7 +105,7 @@ Notice that each template file path is paired with a function. This handler func
         dw.Data("Thanks!")
     }
 
-The standard Go [html/template](https://golang.org/pkg/html/template/) library is used under the hood, however a preferred engine can be configured without much fuss (once it supports inheritance).
+The standard Go [html/template](https://golang.org/pkg/html/template/) library is used under the hood. However, a preferred engine can be configured without much fuss (once it supports inheritance).
 
 See [Handling Inheritance](#TODO) for more details.
 
@@ -118,4 +118,4 @@ See [Client Library](https://github.com/rur/treetop-client) for more information
 
 ## References
 1. Go supports template inheritance through [nested template definitions](https://tip.golang.org/pkg/text/template/#hdr-Nested_template_definitions)
-    * Treetop is intended for use with `{{block "name" ...}}` for convenience sake, `{{define "name"}}` could also be used however. See Go [template actions](https://tip.golang.org/pkg/text/template/#hdr-Actions).
+    * Treetop is intended for use with `{{block "name" ...}}` for convenience sake, `{{define "name"}}` could also be used, however. See Go [template actions](https://tip.golang.org/pkg/text/template/#hdr-Actions).
