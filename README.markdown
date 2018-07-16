@@ -14,7 +14,7 @@ Try it yourself, clone the repo and run the example server.
 
 Tip. Activate your network tab to observe what's going on.
 
-_Example requires Go 1.6 or greater._
+_TODO: Add more examples_
 
 ## Introduction
 
@@ -24,7 +24,7 @@ Integrating a modern web UI with a mainly server-side app can be frustrating. Th
 
 #### No client configuration necessary
 
-A lightweight JS library is the only thing required for the browser to facilitate in-page navigation. It is designed not to get in the way if other JS components.
+A lightweight JS library is the only thing required for the browser to facilitate in-page navigation. It is designed to play nicely with other JS components.
 
 See [Client Library](https://github.com/rur/treetop-client) for more information.
 
@@ -107,7 +107,7 @@ Notice that each template file path is paired with a function. This handler func
 
 The standard Go [html/template](https://golang.org/pkg/html/template/) library is used under the hood. However, a preferred engine can be configured without much fuss (once it supports inheritance).
 
-See [Handling Inheritance](#TODO) for more details.
+_TODO: add guide for 'Handling Inheritance'_
 
 ## Client Library
 
