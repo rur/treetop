@@ -6,7 +6,7 @@ _N.B. This is a prototype. The API is not stable and has not yet been extensivel
 
 ## TL;DR
 
-Treetop is a library for managing HTTP requests that enable in-page browser navigation without client side templates.
+Treetop is a library for managing HTTP requests that enable in-page browser navigation with server side templates.
 
 Try it yourself, clone the repo and run the example server.
 
@@ -18,15 +18,14 @@ _Example requires Go 1.6 or greater._
 
 ### Why was this created?
 
-Integrating a modern web UI with a server side application can be frustrating. When a single-page application ([SPA](https://en.wikipedia.org/wiki/Single-page_application)) is not an option, hybrid client & server templates are needed. This blurs the lines between conventional page navigation and data-driven components. Dual APIs have severe limitations that can cause maintenance headaches over time.
+Integrating a modern web UI with a server side application can be frustrating. The single-page application approach ([SPA](https://en.wikipedia.org/wiki/Single-page_application)) is not always a good option. Treetop is a prototype which aims to extend the navigation model for multi-page apps with HTML partials and fragments. Insted of returning a full HTML page, the server can respond with 'updates' for the current web page.
 
-Treetop is a prototype which aims to bridge this gap by extending the standard model of HTML page navigation with partials and fragments. This helps alleviate the need for client side components to fetch data from the server, instead context can be pushed via HTML in the conventional way.
+#### No client configuration necessary
 
-### No client configuration necessary
-
-A lightweight JS library is the only thing required on the client to facilitate in-page navigation. It is fairly unobtrusive and follows an 'opt in' activation principle. Configuration is not required. Bindings are available for custom components.
+A lightweight JS library is the only thing required for the browser to facilitate in-page navigation. It is designed not to get in the way if other JS components.
 
 See [Client Library](https://github.com/rur/treetop-client) for more information.
+
 
 ## How Treetop Requests Work
 
