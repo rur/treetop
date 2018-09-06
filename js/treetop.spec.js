@@ -108,6 +108,51 @@ describe('Treetop', function() {
     });
   });
 
+  describe('compose indexed elements', function() {
+    var el = null;
+    beforeEach(function() {
+      el = document.createElement("ul");
+      el.setAttribute("id", "test");
+      el.setAttribute("treetop-compose", "test");
+      el.innerHTML = "<li>1</li><li>2</li><li>3</li>";
+      treetop.push({
+        "composition": {
+          "test": (next, prev) => {
+            Array.from(next.children).forEach(child => {
+              prev.appendChild(child);
+            });
+          }
+        }
+      });
+      document.body.appendChild(el);
+    });
+
+    afterEach(() => document.body.removeChild(document.getElementById("test")));
+
+    it('should have appended the child', () => expect(el.parentNode.tagName).to.equal("BODY"));
+
+    it('should append items to the list', function() {
+      treetop.request("GET", "/test");
+      requests[0].respond(
+        200,
+        { 'content-type': treetop.PARTIAL_CONTENT_TYPE },
+        '<ul id="test" treetop-compose="test"><li>4</li><li>5</li><li>6</li></ul>'
+      );
+      expect(document.body.textContent).to.equal("123456");
+    });
+
+    it('should replace if compose method does not match', function() {
+      treetop.request("GET", "/test");
+      requests[0].respond(
+        200,
+        { 'content-type': treetop.PARTIAL_CONTENT_TYPE },
+        '<ul id="test" treetop-compose="something-else"><li>4</li><li>5</li><li>6</li></ul>'
+      );
+      expect(document.body.textContent).to.equal("456");
+    });
+  });
+
+
   describe('replace singleton elements', () =>
 
     it('should replace title tag', function() {
