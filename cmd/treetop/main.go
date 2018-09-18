@@ -59,9 +59,18 @@ func main() {
 			}
 		}
 
-		outfolder, createdFiles, err := generate(sitemap)
+		outfolder, err := ioutil.TempDir("", "")
+		if err != nil {
+			fmt.Printf("Error creating temp dir: %s", err)
+			return
+		}
+
+		createdFiles, err := generate(outfolder, sitemap)
 		if err != nil {
 			fmt.Printf("Treetop: Failed to build scaffold for sitemap %s\nGenerator Error: %s\n", config, err.Error())
+			if err := os.RemoveAll(outfolder); err != nil {
+				fmt.Printf("Scaffold failed but temp directory was not cleaned up: %s\n", err.Error())
+			}
 			return
 		} else {
 			// attempt to format the go code
@@ -90,65 +99,62 @@ func main() {
 	}
 }
 
-func generate(sitemap generator.Sitemap) (string, []string, error) {
+func generate(outDir string, sitemap generator.Sitemap) ([]string, error) {
 	var files []string
 	var file string
+	var err error
 	created := make([]string, 0)
 
 	// check that sitemap namespace is a uri looking thing (without protocol, creds, etc...)
 	// it will typically be something like "github.com/example/project"
 	var nsReg = regexp.MustCompile(`(?i)^[A-Z][A-Z0-9-_]*(\.[A-Z][A-Z0-9-_]*)*(/[A-Z][A-Z0-9-_]*(\.[A-Z][A-Z0-9-_]*)*)*$`)
 	if !nsReg.MatchString(sitemap.Namespace) {
-		return "", created, fmt.Errorf("Invalid site namespace in config: %s", sitemap.Namespace)
-	}
-	outDir, err := ioutil.TempDir("", "")
-	if err != nil {
-		return outDir, created, fmt.Errorf("Error creating temp dir, %s", err)
+		return created, fmt.Errorf("Invalid site namespace in config: %s", sitemap.Namespace)
 	}
 
 	pagesDir := filepath.Join(outDir, "pages")
 	if err := os.Mkdir(pagesDir, os.ModePerm); err != nil {
-		return outDir, created, fmt.Errorf("Error creating pages dir in temp directory. %s", err)
+		return created, fmt.Errorf("Error creating pages dir in temp directory. %s", err)
 	}
 
 	for _, def := range sitemap.Pages {
 		pageDir := filepath.Join(pagesDir, def.Name)
 		if err := os.Mkdir(pageDir, os.ModePerm); err != nil {
-			return outDir, created, fmt.Errorf("Error creating dir for page '%s'. %s", def.Name, err)
+			return created, fmt.Errorf("Error creating dir for page '%s'. %s", def.Name, err)
 		}
 		templatesDir := filepath.Join(pageDir, "templates")
 		if err := os.Mkdir(templatesDir, os.ModePerm); err != nil {
-			return outDir, created, fmt.Errorf("Error creating template dir for page '%s'. %s", def.Name, err)
+			return created, fmt.Errorf("Error creating template dir for page '%s'. %s", def.Name, err)
 		}
 
 		file, err = writers.WritePageFile(pageDir, &def, sitemap.Namespace)
 		if err != nil {
-			return outDir, created, fmt.Errorf("Error creating page.go file for '%s'. %s", def.Name, err)
+			return created, fmt.Errorf("Error creating page.go file for '%s'. %s", def.Name, err)
 		}
 		created = append(created, file)
 		file, err = writers.WriteHandlerFile(pageDir, &def, sitemap.Namespace)
 		if err != nil {
-			return outDir, created, fmt.Errorf("Error creating handler.go file for page '%s'. %s", def.Name, err)
+			return created, fmt.Errorf("Error creating handler.go file for page '%s'. %s", def.Name, err)
 		}
 		created = append(created, file)
 		files, err = writers.WriteTemplateFiles(templatesDir, &def)
 		if err != nil {
-			return outDir, created, fmt.Errorf("Error creating templates/... for page '%s'. %s", def.Name, err)
+			return created, fmt.Errorf("Error creating templates/... for page '%s'. %s", def.Name, err)
 		}
 		created = append(created, files...)
 	}
 
 	file, err = writers.WriteContextFile(pagesDir, sitemap.Namespace)
 	if err != nil {
-		return outDir, created, fmt.Errorf("Error creating context.go file. %s", err)
+		return created, fmt.Errorf("Error creating context.go file. %s", err)
 	}
 	created = append(created, file)
 
 	file, err = writers.WriteStartFile(outDir, sitemap.Pages, sitemap.Namespace)
 	if err != nil {
-		return outDir, created, fmt.Errorf("Error creating start.go file. %s", err)
+		return created, fmt.Errorf("Error creating start.go file. %s", err)
 	}
 	created = append(created, file)
 
-	return outDir, created, nil
+	return created, nil
 }
