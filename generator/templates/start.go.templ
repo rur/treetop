@@ -10,7 +10,7 @@ import (
 	"{{ .Namespace }}/pages"
 	{{ range $index, $page := .Pages -}}
 	"{{ $.Namespace }}/pages/{{ $page }}"
-{{- end }}
+	{{ end }}
 )
 
 var (

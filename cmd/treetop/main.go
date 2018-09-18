@@ -117,6 +117,8 @@ func generate(outDir string, sitemap generator.Sitemap) ([]string, error) {
 		return created, fmt.Errorf("Error creating pages dir in temp directory. %s", err)
 	}
 
+	// TODO: implement page specific page generators, skip for now
+	goto TEMP_SKIP
 	for _, def := range sitemap.Pages {
 		pageDir := filepath.Join(pagesDir, def.Name)
 		if err := os.Mkdir(pageDir, os.ModePerm); err != nil {
@@ -143,8 +145,8 @@ func generate(outDir string, sitemap generator.Sitemap) ([]string, error) {
 		}
 		created = append(created, files...)
 	}
-
-	file, err = writers.WriteContextFile(pagesDir, sitemap.Namespace)
+TEMP_SKIP:
+	file, err = writers.WriteContextFile(pagesDir)
 	if err != nil {
 		return created, fmt.Errorf("Error creating context.go file. %s", err)
 	}

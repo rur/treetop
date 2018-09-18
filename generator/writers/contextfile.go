@@ -1,14 +1,27 @@
 package writers
 
 import (
-	"fmt"
+	"os"
+	"path/filepath"
 )
 
 type contextdata struct {
 	Namespace string
 }
 
-func WriteContextFile(dir string, namespace string) (string, error) {
-	var fullpath string
-	return fullpath, fmt.Errorf("Not Implemented")
+func WriteContextFile(dir string) (string, error) {
+	fileName := filepath.Join("pages", "context.go")
+	filePath := filepath.Join(dir, "context.go")
+	sf, err := os.Create(filePath)
+	if err != nil {
+		return fileName, err
+	}
+	defer sf.Close()
+
+	err = contextTemplate.Execute(sf, nil)
+	if err != nil {
+		return fileName, err
+	}
+
+	return fileName, nil
 }
