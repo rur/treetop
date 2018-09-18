@@ -1,0 +1,33 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+
+	"github.com/rur/treetop"
+
+	"{{ .Namespace }}/pages"
+	{{ range $index, $page := .Pages -}}
+	"{{ $.Namespace }}/pages/{{ $page }}"
+{{- end }}
+)
+
+var (
+	addr = ":8000"
+)
+
+func main() {
+	m := http.NewServeMux()
+
+	cxt := pages.ServerContext{Example: true}
+
+	renderer := treetop.NewRenderer(treetop.DefaultTemplateExec){{ range $index, $page := .Pages }}
+	{{ $page }}.Page(&cxt, m, renderer)
+{{- end }}
+
+	fmt.Printf("Starting treetop-workspace server at %s", addr)
+	// Bind to a addr and pass our router in
+	log.Fatal(http.ListenAndServe(addr, m))
+}
+

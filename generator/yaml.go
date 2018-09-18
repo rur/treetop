@@ -4,6 +4,11 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type Sitemap struct {
+	Namespace string       `yaml:"namespace"`
+	Pages     []PartialDef `yaml:"pages"`
+}
+
 type PartialDef struct {
 	Name     string                  `yaml:"name"`
 	Fragment bool                    `yaml:"fragment"`
@@ -16,10 +21,10 @@ type PartialDef struct {
 	URI      string                  `yaml:"uri"`
 }
 
-func LoadPartialDef(data []byte) ([]PartialDef, error) {
-	var defs []PartialDef
-	if err := yaml.Unmarshal(data, &defs); err != nil {
-		return defs, err
+func LoadSitemap(data []byte) (Sitemap, error) {
+	var config Sitemap
+	if err := yaml.Unmarshal(data, &config); err != nil {
+		return config, err
 	}
-	return defs, nil
+	return config, nil
 }

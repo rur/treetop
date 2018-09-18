@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	generator "github.com/rur/treetop/generator"
+	writers "github.com/rur/treetop/generator/writers"
 )
 
 var generateUsage = `
@@ -38,12 +39,12 @@ func main() {
 
 		data, err := ioutil.ReadFile(config)
 		if err != nil {
-			fmt.Printf("Error loading YAML config: %v", err)
+			fmt.Printf("Error loading sitemap file: %v", err)
 			return
 		}
-		defs, err := generator.LoadPartialDef(data)
+		sitemap, err := generator.LoadSitemap(data)
 		if err != nil {
-			fmt.Printf("Error parsing config: %v", err)
+			fmt.Printf("Error parsing sitemap YAML: %v", err)
 			return
 		}
 
@@ -57,7 +58,7 @@ func main() {
 			}
 		}
 
-		outfolder, createdFiles, err := generate(defs)
+		outfolder, createdFiles, err := generate(sitemap)
 		if err != nil {
 			fmt.Printf("Treetop: filed to generate data from sitemap %s\n%s\n", config, err.Error())
 			return
@@ -88,28 +89,58 @@ func main() {
 	}
 }
 
-func generate(defs []generator.PartialDef) (string, []string, error) {
+func generate(sitemap generator.Sitemap) (string, []string, error) {
+	var files []string
+	var file string
 	created := make([]string, 0)
 	outDir, err := ioutil.TempDir("", "")
 	if err != nil {
 		return outDir, created, err
 	}
 
-	templatesDir := filepath.Join(outDir, "templates")
-	if err := os.Mkdir(templatesDir, os.ModePerm); err != nil {
+	pagesDir := filepath.Join(outDir, "pages")
+	if err := os.Mkdir(pagesDir, os.ModePerm); err != nil {
 		return outDir, created, err
 	}
 
-	serverDir := filepath.Join(outDir, "server")
-	if err := os.Mkdir(serverDir, os.ModePerm); err != nil {
-		return outDir, created, err
+	for _, def := range sitemap.Pages {
+		pageDir := filepath.Join(pagesDir, def.Name)
+		if err := os.Mkdir(pageDir, os.ModePerm); err != nil {
+			return outDir, created, err
+		}
+		templatesDir := filepath.Join(pageDir, "templates")
+		if err := os.Mkdir(templatesDir, os.ModePerm); err != nil {
+			return outDir, created, err
+		}
+
+		file, err = writers.WritePageFile(pageDir, &def, sitemap.Namespace)
+		if err != nil {
+			return outDir, created, err
+		}
+		created = append(created, file)
+		files, err = writers.WriteHandlerFile(pageDir, &def, sitemap.Namespace)
+		if err != nil {
+			return outDir, created, err
+		}
+		created = append(created, file)
+		files, err = writers.WriteTemplateFiles(templatesDir, &def)
+		if err != nil {
+			return outDir, created, err
+		}
+		created = append(created, files...)
 	}
 
-	files, err := generator.CreateSeverFiles(outDir, defs)
+	file, err = writers.WriteContext(pagesDir)
 	if err != nil {
 		return outDir, created, err
 	}
-	created = append(created, files...)
+	created = append(created, file)
+
+	file, err = writers.WriteStartFile(outDir, defs)
+	if err != nil {
+		return outDir, created, err
+	}
+	created = append(created, file)
 
 	return outDir, created, nil
 }
