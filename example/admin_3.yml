@@ -1,0 +1,136 @@
+namespace: github.com/rur/treetop
+pages:
+  - name: home
+    doc: Assemble application configuration including user authorization details
+    uri: /admin
+    blocks:
+      nav:
+        - name: nav
+          default: true
+          doc: principle navigatio
+
+      wrapper:
+        - name: landing
+          default: true
+          doc: General admin search area
+          path: /admin
+          blocks:
+            landing-results:
+              - name: user-search-results
+                path: /admin/user-search
+
+              - name: role-search-results
+                path: /admin/role-search
+
+  - name: history
+    doc: Assemble application configuration including user authorization details
+    uri: /admin/history
+    blocks:
+      nav:
+        - name: nav
+          default: true
+
+      wrapper:
+        - name: search
+          default: true
+          doc: Allow history log to be searched
+          path: /admin/history
+
+  - name: account
+    doc: Assemble application configuration including user authorization details
+    uri: /admin/account
+    blocks:
+      nav:
+        - name: nav
+          default: true
+
+      wrapper:
+        - name: landing
+          default: true
+          doc: Administer admin user account
+          path: /admin/account
+
+
+  - name: user
+    doc: Assemble application configuration including user authorization details
+    uri: /admin/users
+    blocks:
+      nav:
+        - name: nav
+          default: true
+
+      wrapper:
+        - name: all-users
+          default: true
+          path: /admin/users
+
+        - name: base
+          doc: Display user information
+          path: /admin/users/{user}
+          blocks:
+            content:
+              - default: true
+                name: roles-list
+                path: /admin/users/{user}/roles
+
+              - name: roles-edit
+                path: /admin/users/{user}/edit
+
+              - name: assign-roles
+                path: /admin/users/{user}/assign
+
+              - fragment: true
+                name: find-roles-results
+                path: /admin/users/{user}/find-role-roles
+
+              - fragment: true
+                name: assign-role-complete
+                path: /admin/users/{user}/assign-roles-complete
+
+              - fragment: true
+                name: revoke-role-complete
+                path: /admin/users/{user}/revoke-roles-complete
+
+  - name: role
+    doc: Assemble application configuration including user authorization details
+    uri: /admin/roles
+    blocks:
+      nav:
+        - name: nav
+          default: true
+
+      wrapper:
+        - name: all-roles
+          doc: show summary of all roles
+          default: true
+          path: /admin/roles
+
+        - name: role
+          path: /admin/roles/{role}
+          blocks:
+            content:
+              - default: true
+                name: users-list
+                path: /admin/roles/{role}/users
+
+              - name: users-edit
+                path: /admin/roles/{role}/edit
+
+              - name: assign-users
+                path: /admin/roles/{role}/assign
+
+              - fragment: true
+                name: assign-results-roles
+                path: /admin/roles/{role}/find-user-roles-results
+
+              - fragment: true
+                name: assign-results-users
+                path: /admin/roles/{role}/find-users-results
+
+              - fragment: true
+                name: assign-role-complete
+                path: /admin/roles/{role}/assign-role-users-complete
+
+              - fragment: true
+                name: revoke-users-complete
+                path: /admin/roles/{role}/assign-users-complete

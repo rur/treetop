@@ -6,7 +6,7 @@ import (
 	"github.com/rur/treetop/generator"
 )
 
-type blockdata struct {
+type handlerBlockData struct {
 	Identifier string
 	Name       string
 	FieldName  string
@@ -15,7 +15,7 @@ type blockdata struct {
 type handlerdata struct {
 	Info       string
 	Doc        string
-	Blocks     []blockdata
+	Blocks     []handlerBlockData
 	Identifier string
 }
 

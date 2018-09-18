@@ -27,6 +27,7 @@ type templatedata struct {
 	Blocks  []*blockdata
 }
 
-func WriteTemplateFiles(dir string, pageDef *generator.PartialDef) (string, error) {
-	return "", fmt.Errorf("Not Implemented")
+func WriteTemplateFiles(dir string, pageDef *generator.PartialDef) ([]string, error) {
+	var created []string
+	return created, fmt.Errorf("Not Implemented")
 }

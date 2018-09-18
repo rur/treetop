@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	generator "github.com/rur/treetop/generator"
@@ -60,7 +61,7 @@ func main() {
 
 		outfolder, createdFiles, err := generate(sitemap)
 		if err != nil {
-			fmt.Printf("Treetop: filed to generate data from sitemap %s\n%s\n", config, err.Error())
+			fmt.Printf("Treetop: Failed to build scaffold for sitemap %s\nGenerator Error: %s\n", config, err.Error())
 			return
 		} else {
 			// attempt to format the go code
@@ -93,52 +94,59 @@ func generate(sitemap generator.Sitemap) (string, []string, error) {
 	var files []string
 	var file string
 	created := make([]string, 0)
+
+	// check that sitemap namespace is a uri looking thing (without protocol, creds, etc...)
+	// it will typically be something like "github.com/example/project"
+	var nsReg = regexp.MustCompile(`(?i)^[A-Z][A-Z0-9-_]*(\.[A-Z][A-Z0-9-_]*)*(/[A-Z][A-Z0-9-_]*(\.[A-Z][A-Z0-9-_]*)*)*$`)
+	if !nsReg.MatchString(sitemap.Namespace) {
+		return "", created, fmt.Errorf("Invalid site namespace in config: %s", sitemap.Namespace)
+	}
 	outDir, err := ioutil.TempDir("", "")
 	if err != nil {
-		return outDir, created, err
+		return outDir, created, fmt.Errorf("Error creating temp dir, %s", err)
 	}
 
 	pagesDir := filepath.Join(outDir, "pages")
 	if err := os.Mkdir(pagesDir, os.ModePerm); err != nil {
-		return outDir, created, err
+		return outDir, created, fmt.Errorf("Error creating pages dir in temp directory. %s", err)
 	}
 
 	for _, def := range sitemap.Pages {
 		pageDir := filepath.Join(pagesDir, def.Name)
 		if err := os.Mkdir(pageDir, os.ModePerm); err != nil {
-			return outDir, created, err
+			return outDir, created, fmt.Errorf("Error creating dir for page '%s'. %s", def.Name, err)
 		}
 		templatesDir := filepath.Join(pageDir, "templates")
 		if err := os.Mkdir(templatesDir, os.ModePerm); err != nil {
-			return outDir, created, err
+			return outDir, created, fmt.Errorf("Error creating template dir for page '%s'. %s", def.Name, err)
 		}
 
 		file, err = writers.WritePageFile(pageDir, &def, sitemap.Namespace)
 		if err != nil {
-			return outDir, created, err
+			return outDir, created, fmt.Errorf("Error creating page.go file for '%s'. %s", def.Name, err)
 		}
 		created = append(created, file)
-		files, err = writers.WriteHandlerFile(pageDir, &def, sitemap.Namespace)
+		file, err = writers.WriteHandlerFile(pageDir, &def, sitemap.Namespace)
 		if err != nil {
-			return outDir, created, err
+			return outDir, created, fmt.Errorf("Error creating handler.go file for page '%s'. %s", def.Name, err)
 		}
 		created = append(created, file)
 		files, err = writers.WriteTemplateFiles(templatesDir, &def)
 		if err != nil {
-			return outDir, created, err
+			return outDir, created, fmt.Errorf("Error creating templates/... for page '%s'. %s", def.Name, err)
 		}
 		created = append(created, files...)
 	}
 
-	file, err = writers.WriteContext(pagesDir)
+	file, err = writers.WriteContextFile(pagesDir, sitemap.Namespace)
 	if err != nil {
-		return outDir, created, err
+		return outDir, created, fmt.Errorf("Error creating context.go file. %s", err)
 	}
 	created = append(created, file)
 
-	file, err = writers.WriteStartFile(outDir, defs)
+	file, err = writers.WriteStartFile(outDir, sitemap.Pages, sitemap.Namespace)
 	if err != nil {
-		return outDir, created, err
+		return outDir, created, fmt.Errorf("Error creating start.go file. %s", err)
 	}
 	created = append(created, file)
 

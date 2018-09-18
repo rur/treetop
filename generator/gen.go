@@ -2,7 +2,7 @@
 
 // +build ignore
 
-// This program generates templates.go. It can be invoked by running
+// This program generates writers/templates.go. It can be invoked by running
 // go generate
 package main
 
@@ -86,7 +86,7 @@ import (
 
 var (
 	{{ range $index, $template := .Templates -}}
-	{{ $template.Ident }} {{ if $template.IsHtml -}}
+	{{ $template.Ident }}ate {{ if $template.IsHtml -}}
 	*html.Template
 	{{- else -}}
 	*text.Template
@@ -97,10 +97,10 @@ var (
 func init() {
 	var err error
 	{{ range $index, $template := .Templates -}}
-	{{ $template.Ident }}, err = {{ if $template.IsHtml -}}
-	html.New("{{ $template.Path }}").Delims("[[", "]]").Parse($template.Ident)
+	{{ $template.Ident }}ate, err = {{ if $template.IsHtml -}}
+	html.New("{{ $template.Path }}").Delims("[[", "]]").Parse({{ $template.Ident }})
 	{{- else -}}
-	text.New("{{ $template.Path }}").Parse($template.Ident)
+	text.New("{{ $template.Path }}").Parse({{ $template.Ident }})
 	{{- end }}
 	if err != nil {
 		log.Fatal(err)

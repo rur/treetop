@@ -6,12 +6,12 @@ import (
 	"github.com/rur/treetop/generator"
 )
 
-type blockdata struct {
+type pageBlockData struct {
 	Identifier string
 	Name       string
 }
 
-type entrydata struct {
+type pageEntryData struct {
 	Identifier string
 	Name       string
 	Extends    string
@@ -20,20 +20,20 @@ type entrydata struct {
 	Template   string
 }
 
-type routedata struct {
+type pageRouteData struct {
 	Identifier string
 	Path       string
 	Type       string
 }
 
-type pagedata struct {
+type pageData struct {
 	Namespace string
 	Name      string
 	Template  string
 	Handler   string
-	Blocks    []blockdata
-	Entries   []entrydata
-	Routes    []routedata
+	Blocks    []pageBlockData
+	Entries   []pageEntryData
+	Routes    []pageRouteData
 }
 
 func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) (string, error) {
