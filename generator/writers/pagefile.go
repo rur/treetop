@@ -110,10 +110,6 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 	return fileName, nil
 }
 
-func sanitizeName(name string) (string, error) {
-	return generator.ValidIdentifier(name), nil
-}
-
 func processPartialDef(extends string, def *generator.PartialDef, templatePath string) ([]pageEntryData, []pageRouteData, error) {
 	var entryType string
 	var suffix string
