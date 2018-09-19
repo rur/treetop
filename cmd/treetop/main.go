@@ -154,6 +154,12 @@ func generate(outDir string, sitemap generator.Sitemap) ([]string, error) {
 		}
 		created = append(created, file)
 
+		file, err = writers.WriteIndexFile(templatesDir, &def, sitemap.Pages)
+		if err != nil {
+			return created, fmt.Errorf("Error creating index.templ.html file for page '%s'. %s", def.Name, err)
+		}
+		created = append(created, file)
+
 		// TODO: implement template generator
 		continue
 		files, err = writers.WriteTemplateFiles(templatesDir, &def)

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Page [[ .Page.Name ]]</title>
+    <title>Page [[ .Title ]]</title>
     <style>
 
     .page-nav {
@@ -37,10 +37,10 @@
 </head>
 <body>
     <ul class="page-nav nav">[[ range $link := .SiteLinks ]]
-        [[ if $link.URI ]]<li><a treetop href="[[ $link.URI ]]">[[ $link.Label ]]</a></li>[[ else ]]
+        [[ if $link.Active ]]<li><a treetop href="[[ $link.URI ]]">[[ $link.Label ]]</a></li>[[ else ]]
         <li>[[ $link.Label ]]</li>[[ end ]][[ end ]]
     </ul>
-    <h1>[[ .Page.Name ]] page</h1>[[ range $index, $block := .Page.Blocks ]]
+    <h1>[[ .Title ]] page</h1>[[ range $index, $block := .Blocks ]]
     <h2>Block [[ $block.Name ]]</h2>
     <ul class="nav">[[ range $partial := $block.Partials ]][[ if $partial.Path ]][[ if $partial.Default ]]
         <li><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]*</a></li>
@@ -54,6 +54,6 @@
     </div>
     {{ end }}
 [[ end ]]
-<script src="/static/lib/treetop.js" async></script>
+<script src="https://rawgit.com/rur/treetop-client/master/treetop.js"></script><script> treetop.init() </script>
 </body>
 </html>
