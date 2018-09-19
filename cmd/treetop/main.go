@@ -22,6 +22,7 @@ By default the path to the new directory will be printed to stdout.
 
 FLAGS:
 --human	Human readable output
+--temp-dir [DIRECTORY_PATH]	Path to directory that should be used as 'temp'
 
 `
 
@@ -50,16 +51,24 @@ func main() {
 		}
 
 		human := false
-		for _, arg := range os.Args[3:] {
-			if arg == "--human" {
+		skip := 0
+		tmpDir := ""
+		for i, arg := range os.Args[3:] {
+			if skip > 0 {
+				skip = skip - 1
+				continue
+			} else if arg == "--human" {
 				human = true
+			} else if arg == "--temp-dir" {
+				tmpDir = os.Args[i+4]
+				skip = 1
 			} else {
 				fmt.Printf("Unknown flag '%s'\n\n%s", arg, generateUsage)
 				return
 			}
 		}
 
-		outfolder, err := ioutil.TempDir("", "")
+		outfolder, err := ioutil.TempDir(tmpDir, "")
 		if err != nil {
 			fmt.Printf("Error creating temp dir: %s", err)
 			return
@@ -131,10 +140,10 @@ func generate(outDir string, sitemap generator.Sitemap) ([]string, error) {
 		if err != nil {
 			return created, fmt.Errorf("Error creating page.go file for '%s'. %s", def.Name, err)
 		}
+		created = append(created, file)
 
 		continue
 
-		created = append(created, file)
 		file, err = writers.WriteHandlerFile(pageDir, &def, sitemap.Namespace)
 		if err != nil {
 			return created, fmt.Errorf("Error creating handler.go file for page '%s'. %s", def.Name, err)

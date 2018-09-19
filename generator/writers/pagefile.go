@@ -79,13 +79,11 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 		})
 
 		for _, partial := range partials {
-
 			blockEntries, blockRoutes, err := processPartialDef(
 				blockName,
 				&partial,
 				filepath.Join("pages", pageName, "templates", blockName),
 			)
-
 			if err != nil {
 				return fileName, err
 			}
@@ -130,7 +128,7 @@ func processPartialDef(extends string, def *generator.PartialDef, templatePath s
 		suffix = "dfl"
 	} else {
 		entryType = "Partial"
-		suffix = "prt"
+		suffix = "ptl"
 	}
 
 	entryName, err := sanitizeName(def.Name)
@@ -172,13 +170,11 @@ func processPartialDef(extends string, def *generator.PartialDef, templatePath s
 		})
 
 		for _, partial := range partials {
-
 			blockEntries, blockRoutes, err := processPartialDef(
 				blockName,
 				&partial,
 				filepath.Join(templatePath, blockName),
 			)
-
 			if err != nil {
 				return entries, routes, err
 			}
