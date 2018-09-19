@@ -165,7 +165,7 @@ func processPartialDef(extends string, def *generator.PartialDef, templatePath s
 		}, pageEntryData{
 			Identifier: blockName,
 			Name:       blockName,
-			Extends:    entryName,
+			Extends:    entryName + "_" + suffix,
 			Type:       "Block",
 		})
 
