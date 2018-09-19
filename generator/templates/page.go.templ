@@ -24,7 +24,7 @@ func Page(server *pages.ServerContext, m mux, renderer treetop.Renderer) {
 		server.bind({{ $entry.Handler }}),
 	)
 	{{- else if eq $entry.Type "Fragment" -}}
-	{{ $entry.Identifier }} := {{ $entry.Extends }}.Fragment(,
+	{{ $entry.Identifier }} := {{ $entry.Extends }}.Fragment(
 		"{{ $entry.Template }}",
 		server.bind({{ $entry.Handler }}),
 	)
@@ -32,6 +32,6 @@ func Page(server *pages.ServerContext, m mux, renderer treetop.Renderer) {
 	nil // unknown entry type: {{ $entry.Type }}
 	{{- end }}
 	{{ end }}{{ range $index, $route := .Routes }}
-	m.Handle("{{ $route.Path }}", {{ $route.Identifier }})  // {{ $route.Type }}
+	m.Handle("{{ $route.Path }}", {{ $route.Identifier }})
 	{{- end }}
 }

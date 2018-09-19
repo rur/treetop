@@ -1,7 +1,7 @@
 namespace: github.com/rur/treetop
 pages:
   - name: home
-    doc: Assemble application configuration including user authorization details
+    doc: Landing page of the site
     uri: /admin
     blocks:
       nav:
@@ -23,7 +23,7 @@ pages:
                 path: /admin/role-search
 
   - name: history
-    doc: Assemble application configuration including user authorization details
+    doc: Land on current days activity by default
     uri: /admin/history
     blocks:
       nav:
@@ -37,7 +37,7 @@ pages:
           path: /admin/history
 
   - name: account
-    doc: Assemble application configuration including user authorization details
+    doc: View and edit user account information. Admin controls also.
     uri: /admin/account
     blocks:
       nav:
@@ -52,7 +52,7 @@ pages:
 
 
   - name: user
-    doc: Assemble application configuration including user authorization details
+    doc: View and edit user roles
     uri: /admin/users
     blocks:
       nav:
@@ -92,7 +92,7 @@ pages:
                 path: /admin/users/{user}/revoke-roles-complete
 
   - name: role
-    doc: Assemble application configuration including user authorization details
+    doc: View and edit role membership list
     uri: /admin/roles
     blocks:
       nav:

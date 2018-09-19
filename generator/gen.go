@@ -25,11 +25,11 @@ type genTemplate struct {
 
 func main() {
 	files := map[string]string{
-		"templates/page.templ.html":    "pageTempl",
+		"templates/index.templ.html":   "indexTempl",
 		"templates/partial.templ.html": "partialTempl",
 		"templates/start.go.templ":     "startTempl",
 		"templates/context.go.templ":   "contextTempl",
-		"templates/page.go.templ":      "pageGoTempl",
+		"templates/page.go.templ":      "pageTempl",
 		"templates/handler.go.templ":   "handlerTempl",
 	}
 	content := make([]genTemplate, 0, 4)

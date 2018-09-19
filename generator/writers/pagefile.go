@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/rur/treetop/generator"
 )
@@ -25,7 +26,6 @@ type pageEntryData struct {
 type pageRouteData struct {
 	Identifier string
 	Path       string
-	Type       string
 }
 
 type pageTemplateData struct {
@@ -60,6 +60,13 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 
 	var entries []pageEntryData
 	var routes []pageRouteData
+	if pageDef.Path != "" {
+		routes = append(routes, pageRouteData{
+			Identifier: "page",
+			Path:       strings.Trim(pageDef.Path, " "),
+		})
+	}
+
 	blocks := make([]pageBlockData, 0, len(pageDef.Blocks))
 	for nme, partials := range pageDef.Blocks {
 		blockName, err := sanitizeName(nme)
@@ -97,7 +104,7 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 		Routes:    routes,
 	}
 
-	err = pageGoTemplate.Execute(sf, page)
+	err = pageTemplate.Execute(sf, page)
 	if err != nil {
 		return fileName, err
 	}
@@ -131,14 +138,23 @@ func processPartialDef(extends string, def *generator.PartialDef, templatePath s
 		return entries, routes, fmt.Errorf("Invalid %s name '%s'", entryType, def.Name)
 	}
 
-	entries = append(entries, pageEntryData{
+	entry := pageEntryData{
 		Identifier: entryName + "_" + suffix,
 		Name:       entryName,
 		Extends:    extends,
 		Handler:    extends + "_" + entryName + "Handler",
 		Type:       entryType,
 		Template:   filepath.Join(templatePath, entryName+".templ.html"),
-	})
+	}
+
+	if def.Path != "" {
+		routes = append(routes, pageRouteData{
+			Identifier: entry.Identifier,
+			Path:       strings.Trim(def.Path, " "),
+		})
+	}
+
+	entries = append(entries, entry)
 
 	for nme, partials := range def.Blocks {
 		blockName, err := sanitizeName(nme)
