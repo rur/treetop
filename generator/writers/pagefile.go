@@ -111,15 +111,19 @@ func sanitizeName(name string) (string, error) {
 
 func processPartialDef(extends string, def *generator.PartialDef, templatePath string) ([]pageEntryData, []pageRouteData, error) {
 	var entryType string
+	var suffix string
 	var entries []pageEntryData
 	var routes []pageRouteData
 
 	if def.Fragment {
 		entryType = "Fragment"
+		suffix = "frg"
 	} else if def.Default {
 		entryType = "DefaultPartial"
+		suffix = "dfl"
 	} else {
 		entryType = "Partial"
+		suffix = "prt"
 	}
 
 	entryName, err := sanitizeName(def.Name)
@@ -128,7 +132,7 @@ func processPartialDef(extends string, def *generator.PartialDef, templatePath s
 	}
 
 	entries = append(entries, pageEntryData{
-		Identifier: entryName,
+		Identifier: entryName + "_" + suffix,
 		Name:       entryName,
 		Extends:    extends,
 		Handler:    extends + "_" + entryName + "Handler",
