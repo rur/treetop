@@ -32,7 +32,7 @@ func delims(r rune) bool {
 }
 
 // convert a name to a valid identifier, leading digits will be stripped
-func validIdentifier(name string) string {
+func ValidIdentifier(name string) string {
 	parts := strings.FieldsFunc(name, delims)
 	fixed := make([]string, len(parts))
 
@@ -54,7 +54,7 @@ func validIdentifier(name string) string {
 }
 
 // convert a name to a valid public identifier, leading digits will be stripped
-func validPublicIdentifier(name string) string {
+func ValidPublicIdentifier(name string) string {
 	parts := strings.FieldsFunc(name, delims)
 	fixed := make([]string, len(parts))
 
@@ -82,10 +82,10 @@ func (u *uniqueIdentifiers) new(name string, qualifier []string) string {
 		u.ref <- ref
 	}()
 
-	ident := validIdentifier(name)
+	ident := ValidIdentifier(name)
 
 	if len(qualifier) > 0 {
-		ident = validIdentifier(strings.Join(qualifier, " ")) + "_" + strings.Title(ident)
+		ident = ValidIdentifier(strings.Join(qualifier, " ")) + "_" + strings.Title(ident)
 	}
 
 	if _, found = ref[ident]; !found {

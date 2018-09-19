@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strings"
 
 	"github.com/rur/treetop/generator"
 )
@@ -47,10 +45,9 @@ type pageData struct {
 }
 
 func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) (string, error) {
-	pageName := strings.Trim(pageDef.Name, " ")
-	var nsReg = regexp.MustCompile(`(?i)^[A-Z][A-Z0-9-_]*$`)
-	if !nsReg.MatchString(pageName) {
-		return "", fmt.Errorf("Invalid page name '%s'.", pageName)
+	pageName, err := sanitizeName(pageDef.Name)
+	if err != nil {
+		return "", fmt.Errorf("Invalid page name '%s'.", err)
 	}
 
 	fileName := filepath.Join("pages", pageName, "page.go")
@@ -61,14 +58,43 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 	}
 	defer sf.Close()
 
+	var entries []pageEntryData
+	var routes []pageRouteData
+	blocks := make([]pageBlockData, 0, len(pageDef.Blocks))
+	for nme, partials := range pageDef.Blocks {
+		blockName, err := sanitizeName(nme)
+		if err != nil {
+			return fileName, fmt.Errorf("Invalid block name '%s'", nme)
+		}
+		blocks = append(blocks, pageBlockData{
+			Identifier: nme,
+			Name:       nme,
+		})
+
+		for _, partial := range partials {
+
+			blockEntries, blockRoutes, err := processPartialDef(
+				blockName,
+				&partial,
+				filepath.Join("pages", pageName, "templates", blockName),
+			)
+
+			if err != nil {
+				return fileName, err
+			}
+			entries = append(entries, blockEntries...)
+			routes = append(routes, blockRoutes...)
+		}
+	}
+
 	page := pageData{
 		Namespace: namespace,
 		Name:      pageName,
 		Template:  filepath.Join("pages", pageName, "templates", "index.html"),
 		Handler:   pageName + "Handler",
-		Blocks:    []pageBlockData{},
-		Entries:   []pageEntryData{},
-		Routes:    []pageRouteData{},
+		Blocks:    blocks,
+		Entries:   entries,
+		Routes:    routes,
 	}
 
 	err = pageGoTemplate.Execute(sf, page)
@@ -77,4 +103,69 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 	}
 
 	return fileName, nil
+}
+
+func sanitizeName(name string) (string, error) {
+	return generator.ValidIdentifier(name), nil
+}
+
+func processPartialDef(extends string, def *generator.PartialDef, templatePath string) ([]pageEntryData, []pageRouteData, error) {
+	var entryType string
+	var entries []pageEntryData
+	var routes []pageRouteData
+
+	if def.Fragment {
+		entryType = "Fragment"
+	} else if def.Default {
+		entryType = "DefaultPartial"
+	} else {
+		entryType = "Partial"
+	}
+
+	entryName, err := sanitizeName(def.Name)
+	if err != nil {
+		return entries, routes, fmt.Errorf("Invalid %s name '%s'", entryType, def.Name)
+	}
+
+	entries = append(entries, pageEntryData{
+		Identifier: entryName,
+		Name:       entryName,
+		Extends:    extends,
+		Handler:    extends + "_" + entryName + "Handler",
+		Type:       entryType,
+		Template:   filepath.Join(templatePath, entryName+".templ.html"),
+	})
+
+	for nme, partials := range def.Blocks {
+		blockName, err := sanitizeName(nme)
+		if err != nil {
+			return entries, routes, fmt.Errorf("Invalid block name '%s'", nme)
+		}
+
+		entries = append(entries, pageEntryData{
+			Type: "Spacer",
+		}, pageEntryData{
+			Identifier: blockName,
+			Name:       blockName,
+			Extends:    entryName,
+			Type:       "Block",
+		})
+
+		for _, partial := range partials {
+
+			blockEntries, blockRoutes, err := processPartialDef(
+				blockName,
+				&partial,
+				filepath.Join(templatePath, blockName),
+			)
+
+			if err != nil {
+				return entries, routes, err
+			}
+			entries = append(entries, blockEntries...)
+			routes = append(routes, blockRoutes...)
+		}
+	}
+
+	return entries, routes, nil
 }
