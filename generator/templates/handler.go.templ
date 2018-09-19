@@ -29,7 +29,7 @@ func {{ $handler.Identifier }}(cxt *pages.RequestContext, w treetop.DataWriter, 
 		{{- end }}
 	})
 }{{ else }}
-func {{ $handler.Identifier }}(cxt *RequestContext, w treetop.DataWriter, req *http.Request) {
+func {{ $handler.Identifier }}(cxt *pages.RequestContext, w treetop.DataWriter, req *http.Request) {
 	w.Data("{{ $handler.Info }} template data here!")
 }{{ end }}
 {{ end }}

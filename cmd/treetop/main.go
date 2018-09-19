@@ -84,16 +84,23 @@ func main() {
 		} else {
 			// attempt to format the go code
 			// this should not cause the generate command to fail if go fmt fails for some reason
+			var fmtError []string
 			for i := range createdFiles {
 				if strings.HasSuffix(createdFiles[i], ".go") {
 					cmd := exec.Command("go", "fmt", path.Join(outfolder, createdFiles[i]))
 					err := cmd.Run()
 					if err != nil {
-						log.Fatal(err)
+						fmtError = append(fmtError, fmt.Sprintf("%s Error: %s", createdFiles[i], err))
 					}
 				}
 			}
-
+			if len(fmtError) > 0 {
+				log.Fatalf(
+					"Generated folder %s but `go fmt` failed for the following files:\n\t%s",
+					outfolder,
+					strings.Join(fmtError, "\n\t"),
+				)
+			}
 		}
 
 		if human {
@@ -142,13 +149,14 @@ func generate(outDir string, sitemap generator.Sitemap) ([]string, error) {
 		}
 		created = append(created, file)
 
-		continue
-
 		file, err = writers.WriteHandlerFile(pageDir, &def, sitemap.Namespace)
 		if err != nil {
 			return created, fmt.Errorf("Error creating handler.go file for page '%s'. %s", def.Name, err)
 		}
 		created = append(created, file)
+
+		// TODO: implement template generator
+		continue
 		files, err = writers.WriteTemplateFiles(templatesDir, &def)
 		if err != nil {
 			return created, fmt.Errorf("Error creating templates/... for page '%s'. %s", def.Name, err)
