@@ -8,7 +8,7 @@ import (
 )
 
 {{ range $index, $handler := .Handlers }}
-// {{ $handler.Info }}{{ if $handler.Doc }}
+// {{ $handler.Info }} {{ $handler.Type }}{{ if $handler.Doc }}
 // {{ $handler.Doc }}
 {{- end }}{{ if len $handler.Blocks}}
 func {{ $handler.Identifier }}(cxt *pages.RequestContext, w treetop.DataWriter, req *http.Request) {

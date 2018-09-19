@@ -27,7 +27,6 @@ FLAGS:
 `
 
 func main() {
-
 	if len(os.Args) < 2 {
 		fmt.Printf("Usage: treetop [cmd] args... \n")
 		return

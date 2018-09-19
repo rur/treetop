@@ -79,7 +79,7 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 		})
 
 		for _, partial := range partials {
-			blockEntries, blockRoutes, err := processPartialDef(
+			blockEntries, blockRoutes, err := processEntries(
 				blockName,
 				&partial,
 				filepath.Join("pages", pageName, "templates", blockName),
@@ -96,7 +96,7 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 		Namespace: namespace,
 		Name:      pageName,
 		Template:  filepath.Join("pages", pageName, "templates", "index.html"),
-		Handler:   pageName + "Handler",
+		Handler:   pageName + "PageHandler",
 		Blocks:    blocks,
 		Entries:   entries,
 		Routes:    routes,
@@ -110,7 +110,7 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 	return fileName, nil
 }
 
-func processPartialDef(extends string, def *generator.PartialDef, templatePath string) ([]pageEntryData, []pageRouteData, error) {
+func processEntries(extends string, def *generator.PartialDef, templatePath string) ([]pageEntryData, []pageRouteData, error) {
 	var entryType string
 	var suffix string
 	var entries []pageEntryData
@@ -166,7 +166,7 @@ func processPartialDef(extends string, def *generator.PartialDef, templatePath s
 		})
 
 		for _, partial := range partials {
-			blockEntries, blockRoutes, err := processPartialDef(
+			blockEntries, blockRoutes, err := processEntries(
 				blockName,
 				&partial,
 				filepath.Join(templatePath, blockName),

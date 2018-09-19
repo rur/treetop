@@ -14,8 +14,9 @@ type handlerBlockData struct {
 	FieldName  string
 }
 
-type handlerdata struct {
+type handlerData struct {
 	Info       string
+	Type       string
 	Doc        string
 	Blocks     []*handlerBlockData
 	Identifier string
@@ -24,7 +25,7 @@ type handlerdata struct {
 type handlersdata struct {
 	Namespace string
 	PageName  string
-	Handlers  []*handlerdata
+	Handlers  []*handlerData
 }
 
 func WriteHandlerFile(dir string, pageDef *generator.PartialDef, namespace string) (string, error) {
@@ -41,13 +42,14 @@ func WriteHandlerFile(dir string, pageDef *generator.PartialDef, namespace strin
 	}
 	defer sf.Close()
 
-	var handlers []*handlerdata
+	var handlers []*handlerData
 	// base page handler
-	pageHandler := handlerdata{
+	pageHandler := handlerData{
 		Info:       pageName,
 		Doc:        pageDef.Doc,
+		Type:       "(page)",
 		Blocks:     make([]*handlerBlockData, 0, len(pageDef.Blocks)),
-		Identifier: pageName + "Handler",
+		Identifier: pageName + "PageHandler",
 	}
 	handlers = append(handlers, &pageHandler)
 
@@ -83,6 +85,51 @@ func WriteHandlerFile(dir string, pageDef *generator.PartialDef, namespace strin
 	return fileName, nil
 }
 
-func processHandlersDef(blockName string, def *generator.PartialDef) ([]*handlerdata, error) {
-	return []*handlerdata{}, nil
+func processHandlersDef(blockName string, def *generator.PartialDef) ([]*handlerData, error) {
+	var handlers []*handlerData
+	var entryType string
+	if def.Fragment {
+		entryType = "(fragment)"
+	} else if def.Default {
+		entryType = "(default partial)"
+	} else {
+		entryType = "(partial)"
+	}
+
+	entryName, err := sanitizeName(def.Name)
+	if err != nil {
+		return handlers, fmt.Errorf("Invalid name '%s'", def.Name)
+	}
+
+	// base page handler
+	handler := handlerData{
+		Info:       entryName,
+		Doc:        def.Doc,
+		Type:       entryType,
+		Blocks:     make([]*handlerBlockData, 0, len(def.Blocks)),
+		Identifier: blockName + "_" + entryName + "Handler",
+	}
+	handlers = append(handlers, &handler)
+
+	for rawName, partials := range def.Blocks {
+		blockIdent, err := sanitizeName(rawName)
+		if err != nil {
+			return handlers, fmt.Errorf("Invalid block name '%s'", rawName)
+		}
+		handler.Blocks = append(handler.Blocks, &handlerBlockData{
+			Identifier: blockIdent + "Data",
+			Name:       rawName,
+			FieldName:  generator.ValidPublicIdentifier(rawName),
+		})
+
+		for _, partial := range partials {
+			blockHandlers, err := processHandlersDef(blockIdent, &partial)
+			if err != nil {
+				return handlers, err
+			}
+			handlers = append(handlers, blockHandlers...)
+		}
+	}
+
+	return handlers, nil
 }
