@@ -1,6 +1,6 @@
 {{ block "[[ .Extends ]]" . }}
 <div id="[[ .Extends ]]" class="block-extended">
-    <p>View named [[.Name]]</p>[[ range $index, $block := .Blocks ]]
+    <p>Partial view named [[.Name]]</p>[[ range $index, $block := .Blocks ]]
 <h3>Block [[ $block.Name ]]</h3>
 <ul class="nav">[[ range $partial := $block.Partials ]][[ if $partial.Path ]][[ if $partial.Default ]]
     <li><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]*</a></li>[[ else ]]

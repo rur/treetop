@@ -5,36 +5,36 @@ import (
 	"{{ .Namespace }}/pages"
 )
 
-func Page(server *pages.ServerContext, m mux, renderer treetop.Renderer) {
+func Page(server *pages.ServerContext, m pages.Mux, renderer treetop.Renderer) {
 	page := renderer.Page(
 		"{{ .Template }}",
-		server.bind({{ .Handler }}),
+		server.Bind({{ .Handler }}),
 	)
 	{{ range $index, $block := .Blocks -}}
-		{{ $block.Identifier }} := page.Block("{{ $block.Name }}")
+		{{ $block.Identifier }} page.Block("{{ $block.Name }}")
 	{{ end }}
 	{{ range $index, $entry := .Entries -}}
 	{{ if eq $entry.Type "Block" -}}
-	{{ $entry.Identifier }} := {{ $entry.Extends }}.Block("{{ $entry.Name }}")
+	{{ $entry.Identifier }} {{ $entry.Extends }}.Block("{{ $entry.Name }}")
 	{{- else if eq $entry.Type "DefaultPartial" -}}
-	{{ $entry.Identifier }} := {{ $entry.Extends }}.DefaultPartial(
+	{{ $entry.Identifier }} {{ $entry.Extends }}.DefaultPartial(
 		"{{ $entry.Template }}",
-		server.bind({{ $entry.Handler }}),
+		server.Bind({{ $entry.Handler }}),
 	)
 	{{- else if eq $entry.Type "Partial" -}}
-	{{ $entry.Identifier }} := {{ $entry.Extends }}.Partial(
+	{{ $entry.Identifier }} {{ $entry.Extends }}.Partial(
 		"{{ $entry.Template }}",
-		server.bind({{ $entry.Handler }}),
+		server.Bind({{ $entry.Handler }}),
 	)
 	{{- else if eq $entry.Type "Fragment" -}}
-	{{ $entry.Identifier }} := {{ $entry.Extends }}.Fragment(
+	{{ $entry.Identifier }} {{ $entry.Extends }}.Fragment(
 		"{{ $entry.Template }}",
-		server.bind({{ $entry.Handler }}),
+		server.Bind({{ $entry.Handler }}),
 	)
 {{- else if eq $entry.Type "Spacer" }}{{ else -}}
 	nil // unknown entry type: {{ $entry.Type }}
 	{{- end }}
 	{{ end }}{{ range $index, $route := .Routes }}
-	m.Handle("{{ $route.Path }}", {{ $route.Identifier }})
+	m.Handle("{{ $route.Path }}", {{ $route.Reference }})
 	{{- end }}
 }

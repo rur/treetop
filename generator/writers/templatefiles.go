@@ -146,6 +146,28 @@ func writePartialFiles(dir string, def *generator.PartialDef, extends string) ([
 		Name:    def.Name,
 		Blocks:  make([]*htmlBlockData, 0, len(def.Blocks)),
 	}
+	for bName, bPartials := range def.Blocks {
+		bIdent, err := SanitizeName(bName)
+		if err != nil {
+			return created, fmt.Errorf("Invalid Block name: '%s'", def.Name)
+		}
+		blockData := htmlBlockData{
+			FieldName:  generator.ValidPublicIdentifier(bName),
+			Identifier: bIdent,
+			Name:       bName,
+			Partials:   make([]*htmlBlockPartialData, 0, len(bPartials)),
+		}
+		for _, bPartial := range bPartials {
+			blockData.Partials = append(blockData.Partials, &htmlBlockPartialData{
+				Path:     bPartial.Path,
+				Name:     bPartial.Name,
+				Fragment: bPartial.Fragment,
+				Default:  bPartial.Default,
+			})
+		}
+		partial.Blocks = append(partial.Blocks, &blockData)
+	}
+
 	fileName := fmt.Sprintf("%s.templ.html", name)
 	filePath := filepath.Join(dir, fileName)
 	sf, err := os.Create(filePath)

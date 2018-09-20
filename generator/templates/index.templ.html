@@ -37,7 +37,7 @@
 </head>
 <body>
     <ul class="page-nav nav">[[ range $link := .SiteLinks ]]
-        [[ if $link.Active ]]<li><a treetop href="[[ $link.URI ]]">[[ $link.Label ]]</a></li>[[ else ]]
+        [[ if $link.Active ]]<li><a href="[[ $link.URI ]]">[[ $link.Label ]]</a></li>[[ else ]]
         <li>[[ $link.Label ]]</li>[[ end ]][[ end ]]
     </ul>
     <h1>[[ .Title ]] page</h1>[[ range $index, $block := .Blocks ]]

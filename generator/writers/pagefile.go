@@ -24,8 +24,8 @@ type pageEntryData struct {
 }
 
 type pageRouteData struct {
-	Identifier string
-	Path       string
+	Reference string
+	Path      string
 }
 
 type pageTemplateData struct {
@@ -44,6 +44,22 @@ type pageData struct {
 	Routes    []pageRouteData
 }
 
+func assignHandler(def *generator.PartialDef, name string) string {
+	if def.Path == "" && len(def.Blocks) == 0 {
+		return "_ ="
+	} else {
+		return name + " :="
+	}
+}
+
+func assignBlock(defs []generator.PartialDef, name string) string {
+	if len(defs) == 0 {
+		return "_ ="
+	} else {
+		return name + " :="
+	}
+}
+
 func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) (string, error) {
 	pageName, err := SanitizeName(pageDef.Name)
 	if err != nil {
@@ -54,7 +70,7 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 	filePath := filepath.Join(dir, "page.go")
 	sf, err := os.Create(filePath)
 	if err != nil {
-		return fileName, err
+		return "", err
 	}
 	defer sf.Close()
 
@@ -62,8 +78,8 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 	var routes []pageRouteData
 	if pageDef.Path != "" {
 		routes = append(routes, pageRouteData{
-			Identifier: "page",
-			Path:       strings.Trim(pageDef.Path, " "),
+			Reference: "page",
+			Path:      strings.Trim(pageDef.Path, " "),
 		})
 	}
 
@@ -71,10 +87,10 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 	for nme, partials := range pageDef.Blocks {
 		blockName, err := SanitizeName(nme)
 		if err != nil {
-			return fileName, fmt.Errorf("Invalid block name '%s'", nme)
+			return "", fmt.Errorf("Invalid block name '%s'", nme)
 		}
 		blocks = append(blocks, pageBlockData{
-			Identifier: nme,
+			Identifier: assignBlock(partials, nme),
 			Name:       nme,
 		})
 
@@ -85,17 +101,21 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 				filepath.Join("pages", pageName, "templates", blockName),
 			)
 			if err != nil {
-				return fileName, err
+				return "", err
 			}
 			entries = append(entries, blockEntries...)
 			routes = append(routes, blockRoutes...)
 		}
 	}
 
+	if len(routes) == 0 {
+		return "", fmt.Errorf("Page '%s' does not have any routes!", pageName)
+	}
+
 	page := pageData{
 		Namespace: namespace,
 		Name:      pageName,
-		Template:  filepath.Join("pages", pageName, "templates", "index.html"),
+		Template:  filepath.Join("pages", pageName, "templates", "index.templ.html"),
 		Handler:   pageName + "PageHandler",
 		Blocks:    blocks,
 		Entries:   entries,
@@ -133,7 +153,7 @@ func processEntries(extends string, def *generator.PartialDef, templatePath stri
 	}
 
 	entry := pageEntryData{
-		Identifier: entryName + "_" + suffix,
+		Identifier: assignHandler(def, entryName+"_"+suffix),
 		Name:       entryName,
 		Extends:    extends,
 		Handler:    extends + "_" + entryName + "Handler",
@@ -143,8 +163,8 @@ func processEntries(extends string, def *generator.PartialDef, templatePath stri
 
 	if def.Path != "" {
 		routes = append(routes, pageRouteData{
-			Identifier: entry.Identifier,
-			Path:       strings.Trim(def.Path, " "),
+			Reference: entryName + "_" + suffix,
+			Path:      strings.Trim(def.Path, " "),
 		})
 	}
 
@@ -159,7 +179,7 @@ func processEntries(extends string, def *generator.PartialDef, templatePath stri
 		entries = append(entries, pageEntryData{
 			Type: "Spacer",
 		}, pageEntryData{
-			Identifier: blockName,
+			Identifier: assignBlock(partials, blockName),
 			Name:       blockName,
 			Extends:    entryName + "_" + suffix,
 			Type:       "Block",
