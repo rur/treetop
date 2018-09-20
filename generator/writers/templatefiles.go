@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 
 	"github.com/rur/treetop/generator"
 )
@@ -49,6 +50,34 @@ type indexData struct {
 	Title     string
 	SiteLinks []*indexSiteLinksData
 	Blocks    []*htmlBlockData
+}
+
+type blockDef struct {
+	name     string
+	ident    string
+	partials []generator.PartialDef
+}
+
+func iterateSortedBlocks(blocks map[string][]generator.PartialDef) ([]blockDef, error) {
+	output := make([]blockDef, 0, len(blocks))
+	var keys []string
+	for k := range blocks {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		ident, err := SanitizeName(k)
+		if err != nil {
+			return output, fmt.Errorf("Invalid block name '%s'", k)
+		}
+		output = append(output, blockDef{
+			name:     k,
+			ident:    ident,
+			partials: blocks[k],
+		})
+	}
+	return output, nil
 }
 
 func WriteIndexFile(dir string, pageDef *generator.PartialDef, otherPages []generator.PartialDef) (string, error) {
@@ -103,29 +132,29 @@ func WriteIndexFile(dir string, pageDef *generator.PartialDef, otherPages []gene
 
 func WriteTemplateBlock(dir string, blocks map[string][]generator.PartialDef) ([]string, error) {
 	var created []string
-	for name, partials := range blocks {
-		extName, err := SanitizeName(name)
-		if err != nil {
-			return created, fmt.Errorf("Invalid block name: '%s'", name)
-		}
-		blockTemplDir := path.Join(dir, extName)
+	blockList, err := iterateSortedBlocks(blocks)
+	if err != nil {
+		return created, err
+	}
+	for _, block := range blockList {
+		blockTemplDir := path.Join(dir, block.ident)
 		if err := os.Mkdir(blockTemplDir, os.ModePerm); err != nil {
 			return created, fmt.Errorf("Error creating template dir '%s': %s", blockTemplDir, err)
 		}
-		for _, def := range partials {
+		for _, def := range block.partials {
 			if def.Fragment {
-				file, err := writeFragmentFile(blockTemplDir, &def, name)
+				file, err := writeFragmentFile(blockTemplDir, &def, block.name)
 				if err != nil {
-					return created, fmt.Errorf("Error creating fragment %s for block %s", def.Name, name)
+					return created, fmt.Errorf("Error creating fragment %s for block %s", def.Name, block.name)
 				}
-				created = append(created, path.Join(extName, file))
+				created = append(created, path.Join(block.ident, file))
 			} else {
-				files, err := writePartialFiles(blockTemplDir, &def, name)
+				files, err := writePartialFiles(blockTemplDir, &def, block.name)
 				if err != nil {
 					return created, err
 				}
 				for _, file := range files {
-					created = append(created, path.Join(extName, file))
+					created = append(created, path.Join(block.ident, file))
 				}
 			}
 		}
