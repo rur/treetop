@@ -115,7 +115,6 @@ func main() {
 }
 
 func generate(outDir string, sitemap generator.Sitemap) ([]string, error) {
-	var files []string
 	var file string
 	var err error
 	created := make([]string, 0)
@@ -133,7 +132,11 @@ func generate(outDir string, sitemap generator.Sitemap) ([]string, error) {
 	}
 
 	for _, def := range sitemap.Pages {
-		pageDir := filepath.Join(pagesDir, def.Name)
+		pageName, err := writers.SanitizeName(def.Name)
+		if err != nil {
+			return created, err
+		}
+		pageDir := filepath.Join(pagesDir, pageName)
 		if err := os.Mkdir(pageDir, os.ModePerm); err != nil {
 			return created, fmt.Errorf("Error creating dir for page '%s'. %s", def.Name, err)
 		}
@@ -146,34 +149,34 @@ func generate(outDir string, sitemap generator.Sitemap) ([]string, error) {
 		if err != nil {
 			return created, fmt.Errorf("Error creating page.go file for '%s'. %s", def.Name, err)
 		}
-		created = append(created, file)
+		created = append(created, path.Join("pages", pageName, file))
 
 		file, err = writers.WriteHandlerFile(pageDir, &def, sitemap.Namespace)
 		if err != nil {
 			return created, fmt.Errorf("Error creating handler.go file for page '%s'. %s", def.Name, err)
 		}
-		created = append(created, file)
+		created = append(created, path.Join("pages", pageName, file))
 
 		file, err = writers.WriteIndexFile(templatesDir, &def, sitemap.Pages)
 		if err != nil {
 			return created, fmt.Errorf("Error creating index.templ.html file for page '%s'. %s", def.Name, err)
 		}
-		created = append(created, file)
+		created = append(created, path.Join("pages", pageName, "templates", file))
 
-		// TODO: implement template generator
-		continue
-		files, err = writers.WriteTemplateFiles(templatesDir, &def)
+		files, err := writers.WriteTemplateBlock(templatesDir, def.Blocks)
 		if err != nil {
-			return created, fmt.Errorf("Error creating templates/... for page '%s'. %s", def.Name, err)
+			return created, fmt.Errorf("Error creating HTML partials for page '%s'. %s", def.Name, err)
 		}
-		created = append(created, files...)
+		for _, file = range files {
+			created = append(created, path.Join("pages", pageName, "templates", file))
+		}
 	}
 
 	file, err = writers.WriteContextFile(pagesDir)
 	if err != nil {
 		return created, fmt.Errorf("Error creating context.go file. %s", err)
 	}
-	created = append(created, file)
+	created = append(created, path.Join("pages", file))
 
 	file, err = writers.WriteStartFile(outDir, sitemap.Pages, sitemap.Namespace)
 	if err != nil {

@@ -3,6 +3,7 @@ package writers
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/rur/treetop/generator"
@@ -27,7 +28,15 @@ type partialData struct {
 	Extends string
 	Name    string
 	Blocks  []*htmlBlockData
-	Type    string
+}
+
+// NOTE: Make fragment data a duplicate of partial template data for now,
+//       if they do not diverge as we refine the templates then they
+//       should be merged again.
+type fragmentData struct {
+	Path    string
+	Extends string
+	Name    string
 }
 
 type indexSiteLinksData struct {
@@ -43,12 +52,7 @@ type indexData struct {
 }
 
 func WriteIndexFile(dir string, pageDef *generator.PartialDef, otherPages []generator.PartialDef) (string, error) {
-	pageName, err := sanitizeName(pageDef.Name)
-	if err != nil {
-		return "", fmt.Errorf("Invalid page name '%s'.", err)
-	}
-
-	fileName := filepath.Join("pages", pageName, "templates", "index.templ.html")
+	fileName := "index.templ.html"
 	filePath := filepath.Join(dir, "index.templ.html")
 	sf, err := os.Create(filePath)
 	if err != nil {
@@ -97,7 +101,97 @@ func WriteIndexFile(dir string, pageDef *generator.PartialDef, otherPages []gene
 	return fileName, nil
 }
 
-func WriteTemplateFiles(dir string, pageDef *generator.PartialDef) ([]string, error) {
+func WriteTemplateBlock(dir string, blocks map[string][]generator.PartialDef) ([]string, error) {
 	var created []string
-	return created, fmt.Errorf("Not Implemented")
+	for name, partials := range blocks {
+		extName, err := SanitizeName(name)
+		if err != nil {
+			return created, fmt.Errorf("Invalid block name: '%s'", name)
+		}
+		blockTemplDir := path.Join(dir, extName)
+		if err := os.Mkdir(blockTemplDir, os.ModePerm); err != nil {
+			return created, fmt.Errorf("Error creating template dir '%s': %s", blockTemplDir, err)
+		}
+		for _, def := range partials {
+			if def.Fragment {
+				file, err := writeFragmentFile(blockTemplDir, &def, name)
+				if err != nil {
+					return created, fmt.Errorf("Error creating fragment %s for block %s", def.Name, name)
+				}
+				created = append(created, path.Join(extName, file))
+			} else {
+				files, err := writePartialFiles(blockTemplDir, &def, name)
+				if err != nil {
+					return created, err
+				}
+				for _, file := range files {
+					created = append(created, path.Join(extName, file))
+				}
+			}
+		}
+	}
+	return created, nil
+}
+
+func writePartialFiles(dir string, def *generator.PartialDef, extends string) ([]string, error) {
+	var created []string
+	name, err := SanitizeName(def.Name)
+	if err != nil {
+		return created, fmt.Errorf("Invalid Partial name: '%s'", def.Name)
+	}
+
+	partial := partialData{
+		Path:    def.Path,
+		Extends: extends,
+		Name:    def.Name,
+		Blocks:  make([]*htmlBlockData, 0, len(def.Blocks)),
+	}
+	fileName := fmt.Sprintf("%s.templ.html", name)
+	filePath := filepath.Join(dir, fileName)
+	sf, err := os.Create(filePath)
+	if err != nil {
+		return created, err
+	}
+	defer sf.Close()
+
+	err = partialTemplate.Execute(sf, partial)
+	if err != nil {
+		return created, fmt.Errorf("Error executing partial template '%s': %s", fileName, err)
+	}
+
+	// writer nested templates
+	files, err := WriteTemplateBlock(dir, def.Blocks)
+	if err != nil {
+		return created, nil
+	}
+	created = append(created, files...)
+
+	return created, nil
+}
+
+func writeFragmentFile(dir string, def *generator.PartialDef, extends string) (string, error) {
+	name, err := SanitizeName(def.Name)
+	if err != nil {
+		return "", fmt.Errorf("Invalid Fragment name: '%s'", def.Name)
+	}
+
+	fragment := fragmentData{
+		Path:    def.Path,
+		Extends: extends,
+		Name:    def.Name,
+	}
+
+	fileName := fmt.Sprintf("%s.templ.html", name)
+	filePath := filepath.Join(dir, fileName)
+	sf, err := os.Create(filePath)
+	if err != nil {
+		return fileName, err
+	}
+	defer sf.Close()
+
+	err = fragmentTemplate.Execute(sf, fragment)
+	if err != nil {
+		return fileName, fmt.Errorf("Error executing fragment template '%s': %s", fileName, err)
+	}
+	return fileName, nil
 }

@@ -10,7 +10,7 @@ type contextdata struct {
 }
 
 func WriteContextFile(dir string) (string, error) {
-	fileName := filepath.Join("pages", "context.go")
+	fileName := "context.go"
 	filePath := filepath.Join(dir, "context.go")
 	sf, err := os.Create(filePath)
 	if err != nil {

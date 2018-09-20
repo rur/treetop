@@ -45,12 +45,12 @@ type pageData struct {
 }
 
 func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) (string, error) {
-	pageName, err := sanitizeName(pageDef.Name)
+	pageName, err := SanitizeName(pageDef.Name)
 	if err != nil {
 		return "", fmt.Errorf("Invalid page name '%s'.", err)
 	}
 
-	fileName := filepath.Join("pages", pageName, "page.go")
+	fileName := "page.go"
 	filePath := filepath.Join(dir, "page.go")
 	sf, err := os.Create(filePath)
 	if err != nil {
@@ -69,7 +69,7 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 
 	blocks := make([]pageBlockData, 0, len(pageDef.Blocks))
 	for nme, partials := range pageDef.Blocks {
-		blockName, err := sanitizeName(nme)
+		blockName, err := SanitizeName(nme)
 		if err != nil {
 			return fileName, fmt.Errorf("Invalid block name '%s'", nme)
 		}
@@ -127,7 +127,7 @@ func processEntries(extends string, def *generator.PartialDef, templatePath stri
 		suffix = "ptl"
 	}
 
-	entryName, err := sanitizeName(def.Name)
+	entryName, err := SanitizeName(def.Name)
 	if err != nil {
 		return entries, routes, fmt.Errorf("Invalid %s name '%s'", entryType, def.Name)
 	}
@@ -151,7 +151,7 @@ func processEntries(extends string, def *generator.PartialDef, templatePath stri
 	entries = append(entries, entry)
 
 	for nme, partials := range def.Blocks {
-		blockName, err := sanitizeName(nme)
+		blockName, err := SanitizeName(nme)
 		if err != nil {
 			return entries, routes, fmt.Errorf("Invalid block name '%s'", nme)
 		}

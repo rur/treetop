@@ -29,12 +29,12 @@ type handlersdata struct {
 }
 
 func WriteHandlerFile(dir string, pageDef *generator.PartialDef, namespace string) (string, error) {
-	pageName, err := sanitizeName(pageDef.Name)
+	pageName, err := SanitizeName(pageDef.Name)
 	if err != nil {
 		return "", fmt.Errorf("Invalid page name '%s'.", err)
 	}
 
-	fileName := filepath.Join("pages", pageName, "handlers.go")
+	fileName := "handlers.go"
 	filePath := filepath.Join(dir, "handlers.go")
 	sf, err := os.Create(filePath)
 	if err != nil {
@@ -54,7 +54,7 @@ func WriteHandlerFile(dir string, pageDef *generator.PartialDef, namespace strin
 	handlers = append(handlers, &pageHandler)
 
 	for rawName, partials := range pageDef.Blocks {
-		blockIdent, err := sanitizeName(rawName)
+		blockIdent, err := SanitizeName(rawName)
 		if err != nil {
 			return fileName, fmt.Errorf("Invalid block name '%s'", rawName)
 		}
@@ -96,7 +96,7 @@ func processHandlersDef(blockName string, def *generator.PartialDef) ([]*handler
 		entryType = "(partial)"
 	}
 
-	entryName, err := sanitizeName(def.Name)
+	entryName, err := SanitizeName(def.Name)
 	if err != nil {
 		return handlers, fmt.Errorf("Invalid name '%s'", def.Name)
 	}
@@ -112,7 +112,7 @@ func processHandlersDef(blockName string, def *generator.PartialDef) ([]*handler
 	handlers = append(handlers, &handler)
 
 	for rawName, partials := range def.Blocks {
-		blockIdent, err := sanitizeName(rawName)
+		blockIdent, err := SanitizeName(rawName)
 		if err != nil {
 			return handlers, fmt.Errorf("Invalid block name '%s'", rawName)
 		}

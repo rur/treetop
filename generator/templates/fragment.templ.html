@@ -1,16 +1,4 @@
-// Fragment extends block "[[ .Extends ]]"
-<div id="[[ .Extends ]]" class="block-extended">
-    <p>View Fragment named [[.Name]]</p>[[ range $index, $block := .Blocks ]]
-<h3>Block [[ $block.Name ]]</h3>
-<ul class="nav">[[ range $partial := $block.Partials ]][[ if $partial.Path ]][[ if $partial.Default ]]
-    <li><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]*</a></li>[[ else ]]
-    <li><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]</a></li>
-    [[- end ]][[- end ]]
-[[ end ]]</ul>
-{{ block "[[ $block.Name ]]" .[[ $block.FieldName ]] }}
-<div id="[[ $block.Name  ]]" class="block-default">
-    <p>default for block named [[ $block.Name ]]</p>
-</div>
-{{ end }}
-[[ end ]]
+<!-- Fragment extends block "[[ .Extends ]]" -->
+<div id="[[ .Extends ]]" class="block-extended fragment">
+    <p>View Fragment named [[ .Name ]], path [[ .Path ]]</p>
 </div>
