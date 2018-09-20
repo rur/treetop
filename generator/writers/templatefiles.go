@@ -175,18 +175,18 @@ func writePartialFiles(dir string, def *generator.PartialDef, extends string) ([
 		Name:    def.Name,
 		Blocks:  make([]*htmlBlockData, 0, len(def.Blocks)),
 	}
-	for bName, bPartials := range def.Blocks {
-		bIdent, err := SanitizeName(bName)
-		if err != nil {
-			return created, fmt.Errorf("Invalid Block name: '%s'", def.Name)
-		}
+	blockList, err := iterateSortedBlocks(def.Blocks)
+	if err != nil {
+		return created, err
+	}
+	for _, block := range blockList {
 		blockData := htmlBlockData{
-			FieldName:  generator.ValidPublicIdentifier(bName),
-			Identifier: bIdent,
-			Name:       bName,
-			Partials:   make([]*htmlBlockPartialData, 0, len(bPartials)),
+			FieldName:  generator.ValidPublicIdentifier(block.name),
+			Identifier: block.ident,
+			Name:       block.name,
+			Partials:   make([]*htmlBlockPartialData, 0, len(block.partials)),
 		}
-		for _, bPartial := range bPartials {
+		for _, bPartial := range block.partials {
 			blockData.Partials = append(blockData.Partials, &htmlBlockPartialData{
 				Path:     bPartial.Path,
 				Name:     bPartial.Name,
