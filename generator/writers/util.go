@@ -9,7 +9,7 @@ import (
 
 // TODO: move this to generator module once it becomes clear how it should work
 func SanitizeName(name string) (string, error) {
-	re := regexp.MustCompile("(?i)^[a-z]{3}[a-z0-9-_]*$")
+	re := regexp.MustCompile("(?i)^[a-z][a-z0-9-_]*$")
 	if !re.MatchString(name) {
 		return name, fmt.Errorf("Invalid name '%s'", name)
 	}
