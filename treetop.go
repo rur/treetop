@@ -54,6 +54,7 @@ type Partial interface {
 	GetBlocks() map[string]Block
 	Includes(...Partial) Partial
 	GetIncludes() map[Block]Partial
+	AsFragment() Fragment
 }
 
 type Renderer interface {

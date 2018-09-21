@@ -142,7 +142,7 @@ func WriteTemplateBlock(dir string, blocks map[string][]generator.PartialDef) ([
 			return created, fmt.Errorf("Error creating template dir '%s': %s", blockTemplDir, err)
 		}
 		for _, def := range block.partials {
-			if def.Fragment {
+			if def.Fragment && !def.Default {
 				file, err := writeFragmentFile(blockTemplDir, &def, block.name)
 				if err != nil {
 					return created, fmt.Errorf("Error creating fragment %s for block %s", def.Name, block.name)

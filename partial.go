@@ -3,6 +3,7 @@ package treetop
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"net/http"
 	"sort"
 	"strings"
@@ -29,11 +30,11 @@ func NewPage(template string, handlerFunc HandlerFunc) Partial {
 type partialInternal struct {
 	template    string
 	handlerFunc HandlerFunc
-	// private:
-	blocks   map[string]Block
-	includes map[Block]Partial
-	extends  Block
-	execute  TemplateExec
+	blocks      map[string]Block
+	includes    map[Block]Partial
+	extends     Block
+	execute     TemplateExec
+	asFragment  bool
 }
 
 func (h *partialInternal) String() string {
@@ -105,6 +106,25 @@ func (h *partialInternal) Includes(includes ...Partial) Partial {
 	return &newHandler
 }
 
+func (h *partialInternal) AsFragment() Fragment {
+	newHandler := partialInternal{
+		template:    h.template,
+		handlerFunc: h.handlerFunc,
+		extends:     h.extends,
+		execute:     h.execute,
+		includes:    make(map[Block]Partial),
+		blocks:      make(map[string]Block),
+		asFragment:  true,
+	}
+	for block, handler := range h.includes {
+		newHandler.includes[block] = handler
+	}
+	for name, block := range h.blocks {
+		newHandler.blocks[name] = block
+	}
+	return &newHandler
+}
+
 func (h *partialInternal) GetIncludes() map[Block]Partial {
 	return h.includes
 }
@@ -112,9 +132,15 @@ func (h *partialInternal) GetIncludes() map[Block]Partial {
 // Allow the use of treetop Hander as a HTTP handler
 func (h *partialInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var isPartial bool
+	var ttContentType string
+	if h.asFragment {
+		ttContentType = FragmentContentType
+	} else {
+		ttContentType = PartialContentType
+	}
 	var status int
 	for _, accept := range strings.Split(r.Header.Get("Accept"), ",") {
-		if strings.Trim(accept, " ") == PartialContentType {
+		if strings.Trim(accept, " ") == ttContentType {
 			isPartial = true
 			break
 		}
@@ -122,6 +148,12 @@ func (h *partialInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	root := h.extends
 	if !isPartial {
+		if h.asFragment {
+			// to remain consistent with semantics of a fragment, do not permit
+			// full page load if the partial is being treated as a fragment.
+			http.Error(w, "Not Acceptable", http.StatusNotAcceptable)
+			return
+		}
 		// full page load, execute from the base handler up
 		for root.Container() != nil {
 			root = root.Container().Extends()
@@ -132,7 +164,8 @@ func (h *partialInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	blockMap := resolveBlockMap(root, h)
 	rootHandler, ok := blockMap[root]
 	if !ok {
-		http.Error(w, fmt.Sprintf("Error resolving handler for block %s", root), http.StatusInternalServerError)
+		log.Printf("Error resolving handler for block %s", root)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 	templates := resolvePartialTemplates(rootHandler, blockMap)
@@ -142,7 +175,8 @@ func (h *partialInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		// data was loaded successfully, now execute the templates
 		if err := h.execute(&render, templates, resp.Data); err != nil {
-			http.Error(w, fmt.Sprintf("Error executing templates: %s", err.Error()), http.StatusInternalServerError)
+			log.Printf("Error executing templates: %s", err.Error())
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 	} else {
@@ -157,7 +191,8 @@ func (h *partialInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				partBlockMap := resolveBlockMap(block, handler)
 				partHandler, ok := partBlockMap[block]
 				if !ok {
-					http.Error(w, fmt.Sprintf("Error resolving handler for block %s", block), http.StatusInternalServerError)
+					log.Printf("Error resolving handler for block %s", block)
+					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 					return
 				}
 				partTemplates := resolvePartialTemplates(partHandler, partBlockMap)
@@ -167,7 +202,8 @@ func (h *partialInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					}
 					// data was loaded successfully, now execute the templates
 					if err := h.execute(&render, partTemplates, resp.Data); err != nil {
-						http.Error(w, fmt.Sprintf("Error executing templates: %s", err.Error()), http.StatusInternalServerError)
+						log.Printf("Error executing templates: %s", err.Error())
+						http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 						return
 					}
 				} else {
@@ -177,7 +213,7 @@ func (h *partialInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		// content type should indicate a treetop partial
-		w.Header().Set("Content-Type", PartialContentType)
+		w.Header().Set("Content-Type", ttContentType)
 		w.Header().Set("X-Response-Url", r.URL.RequestURI())
 	}
 

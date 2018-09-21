@@ -35,6 +35,6 @@ func Page(server *pages.ServerContext, m pages.Mux, renderer treetop.Renderer) {
 	nil // unknown entry type: {{ $entry.Type }}
 	{{- end }}
 	{{ end }}{{ range $index, $route := .Routes }}
-	m.Handle("{{ $route.Path }}", {{ $route.Reference }})
+	m.Handle("{{ $route.Path }}", {{ $route.Reference }}{{ if $route.PartialAsFragment }}.AsFragment(){{ end }})
 	{{- end }}
 }

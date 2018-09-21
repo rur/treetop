@@ -87,9 +87,9 @@ func main() {
 			for i := range createdFiles {
 				if strings.HasSuffix(createdFiles[i], ".go") {
 					cmd := exec.Command("go", "fmt", path.Join(outfolder, createdFiles[i]))
-					err := cmd.Run()
+					output, err := cmd.CombinedOutput()
 					if err != nil {
-						fmtError = append(fmtError, fmt.Sprintf("%s Error: %s", createdFiles[i], err))
+						fmtError = append(fmtError, fmt.Sprintf("%s Error: %s\nOutput: %s", createdFiles[i], err, string(output)))
 					}
 				}
 			}

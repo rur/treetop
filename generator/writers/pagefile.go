@@ -24,8 +24,9 @@ type pageEntryData struct {
 }
 
 type pageRouteData struct {
-	Reference string
-	Path      string
+	Reference         string
+	Path              string
+	PartialAsFragment bool
 }
 
 type pageTemplateData struct {
@@ -90,7 +91,7 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 			return "", fmt.Errorf("Invalid block name '%s'", nme)
 		}
 		blocks = append(blocks, pageBlockData{
-			Identifier: assignBlock(partials, nme),
+			Identifier: assignBlock(partials, blockName),
 			Name:       nme,
 		})
 
@@ -136,12 +137,12 @@ func processEntries(extends string, def *generator.PartialDef, templatePath stri
 	var entries []pageEntryData
 	var routes []pageRouteData
 
-	if def.Fragment {
-		entryType = "Fragment"
-		suffix = "frg"
-	} else if def.Default {
+	if def.Default {
 		entryType = "DefaultPartial"
 		suffix = "dfl"
+	} else if def.Fragment {
+		entryType = "Fragment"
+		suffix = "frg"
 	} else {
 		entryType = "Partial"
 		suffix = "ptl"
@@ -163,8 +164,9 @@ func processEntries(extends string, def *generator.PartialDef, templatePath stri
 
 	if def.Path != "" {
 		routes = append(routes, pageRouteData{
-			Reference: entryName + "_" + suffix,
-			Path:      strings.Trim(def.Path, " "),
+			Reference:         entryName + "_" + suffix,
+			Path:              strings.Trim(def.Path, " "),
+			PartialAsFragment: def.Fragment && def.Default,
 		})
 	}
 
