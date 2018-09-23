@@ -85,21 +85,23 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 	}
 
 	blocks := make([]pageBlockData, 0, len(pageDef.Blocks))
-	for nme, partials := range pageDef.Blocks {
-		blockName, err := SanitizeName(nme)
-		if err != nil {
-			return "", fmt.Errorf("Invalid block name '%s'", nme)
-		}
+
+	sortedBlocks, err := iterateSortedBlocks(pageDef.Blocks)
+	if err != nil {
+		return fileName, err
+	}
+	for _, block := range sortedBlocks {
+		// for nme, partials := range pageDef.Blocks {
 		blocks = append(blocks, pageBlockData{
-			Identifier: assignBlock(partials, blockName),
-			Name:       nme,
+			Identifier: assignBlock(block.partials, block.ident),
+			Name:       block.name,
 		})
 
-		for _, partial := range partials {
+		for _, partial := range block.partials {
 			blockEntries, blockRoutes, err := processEntries(
-				blockName,
+				block.ident,
 				&partial,
-				filepath.Join("pages", pageName, "templates", blockName),
+				filepath.Join("pages", pageName, "templates", block.ident),
 			)
 			if err != nil {
 				return "", err
@@ -172,26 +174,25 @@ func processEntries(extends string, def *generator.PartialDef, templatePath stri
 
 	entries = append(entries, entry)
 
-	for nme, partials := range def.Blocks {
-		blockName, err := SanitizeName(nme)
-		if err != nil {
-			return entries, routes, fmt.Errorf("Invalid block name '%s'", nme)
-		}
-
+	sortedBlocks, err := iterateSortedBlocks(def.Blocks)
+	if err != nil {
+		return entries, routes, err
+	}
+	for _, block := range sortedBlocks {
 		entries = append(entries, pageEntryData{
 			Type: "Spacer",
 		}, pageEntryData{
-			Identifier: assignBlock(partials, entryName+"_"+blockName),
-			Name:       blockName,
+			Identifier: assignBlock(block.partials, entryName+"_"+block.ident),
+			Name:       block.ident,
 			Extends:    entryName + "_" + suffix,
 			Type:       "Block",
 		})
 
-		for _, partial := range partials {
+		for _, partial := range block.partials {
 			blockEntries, blockRoutes, err := processEntries(
-				entryName+"_"+blockName,
+				entryName+"_"+block.ident,
 				&partial,
-				filepath.Join(templatePath, blockName),
+				filepath.Join(templatePath, block.ident),
 			)
 			if err != nil {
 				return entries, routes, err

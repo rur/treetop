@@ -54,19 +54,20 @@ func WriteHandlerFile(dir string, pageDef *generator.PartialDef, namespace strin
 	}
 	handlers = append(handlers, &pageHandler)
 
-	for rawName, partials := range pageDef.Blocks {
-		blockIdent, err := SanitizeName(rawName)
-		if err != nil {
-			return fileName, fmt.Errorf("Invalid block name '%s'", rawName)
-		}
+	blocks, err := iterateSortedBlocks(pageDef.Blocks)
+	if err != nil {
+		return fileName, err
+	}
+
+	for _, block := range blocks {
 		pageHandler.Blocks = append(pageHandler.Blocks, &handlerBlockData{
-			Identifier: blockIdent + "Data",
-			Name:       rawName,
-			FieldName:  generator.ValidPublicIdentifier(rawName),
+			Identifier: block.ident + "Data",
+			Name:       block.name,
+			FieldName:  generator.ValidPublicIdentifier(block.name),
 		})
 
-		for _, partial := range partials {
-			blockHandlers, err := processHandlersDef(blockIdent, &partial)
+		for _, partial := range block.partials {
+			blockHandlers, err := processHandlersDef(block.ident, &partial)
 			if err != nil {
 				return fileName, err
 			}
@@ -113,19 +114,20 @@ func processHandlersDef(blockName string, def *generator.PartialDef) ([]*handler
 	}
 	handlers = append(handlers, &handler)
 
-	for rawName, partials := range def.Blocks {
-		blockIdent, err := SanitizeName(rawName)
-		if err != nil {
-			return handlers, fmt.Errorf("Invalid block name '%s'", rawName)
-		}
+	blocks, err := iterateSortedBlocks(def.Blocks)
+	if err != nil {
+		return handlers, err
+	}
+
+	for _, block := range blocks {
 		handler.Blocks = append(handler.Blocks, &handlerBlockData{
-			Identifier: blockIdent + "Data",
-			Name:       rawName,
-			FieldName:  generator.ValidPublicIdentifier(rawName),
+			Identifier: block.ident + "Data",
+			Name:       block.name,
+			FieldName:  generator.ValidPublicIdentifier(block.name),
 		})
 
-		for _, partial := range partials {
-			blockHandlers, err := processHandlersDef(blockIdent, &partial)
+		for _, partial := range block.partials {
+			blockHandlers, err := processHandlersDef(block.ident, &partial)
 			if err != nil {
 				return handlers, err
 			}

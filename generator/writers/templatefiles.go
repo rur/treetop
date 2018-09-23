@@ -5,7 +5,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"sort"
 
 	"github.com/rur/treetop/generator"
 )
@@ -50,34 +49,6 @@ type indexData struct {
 	Title     string
 	SiteLinks []*indexSiteLinksData
 	Blocks    []*htmlBlockData
-}
-
-type blockDef struct {
-	name     string
-	ident    string
-	partials []generator.PartialDef
-}
-
-func iterateSortedBlocks(blocks map[string][]generator.PartialDef) ([]blockDef, error) {
-	output := make([]blockDef, 0, len(blocks))
-	var keys []string
-	for k := range blocks {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	for _, k := range keys {
-		ident, err := SanitizeName(k)
-		if err != nil {
-			return output, fmt.Errorf("Invalid block name '%s'", k)
-		}
-		output = append(output, blockDef{
-			name:     k,
-			ident:    ident,
-			partials: blocks[k],
-		})
-	}
-	return output, nil
 }
 
 func WriteIndexFile(dir string, pageDef *generator.PartialDef, otherPages []generator.PartialDef) (string, error) {
