@@ -8,8 +8,9 @@ import (
 )
 
 {{ range $index, $handler := .Handlers }}
-// {{ $handler.Info }} {{ $handler.Type }}{{ if $handler.Doc }}
-// {{ $handler.Doc }}
+// {{ $handler.Info }} {{ $handler.Type }}{{ if $handler.Extends }}
+// Extends: {{ $handler.Extends }}{{ end }}{{ if $handler.Doc }}
+// Doc: {{ $handler.Doc }}
 {{- end }}{{ if len $handler.Blocks}}
 func {{ $handler.Identifier }}(cxt *pages.RequestContext, w treetop.DataWriter, req *http.Request) {
 	{{ range $index, $block := .Blocks -}}

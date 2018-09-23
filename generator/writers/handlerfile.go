@@ -18,6 +18,7 @@ type handlerData struct {
 	Info       string
 	Type       string
 	Doc        string
+	Extends    string
 	Blocks     []*handlerBlockData
 	Identifier string
 }
@@ -104,6 +105,7 @@ func processHandlersDef(blockName string, def *generator.PartialDef) ([]*handler
 	// base page handler
 	handler := handlerData{
 		Info:       entryName,
+		Extends:    blockName,
 		Doc:        def.Doc,
 		Type:       entryType,
 		Blocks:     make([]*handlerBlockData, 0, len(def.Blocks)),
