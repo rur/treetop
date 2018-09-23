@@ -50,10 +50,9 @@
     </ul>
     <h1>[[ .Title ]] page</h1>[[ range $index, $block := .Blocks ]]
     <h2>Block [[ $block.Name ]]</h2>
-    <ul class="nav">[[ range $partial := $block.Partials ]][[ if $partial.Path ]][[ if $partial.Default ]]
-        <li><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]*</a></li>
-        [[- else -]]
-        <li><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]]</a></li>
+    <ul class="nav">[[ range $partial := $block.Partials ]][[ if $partial.Path ]][[ if $partial.Fragment ]]
+        <li><button treetop-link="[[ $partial.Path ]]">[[ $partial.Name ]][[ if $partial.Default ]]*[[end]]</button></li>[[ else ]]
+        <li><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]][[ if $partial.Default ]]*[[end]]</a></li>
         [[- end ]][[- end ]]
     [[ end ]]</ul>
     {{ block "[[ $block.Name ]]" .[[ $block.FieldName ]] }}
