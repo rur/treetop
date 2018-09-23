@@ -100,15 +100,20 @@ func WriteIndexFile(dir string, pageDef *generator.PartialDef, otherPages []gene
 		}
 	}
 
-	blocks := make([]*htmlBlockData, 0, len(pageDef.Blocks))
-	for blockName, partials := range pageDef.Blocks {
+	blockList, err := iterateSortedBlocks(pageDef.Blocks)
+	if err != nil {
+		return fileName, err
+	}
+	blocks := make([]*htmlBlockData, 0, len(blockList))
+	for _, block := range blockList {
 		blockData := htmlBlockData{
-			FieldName: generator.ValidPublicIdentifier(blockName),
-			Name:      blockName,
-			Partials:  make([]*htmlBlockPartialData, 0, len(partials)),
+			FieldName:  generator.ValidPublicIdentifier(block.name),
+			Identifier: block.ident,
+			Name:       block.name,
+			Partials:   make([]*htmlBlockPartialData, 0, len(block.partials)),
 		}
 		blocks = append(blocks, &blockData)
-		for _, partial := range partials {
+		for _, partial := range block.partials {
 			blockData.Partials = append(blockData.Partials, &htmlBlockPartialData{
 				Path:     partial.Path,
 				Name:     partial.Name,
@@ -138,8 +143,10 @@ func WriteTemplateBlock(dir string, blocks map[string][]generator.PartialDef) ([
 	}
 	for _, block := range blockList {
 		blockTemplDir := path.Join(dir, block.ident)
-		if err := os.Mkdir(blockTemplDir, os.ModePerm); err != nil {
-			return created, fmt.Errorf("Error creating template dir '%s': %s", blockTemplDir, err)
+		if _, err := os.Stat(blockTemplDir); os.IsNotExist(err) {
+			if err := os.Mkdir(blockTemplDir, os.ModePerm); err != nil {
+				return created, fmt.Errorf("Error creating template dir '%s': %s", blockTemplDir, err)
+			}
 		}
 		for _, def := range block.partials {
 			if def.Fragment && !def.Default {

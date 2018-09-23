@@ -107,7 +107,7 @@ func processHandlersDef(blockName string, def *generator.PartialDef) ([]*handler
 		Doc:        def.Doc,
 		Type:       entryType,
 		Blocks:     make([]*handlerBlockData, 0, len(def.Blocks)),
-		Identifier: blockName + "_" + entryName + "Handler",
+		Identifier: entryName + "Handler",
 	}
 	handlers = append(handlers, &handler)
 

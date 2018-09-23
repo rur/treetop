@@ -157,7 +157,7 @@ func processEntries(extends string, def *generator.PartialDef, templatePath stri
 		Identifier: assignHandler(def, entryName+"_"+suffix),
 		Name:       entryName,
 		Extends:    extends,
-		Handler:    extends + "_" + entryName + "Handler",
+		Handler:    entryName + "Handler",
 		Type:       entryType,
 		Template:   filepath.Join(templatePath, entryName+".templ.html"),
 	}
@@ -181,7 +181,7 @@ func processEntries(extends string, def *generator.PartialDef, templatePath stri
 		entries = append(entries, pageEntryData{
 			Type: "Spacer",
 		}, pageEntryData{
-			Identifier: assignBlock(partials, blockName),
+			Identifier: assignBlock(partials, entryName+"_"+blockName),
 			Name:       blockName,
 			Extends:    entryName + "_" + suffix,
 			Type:       "Block",
@@ -189,7 +189,7 @@ func processEntries(extends string, def *generator.PartialDef, templatePath stri
 
 		for _, partial := range partials {
 			blockEntries, blockRoutes, err := processEntries(
-				blockName,
+				entryName+"_"+blockName,
 				&partial,
 				filepath.Join(templatePath, blockName),
 			)

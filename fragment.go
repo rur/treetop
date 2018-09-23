@@ -3,6 +3,7 @@ package treetop
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -66,7 +67,8 @@ func (h *fragmentInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		// data was loaded successfully, now execute the templates
 		if err := h.execute(render, []string{h.template}, resp.Data); err != nil {
-			http.Error(w, fmt.Sprintf("Error executing templates: %s", err.Error()), http.StatusInternalServerError)
+			log.Printf("Error executing templates: %s", err.Error())
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 	} else {
