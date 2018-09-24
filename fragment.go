@@ -61,7 +61,7 @@ func (h *fragmentInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	render := bytes.NewBuffer(make([]byte, 0))
 
-	if resp, proceed := ExecuteFragment(h, map[string]interface{}{}, w, r); proceed {
+	if resp, proceed := executeFragment(h, map[string]interface{}{}, w, r); proceed {
 		if resp.Status > status {
 			status = resp.Status
 		}

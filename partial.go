@@ -169,7 +169,7 @@ func (h *partialInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	templates := resolvePartialTemplates(rootHandler, blockMap)
-	if resp, proceed := ExecutePartial(rootHandler, blockMap, w, r); proceed {
+	if resp, proceed := executePartial(rootHandler, blockMap, w, r); proceed {
 		if resp.Status > status {
 			status = resp.Status
 		}
@@ -196,7 +196,7 @@ func (h *partialInternal) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				partTemplates := resolvePartialTemplates(partHandler, partBlockMap)
-				if resp, proceed := ExecutePartial(partHandler, partBlockMap, w, r); proceed {
+				if resp, proceed := executePartial(partHandler, partBlockMap, w, r); proceed {
 					if resp.Status > status {
 						status = resp.Status
 					}

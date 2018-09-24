@@ -52,7 +52,7 @@ func (a *appended) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	templates := resolvePartialTemplates(rootHandler, blockMap)
-	if resp, proceed := ExecutePartial(rootHandler, blockMap, w, r); proceed {
+	if resp, proceed := executePartial(rootHandler, blockMap, w, r); proceed {
 		// data was loaded successfully, now execute the templates
 		if resp.Status > status && status < 600 {
 			status = resp.Status
@@ -77,7 +77,7 @@ func (a *appended) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				partTemplates := resolvePartialTemplates(partHandler, partBlockMap)
-				if resp, proceed := ExecutePartial(partHandler, partBlockMap, w, r); proceed {
+				if resp, proceed := executePartial(partHandler, partBlockMap, w, r); proceed {
 					if resp.Status > status && status < 600 {
 						status = resp.Status
 					}
@@ -95,7 +95,7 @@ func (a *appended) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		for _, fragment := range a.fragments {
 
-			if resp, proceed := ExecuteFragment(fragment, map[string]interface{}{}, w, r); proceed {
+			if resp, proceed := executeFragment(fragment, map[string]interface{}{}, w, r); proceed {
 				if resp.Status > status && status < 600 {
 					status = resp.Status
 				}

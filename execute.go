@@ -117,7 +117,7 @@ func StringTemplateExec(w io.Writer, templates []string, data interface{}) error
 	return nil
 }
 
-func ExecutePartial(h Partial, handlerMap map[Block]Partial, resp http.ResponseWriter, r *http.Request) (Response, bool) {
+func executePartial(h Partial, handlerMap map[Block]Partial, resp http.ResponseWriter, r *http.Request) (Response, bool) {
 	hw := partialWriter{
 		ResponseWriter: resp,
 		handler:        h,
@@ -129,7 +129,7 @@ func ExecutePartial(h Partial, handlerMap map[Block]Partial, resp http.ResponseW
 	return Response{hw.data, hw.status}, !hw.wroteContent
 }
 
-func ExecuteFragment(h Fragment, dataMap map[string]interface{}, resp http.ResponseWriter, r *http.Request) (Response, bool) {
+func executeFragment(h Fragment, dataMap map[string]interface{}, resp http.ResponseWriter, r *http.Request) (Response, bool) {
 	hw := fragmentWriter{
 		ResponseWriter: resp,
 		handler:        h,
