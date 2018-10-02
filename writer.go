@@ -36,19 +36,23 @@ func (dw *dataWriter) Data(d interface{}) {
 	dw.data = d
 }
 
-// Indicate what the response status should be for the request.
+// Indicate what the HTTP status should be for the response.
 //
-// if the new status code is a larger value than current status
-// then the greater numeric status is chosen.
+// Note that when different handlers indicate a different status
+// the code with the greater numeric value is chosen.
 //
-// eg. Given: Bad Request, Unauthorized and Internal Server Error (400 < 401 < 500), server error wins!
+// For example, given: Bad Request, Unauthorized and Internal Server Error.
+// Status values are differentiated as follows, 400 < 401 < 500, so 'Internal Server Error' wins!
 func (dw *dataWriter) Status(status int) {
 	if status > dw.status {
 		dw.status = status
 	}
 }
 
-// Load data from a named child block handler
+// Load data from a named child block handler.
+//
+// The second return value indicates whether the delegated handler called Data(...)
+// or not. This is necessary to discern the meaning of a `nil` data value.
 func (dw *dataWriter) BlockData(name string, req *http.Request) (interface{}, bool) {
 	// don't do anything if a response has already been written
 	if dw.responseWritten {
@@ -85,8 +89,8 @@ func (dw *dataWriter) BlockData(name string, req *http.Request) (interface{}, bo
 	}
 }
 
-// unique ID for Treetop HTTP response, can be used to keep track of the request
-// as is passes between handlers
+// Unique ID for Treetop HTTP response. This is intended to be used to keep track of
+// the request as is passes between handlers
 func (dw *dataWriter) ResponseToken() string {
 	return dw.responseToken
 }
