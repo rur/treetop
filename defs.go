@@ -1,4 +1,4 @@
-package idea
+package treetop
 
 type templateDef struct {
 	templateDef string
