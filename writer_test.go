@@ -26,8 +26,9 @@ func Test_dataWriter_BlockData(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		want   interface{}
-		want1  bool
+		data   interface{}
+		flag   bool
+		status int
 	}{
 		{
 			name: "Nil case",
@@ -40,8 +41,8 @@ func Test_dataWriter_BlockData(t *testing.T) {
 				name: "no-such-block",
 				req:  req,
 			},
-			want:  nil,
-			want1: false,
+			data: nil,
+			flag: false,
 		},
 		{
 			name: "Simple data",
@@ -61,8 +62,34 @@ func Test_dataWriter_BlockData(t *testing.T) {
 				name: "some-block",
 				req:  req,
 			},
-			want:  "This is a test",
-			want1: true,
+			data: "This is a test",
+			flag: true,
+		},
+		{
+			name: "Adopt sub-handler HTTP status",
+			fields: fields{
+				writer:        &httptest.ResponseRecorder{},
+				responseToken: "test-response",
+				status:        400,
+				template: &Template{
+					Blocks: []*Template{
+						&Template{
+							Extends: "some-block",
+							HandlerFunc: func(dw DataWriter, _ *http.Request) {
+								dw.Status(501)
+								dw.Data("Not Implemented")
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				name: "some-block",
+				req:  req,
+			},
+			data:   "Not Implemented",
+			flag:   true,
+			status: 501,
 		},
 	}
 	for _, tt := range tests {
@@ -77,11 +104,14 @@ func Test_dataWriter_BlockData(t *testing.T) {
 				template:        tt.fields.template,
 			}
 			got, got1 := dw.BlockData(tt.args.name, tt.args.req)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("dataWriter.BlockData() got = %v, want %v", got, tt.want)
+			if !reflect.DeepEqual(got, tt.data) {
+				t.Errorf("dataWriter.BlockData() got = %v, want %v", got, tt.data)
 			}
-			if got1 != tt.want1 {
-				t.Errorf("dataWriter.BlockData() got1 = %v, want %v", got1, tt.want1)
+			if got1 != tt.flag {
+				t.Errorf("dataWriter.BlockData() flag = %v, want %v", got1, tt.flag)
+			}
+			if dw.status != tt.status {
+				t.Errorf("dataWriter.status = %v, want %v", dw.status, tt.status)
 			}
 		})
 	}
