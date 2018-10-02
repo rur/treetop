@@ -1,6 +1,7 @@
 package treetop
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -90,6 +91,50 @@ func Test_dataWriter_BlockData(t *testing.T) {
 			data:   "Not Implemented",
 			flag:   true,
 			status: 501,
+		},
+		{
+			name: "ResponseToken passed down",
+			fields: fields{
+				writer:        &httptest.ResponseRecorder{},
+				responseToken: "test-response",
+				template: &Template{
+					Blocks: []*Template{
+						&Template{
+							Extends: "some-block",
+							HandlerFunc: func(dw DataWriter, _ *http.Request) {
+								dw.Data(fmt.Sprintf("Response token '%s'", dw.ResponseToken()))
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				name: "some-block",
+				req:  req,
+			},
+			data: "Response token 'test-response'",
+			flag: true,
+		},
+		{
+			name: "Block not found",
+			fields: fields{
+				writer:        &httptest.ResponseRecorder{},
+				responseToken: "test-response",
+				template: &Template{
+					Blocks: []*Template{
+						&Template{
+							Extends:     "some-block",
+							HandlerFunc: Constant("This should not happen"),
+						},
+					},
+				},
+			},
+			args: args{
+				name: "some-other-block",
+				req:  req,
+			},
+			data: nil,
+			flag: false,
 		},
 	}
 	for _, tt := range tests {
