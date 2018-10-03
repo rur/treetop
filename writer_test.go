@@ -11,7 +11,7 @@ import (
 func Test_dataWriter_BlockData(t *testing.T) {
 	type fields struct {
 		writer          http.ResponseWriter
-		responseToken   string
+		localToken      uint32
 		responseWritten bool
 		dataCalled      bool
 		data            interface{}
@@ -34,9 +34,9 @@ func Test_dataWriter_BlockData(t *testing.T) {
 		{
 			name: "Nil case",
 			fields: fields{
-				writer:        &httptest.ResponseRecorder{},
-				responseToken: "test-response",
-				template:      &Template{},
+				writer:     &httptest.ResponseRecorder{},
+				localToken: 1234,
+				template:   &Template{},
 			},
 			args: args{
 				name: "no-such-block",
@@ -48,8 +48,8 @@ func Test_dataWriter_BlockData(t *testing.T) {
 		{
 			name: "Simple data",
 			fields: fields{
-				writer:        &httptest.ResponseRecorder{},
-				responseToken: "test-response",
+				writer:     &httptest.ResponseRecorder{},
+				localToken: 1234,
 				template: &Template{
 					Blocks: []*Template{
 						&Template{
@@ -69,9 +69,9 @@ func Test_dataWriter_BlockData(t *testing.T) {
 		{
 			name: "Adopt sub-handler HTTP status",
 			fields: fields{
-				writer:        &httptest.ResponseRecorder{},
-				responseToken: "test-response",
-				status:        400,
+				writer:     &httptest.ResponseRecorder{},
+				localToken: 1234,
+				status:     400,
 				template: &Template{
 					Blocks: []*Template{
 						&Template{
@@ -93,16 +93,16 @@ func Test_dataWriter_BlockData(t *testing.T) {
 			status: 501,
 		},
 		{
-			name: "ResponseToken passed down",
+			name: "LocalToken passed down",
 			fields: fields{
-				writer:        &httptest.ResponseRecorder{},
-				responseToken: "test-response",
+				writer:     &httptest.ResponseRecorder{},
+				localToken: 1234,
 				template: &Template{
 					Blocks: []*Template{
 						&Template{
 							Extends: "some-block",
 							HandlerFunc: func(dw DataWriter, _ *http.Request) {
-								dw.Data(fmt.Sprintf("Response token '%s'", dw.ResponseToken()))
+								dw.Data(fmt.Sprintf("Response token %v", dw.LocalToken()))
 							},
 						},
 					},
@@ -112,14 +112,14 @@ func Test_dataWriter_BlockData(t *testing.T) {
 				name: "some-block",
 				req:  req,
 			},
-			data: "Response token 'test-response'",
+			data: "Response token 1234",
 			flag: true,
 		},
 		{
 			name: "Block not found",
 			fields: fields{
-				writer:        &httptest.ResponseRecorder{},
-				responseToken: "test-response",
+				writer:     &httptest.ResponseRecorder{},
+				localToken: 1234,
 				template: &Template{
 					Blocks: []*Template{
 						&Template{
@@ -141,7 +141,7 @@ func Test_dataWriter_BlockData(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dw := &dataWriter{
 				writer:          tt.fields.writer,
-				responseToken:   tt.fields.responseToken,
+				localToken:      tt.fields.localToken,
 				responseWritten: tt.fields.responseWritten,
 				dataCalled:      tt.fields.dataCalled,
 				data:            tt.fields.data,

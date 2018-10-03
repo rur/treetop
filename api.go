@@ -1,16 +1,24 @@
 package treetop
 
-import "net/http"
+import (
+	"io"
+	"net/http"
+)
+
+const (
+	PartialContentType  = "application/x.treetop-html-partial+xml"
+	FragmentContentType = "application/x.treetop-html-fragment+xml"
+)
 
 type DataWriter interface {
 	http.ResponseWriter
 	Data(interface{})
 	Status(int)
 	BlockData(string, *http.Request) (interface{}, bool)
-	ResponseToken() string
+	LocalToken() uint32
 }
 
-type RenderFunc func([]string, interface{}) error
+type TemplateExec func(io.Writer, []string, interface{}) error
 type HandlerFunc func(DataWriter, *http.Request)
 
 type TemplateDef interface {
