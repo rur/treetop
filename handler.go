@@ -46,6 +46,7 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		http.Error(resp, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
+	tmpls = append([]string{h.Template.Content}, tmpls...)
 
 	// TODO: use buffer pool
 	var buf bytes.Buffer
@@ -60,12 +61,16 @@ func aggregateTemplateContents(seen []string, tmpls []*Template) ([]string, erro
 			strings.Join(seen[len(seen)-22:], "\n- "),
 		)
 	}
+	var these []string
+	var next []string
 	for i := 0; i < len(tmpls); i++ {
 		seen = append(seen, tmpls[i].Content)
-		seen, err := aggregateTemplateContents(seen, tmpls[i].Blocks)
+		agg, err := aggregateTemplateContents(seen, tmpls[i].Blocks)
 		if err != nil {
-			return seen, err
+			return agg, err
 		}
+		these = append(these, tmpls[i].Content)
+		next = append(next, agg...)
 	}
-	return seen, nil
+	return append(these, next...), nil
 }

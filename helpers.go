@@ -13,6 +13,15 @@ func Constant(data interface{}) HandlerFunc {
 	}
 }
 
+func Delegate(blockname string) HandlerFunc {
+	return func(dw DataWriter, req *http.Request) {
+		data, ok := dw.BlockData(blockname, req)
+		if ok {
+			dw.Data(data)
+		}
+	}
+}
+
 func IsTreetopRequest(req *http.Request) bool {
 	for _, accept := range strings.Split(req.Header.Get("Accept"), ",") {
 		accept = strings.ToLower(strings.TrimSpace(accept))
