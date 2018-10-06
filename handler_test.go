@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -226,5 +227,115 @@ func blockDebug(blocknames []string) HandlerFunc {
 			}
 		}
 		dw.Data(d)
+	}
+}
+
+func TestPartial_TemplateList(t *testing.T) {
+	cycle := Partial{
+		Extends:     "prev",
+		Content:     "test.templ.html",
+		HandlerFunc: Delegate("next"),
+		Blocks: []*Partial{
+			{
+				Extends:     "next",
+				Content:     "sub.templ.html",
+				HandlerFunc: Constant("my sub data"),
+			},
+		},
+	}
+	cycle.Blocks[0].Blocks = append(cycle.Blocks[0].Blocks, &cycle)
+
+	type fields struct {
+		Extends     string
+		Content     string
+		HandlerFunc HandlerFunc
+		Parent      *Partial
+		Blocks      []*Partial
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    []string
+		wantErr bool
+	}{
+		{
+			name: "Nested example",
+			fields: fields{
+				Extends:     "base",
+				Content:     "test.templ.html",
+				HandlerFunc: blockDebug([]string{"testblock", "testblock2"}),
+				Blocks: []*Partial{
+					{
+						Extends:     "testblock",
+						Content:     "sub.templ.html",
+						HandlerFunc: blockDebug([]string{"deepblock", "deepblockB"}),
+						Blocks: []*Partial{
+							{
+								Extends:     "deepblock",
+								Content:     "sub-sub.templ.html",
+								HandlerFunc: Constant("~~sub-subA-data~~"),
+							},
+							{
+								Extends:     "deepblockB",
+								Content:     "sub-subB.templ.html",
+								HandlerFunc: Constant("~~sub-subB-data~~"),
+							},
+						},
+					},
+					{
+						Extends:     "testblock2",
+						Content:     "sub2.templ.html",
+						HandlerFunc: blockDebug([]string{"deepblock2", "deepblock2B"}),
+						Blocks: []*Partial{
+							{
+								Extends:     "deepblock2",
+								Content:     "sub2-sub.templ.html",
+								HandlerFunc: Constant("~~sub2-subA-data~~"),
+							},
+							{
+								Extends:     "deepblock2B",
+								Content:     "sub2-subB.templ.html",
+								HandlerFunc: Constant("~~sub2-subB-data~~"),
+							},
+						},
+					},
+				},
+			},
+			want: []string{
+				"test.templ.html",
+				"sub.templ.html", "sub2.templ.html",
+				"sub-sub.templ.html", "sub-subB.templ.html",
+				"sub2-sub.templ.html", "sub2-subB.templ.html",
+			},
+		},
+		{
+			name: "Nested example",
+			fields: fields{
+				Extends:     "base",
+				Content:     "test.templ.html",
+				HandlerFunc: blockDebug([]string{"testblock", "testblock2"}),
+				Blocks:      []*Partial{&cycle},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &Partial{
+				Extends:     tt.fields.Extends,
+				Content:     tt.fields.Content,
+				HandlerFunc: tt.fields.HandlerFunc,
+				Parent:      tt.fields.Parent,
+				Blocks:      tt.fields.Blocks,
+			}
+			got, err := p.TemplateList()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Partial.TemplateList() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Partial.TemplateList() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

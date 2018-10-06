@@ -36,10 +36,6 @@ type Handler struct {
 	// Function that will be responsible for executing template contents against
 	// data yielded from handlers
 	Renderer TemplateExec
-
-	// cached templates
-	partialTemplates []string
-	pageTemplates    []string
 }
 
 // implement http.Handler interface, see https://golang.org/pkg/net/http/?#Handler
@@ -50,20 +46,31 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		partial:    h.Partial,
 	}
 
-	h.Partial.HandlerFunc(dw, req)
-
-	tmpls, err := aggregateTemplates([]string{h.Partial.Extends}, h.Partial.Blocks)
+	// collect template list
+	tmpls, err := h.Partial.TemplateList()
 	if err != nil {
 		log.Printf(err.Error())
 		http.Error(resp, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	tmpls = append([]string{h.Partial.Content}, tmpls...)
+
+	// executes data handlers
+	h.Partial.HandlerFunc(dw, req)
 
 	// TODO: use buffer pool
 	var buf bytes.Buffer
 	h.Renderer(&buf, tmpls, dw.data)
 	buf.WriteTo(resp)
+}
+
+func (p *Partial) TemplateList() ([]string, error) {
+	tmpls, err := aggregateTemplates([]string{p.Extends}, p.Blocks)
+	if err != nil {
+		return nil, err
+	}
+	tmpls = append([]string{p.Content}, tmpls...)
+
+	return tmpls, nil
 }
 
 func aggregateTemplates(seen []string, tmpls []*Partial) ([]string, error) {
