@@ -14,8 +14,8 @@ import (
 
 func TestHandler_ServeHTTP(t *testing.T) {
 	type fields struct {
-		Template     *Template
-		Postscript   []*Template
+		Partial      *Partial
+		Postscript   []*Partial
 		FragmentOnly bool
 		Renderer     TemplateExec
 	}
@@ -25,13 +25,14 @@ func TestHandler_ServeHTTP(t *testing.T) {
 	}
 	req := httptest.NewRequest("GET", "/some/path", nil)
 
-	cycle := Template{
+	cycle := Partial{
+		Extends: "root",
 		Content: "test.templ.html",
 		HandlerFunc: func(dw DataWriter, req *http.Request) {
 			d, _ := dw.BlockData("testblock", req)
 			dw.Data(fmt.Sprintf("Loaded sub data: %s", d))
 		},
-		Blocks: []*Template{
+		Blocks: []*Partial{
 			{
 				Extends:     "testblock",
 				Content:     "sub.templ.html",
@@ -52,30 +53,30 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		{
 			name: "Basic",
 			fields: fields{
-				Template: &Template{
+				Partial: &Partial{
 					Content:     "test.templ.html",
 					HandlerFunc: Constant("somedata"),
 				},
-				Postscript: []*Template{},
+				Postscript: []*Partial{},
 				Renderer:   TemplExec,
 			},
 			args: args{
 				resp: httptest.NewRecorder(),
 				req:  req,
 			},
-			expect: "Templates: [test.templ.html], Data: somedata",
+			expect: "Partials: [test.templ.html], Data: somedata",
 			status: 200,
 		},
 		{
-			name: "Template with a block",
+			name: "Partial with a block",
 			fields: fields{
-				Template: &Template{
+				Partial: &Partial{
 					Content: "test.templ.html",
 					HandlerFunc: func(dw DataWriter, req *http.Request) {
 						d, _ := dw.BlockData("testblock", req)
 						dw.Data(fmt.Sprintf("Loaded sub data: %s", d))
 					},
-					Blocks: []*Template{
+					Blocks: []*Partial{
 						{
 							Extends:     "testblock",
 							Content:     "sub.templ.html",
@@ -83,28 +84,28 @@ func TestHandler_ServeHTTP(t *testing.T) {
 						},
 					},
 				},
-				Postscript: []*Template{},
+				Postscript: []*Partial{},
 				Renderer:   TemplExec,
 			},
 			args: args{
 				resp: httptest.NewRecorder(),
 				req:  req,
 			},
-			expect: "Templates: [test.templ.html sub.templ.html], Data: Loaded sub data: my sub data",
+			expect: "Partials: [test.templ.html sub.templ.html], Data: Loaded sub data: my sub data",
 			status: 200,
 		},
 		{
-			name: "Template with a nested blocks",
+			name: "Partial with a nested blocks",
 			fields: fields{
-				Template: &Template{
+				Partial: &Partial{
 					Content:     "test.templ.html",
 					HandlerFunc: blockDebug([]string{"testblock", "testblock2"}),
-					Blocks: []*Template{
+					Blocks: []*Partial{
 						{
 							Extends:     "testblock",
 							Content:     "sub.templ.html",
 							HandlerFunc: blockDebug([]string{"deepblock", "deepblockB"}),
-							Blocks: []*Template{
+							Blocks: []*Partial{
 								{
 									Extends:     "deepblock",
 									Content:     "sub-sub.templ.html",
@@ -121,7 +122,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 							Extends:     "testblock2",
 							Content:     "sub2.templ.html",
 							HandlerFunc: blockDebug([]string{"deepblock2", "deepblock2B"}),
-							Blocks: []*Template{
+							Blocks: []*Partial{
 								{
 									Extends:     "deepblock2",
 									Content:     "sub2-sub.templ.html",
@@ -136,40 +137,41 @@ func TestHandler_ServeHTTP(t *testing.T) {
 						},
 					},
 				},
-				Postscript: []*Template{},
+				Postscript: []*Partial{},
 				Renderer:   TemplExec,
 			},
 			args: args{
 				resp: httptest.NewRecorder(),
 				req:  req,
 			},
-			expect: "Templates: [test.templ.html sub.templ.html sub2.templ.html sub-sub.templ.html sub-subB.templ.html sub2-sub.templ.html sub2-subB.templ.html], " +
+			expect: "Partials: [test.templ.html sub.templ.html sub2.templ.html sub-sub.templ.html sub-subB.templ.html sub2-sub.templ.html sub2-subB.templ.html], " +
 				"Data: [" +
 				"{testblock [{deepblock ~~sub-subA-data~~} {deepblockB ~~sub-subB-data~~}]} " +
 				"{testblock2 [{deepblock2 ~~sub2-subA-data~~} {deepblock2B ~~sub2-subB-data~~}]}]",
 			status: 200,
 		},
 		{
-			name: "Template with a cycle",
+			name: "Partial with a cycle",
 			fields: fields{
-				Template:   &cycle,
-				Postscript: []*Template{},
+				Partial:    &cycle,
+				Postscript: []*Partial{},
 				Renderer:   TemplExec,
 			},
 			args: args{
 				resp: httptest.NewRecorder(),
 				req:  req,
 			},
-			expect:    "Internal Server Error\n",
-			status:    500,
-			expectLog: "aggregateTemplate: Max iterations reached, it is likely that there is a cycle in template definitions",
+			expect: "Internal Server Error\n",
+			status: 500,
+			expectLog: "aggregateTemplates: Encountered naming cycle within nested blocks:\n" +
+				"* root -> testblock -> root",
 		},
 	}
 	for _, tt := range tests {
 		var output string
 		t.Run(tt.name, func(t *testing.T) {
 			h := &Handler{
-				Template:     tt.fields.Template,
+				Partial:      tt.fields.Partial,
 				Postscript:   tt.fields.Postscript,
 				FragmentOnly: tt.fields.FragmentOnly,
 				Renderer:     tt.fields.Renderer,
@@ -193,7 +195,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 }
 
 func TemplExec(w io.Writer, templates []string, data interface{}) error {
-	fmt.Fprintf(w, "Templates: %s, Data: %v", templates, data)
+	fmt.Fprintf(w, "Partials: %s, Data: %v", templates, data)
 	return nil
 }
 

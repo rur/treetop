@@ -30,11 +30,3 @@ type BlockDef interface {
 	Extend(string, HandlerFunc) TemplateDef
 	Default(string, HandlerFunc) TemplateDef
 }
-
-type Template struct {
-	Extends     string
-	Content     string
-	HandlerFunc HandlerFunc
-	Parent      *Template
-	Blocks      []*Template
-}

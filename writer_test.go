@@ -16,7 +16,7 @@ func Test_dataWriter_BlockData(t *testing.T) {
 		dataCalled      bool
 		data            interface{}
 		status          int
-		template        *Template
+		partial         *Partial
 	}
 	req := httptest.NewRequest("GET", "/some/path", nil)
 	type args struct {
@@ -36,7 +36,7 @@ func Test_dataWriter_BlockData(t *testing.T) {
 			fields: fields{
 				writer:     &httptest.ResponseRecorder{},
 				localToken: 1234,
-				template:   &Template{},
+				partial:    &Partial{},
 			},
 			args: args{
 				name: "no-such-block",
@@ -50,9 +50,9 @@ func Test_dataWriter_BlockData(t *testing.T) {
 			fields: fields{
 				writer:     &httptest.ResponseRecorder{},
 				localToken: 1234,
-				template: &Template{
-					Blocks: []*Template{
-						&Template{
+				partial: &Partial{
+					Blocks: []*Partial{
+						&Partial{
 							Extends:     "some-block",
 							HandlerFunc: Constant("This is a test"),
 						},
@@ -72,9 +72,9 @@ func Test_dataWriter_BlockData(t *testing.T) {
 				writer:     &httptest.ResponseRecorder{},
 				localToken: 1234,
 				status:     400,
-				template: &Template{
-					Blocks: []*Template{
-						&Template{
+				partial: &Partial{
+					Blocks: []*Partial{
+						&Partial{
 							Extends: "some-block",
 							HandlerFunc: func(dw DataWriter, _ *http.Request) {
 								dw.Status(501)
@@ -97,9 +97,9 @@ func Test_dataWriter_BlockData(t *testing.T) {
 			fields: fields{
 				writer:     &httptest.ResponseRecorder{},
 				localToken: 1234,
-				template: &Template{
-					Blocks: []*Template{
-						&Template{
+				partial: &Partial{
+					Blocks: []*Partial{
+						&Partial{
 							Extends: "some-block",
 							HandlerFunc: func(dw DataWriter, _ *http.Request) {
 								dw.Data(fmt.Sprintf("Response token %v", dw.LocalToken()))
@@ -120,9 +120,9 @@ func Test_dataWriter_BlockData(t *testing.T) {
 			fields: fields{
 				writer:     &httptest.ResponseRecorder{},
 				localToken: 1234,
-				template: &Template{
-					Blocks: []*Template{
-						&Template{
+				partial: &Partial{
+					Blocks: []*Partial{
+						&Partial{
 							Extends:     "some-block",
 							HandlerFunc: Constant("This should not happen"),
 						},
@@ -146,7 +146,7 @@ func Test_dataWriter_BlockData(t *testing.T) {
 				dataCalled:      tt.fields.dataCalled,
 				data:            tt.fields.data,
 				status:          tt.fields.status,
-				template:        tt.fields.template,
+				partial:         tt.fields.partial,
 			}
 			got, got1 := dw.BlockData(tt.args.name, tt.args.req)
 			if !reflect.DeepEqual(got, tt.data) {

@@ -9,7 +9,7 @@ type dataWriter struct {
 	dataCalled      bool
 	data            interface{}
 	status          int
-	template        *Template
+	partial         *Partial
 }
 
 // Implement http.ResponseWriter interface by delegating to embedded instance
@@ -58,16 +58,16 @@ func (dw *dataWriter) BlockData(name string, req *http.Request) (interface{}, bo
 	if dw.responseWritten {
 		return nil, false
 	}
-	var templ *Template
+	var part *Partial
 	// 1. loop children of the template
-	for i := 0; i < len(dw.template.Blocks); i++ {
+	for i := 0; i < len(dw.partial.Blocks); i++ {
 		// 2. find a child-template which extends the named block
-		if dw.template.Blocks[i].Extends == name {
-			templ = dw.template.Blocks[i]
+		if dw.partial.Blocks[i].Extends == name {
+			part = dw.partial.Blocks[i]
 			break
 		}
 	}
-	if templ == nil {
+	if part == nil {
 		// a template which extends block name was not found, return nothing
 		return nil, false
 	}
@@ -75,10 +75,10 @@ func (dw *dataWriter) BlockData(name string, req *http.Request) (interface{}, bo
 	subWriter := dataWriter{
 		writer:     dw.writer,
 		localToken: dw.localToken,
-		template:   templ,
+		partial:    part,
 	}
 	// 4. invoke handler
-	templ.HandlerFunc(&subWriter, req)
+	part.HandlerFunc(&subWriter, req)
 	// 5. adopt status of sub handler (if applicable, see .Status doc)
 	dw.Status(subWriter.status)
 	// 6. return resulting data and flag indicating if .Data(...) was called
