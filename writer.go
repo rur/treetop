@@ -89,8 +89,8 @@ func (dw *dataWriter) BlockData(name string, req *http.Request) (interface{}, bo
 	}
 }
 
-// Unique ID for Treetop HTTP response. This is intended to be used to keep track of
-// the request as is passes between handlers
+// Locally unique ID for Treetop HTTP response. This is intended to be used to keep track of
+// the request as is passes between handlers.
 func (dw *dataWriter) LocalToken() uint32 {
 	return dw.localToken
 }

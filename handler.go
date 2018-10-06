@@ -2,25 +2,20 @@ package treetop
 
 import (
 	"bytes"
-	"math"
+	"fmt"
+	"log"
 	"net/http"
+	"strings"
 	"sync/atomic"
 )
 
-var count uint32
+var token uint32
 
-// Generate a numeric token which can be used to identify treetop
+// Generate a token which can be used to identify treetop
 // responses *locally*. The only uniqueness requirement
-// is that simultaneous requests must not possess the same value.
-// (MaxUnit32 - 1) is a more than adaquite threshold for this purpose.
+// is that concurrent active requests must not possess the same value.
 func nextLocalToken() uint32 {
-	v := atomic.AddUint32(&count, 1)
-	if v == math.MaxUint32 {
-		// cycle once we reach max value
-		atomic.StoreUint32(&count, 0)
-		v = 0
-	}
-	return v
+	return atomic.AddUint32(&token, 1)
 }
 
 type Handler struct {
@@ -45,8 +40,32 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 
 	h.Template.HandlerFunc(dw, req)
 
-	// TODO: use buffer pool in the future
+	tmpls, err := aggregateTemplateContents([]string{h.Template.Content}, h.Template.Blocks)
+	if err != nil {
+		log.Printf(err.Error())
+		http.Error(resp, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	// TODO: use buffer pool
 	var buf bytes.Buffer
-	h.Renderer(&buf, []string{}, dw.data)
+	h.Renderer(&buf, tmpls, dw.data)
 	buf.WriteTo(resp)
+}
+
+func aggregateTemplateContents(seen []string, tmpls []*Template) ([]string, error) {
+	if len(seen) > 1000 {
+		return seen, fmt.Errorf(
+			"aggregateTemplate: Max iterations reached, it is likely that there is a cycle in template definitions. Last 20 templates:\n- %s",
+			strings.Join(seen[len(seen)-22:], "\n- "),
+		)
+	}
+	for i := 0; i < len(tmpls); i++ {
+		seen = append(seen, tmpls[i].Content)
+		seen, err := aggregateTemplateContents(seen, tmpls[i].Blocks)
+		if err != nil {
+			return seen, err
+		}
+	}
+	return seen, nil
 }
