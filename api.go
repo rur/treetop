@@ -21,12 +21,12 @@ type DataWriter interface {
 type TemplateExec func(io.Writer, []string, interface{}) error
 type HandlerFunc func(DataWriter, *http.Request)
 
-type TemplateDef interface {
+type PartialDef interface {
 	Block(string) BlockDef
 	PartialHandler() *Handler
 	FragmentHandler() *Handler
 }
 type BlockDef interface {
-	Extend(string, HandlerFunc) TemplateDef
-	Default(string, HandlerFunc) TemplateDef
+	Extend(string, HandlerFunc) PartialDef
+	Default(string, HandlerFunc) PartialDef
 }
