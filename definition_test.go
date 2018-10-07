@@ -20,7 +20,7 @@ func Test_define_basic_block(t *testing.T) {
 	}
 	impl := part.blocks[0]
 	if impl.parent.template != part.template {
-		t.Errorf("Expected new block to refer back to the partial that defined it %v", block)
+		t.Errorf("Expected new block to refer back to the partial that defined it %v", impl)
 	}
 	if impl.name != "test" {
 		t.Errorf("Expected new blockname: %#v got %#v", "test", impl.name)
@@ -44,7 +44,7 @@ func Test_retrieve_an_existing_block(t *testing.T) {
 	}
 	impl := part.blocks[0]
 	if impl.parent.template != part.template {
-		t.Errorf("Expected new block to refer back to the partial that defined it %v", block)
+		t.Errorf("Expected new block to refer back to the partial that defined it %v", impl)
 	}
 	if impl.name != "test" {
 		t.Errorf("Expected new blockname: %#v got %#v", "test", impl.name)
