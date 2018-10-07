@@ -25,10 +25,12 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		req  *http.Request
 	}
 	req := httptest.NewRequest("GET", "/some/path", nil)
+	reqPartial := httptest.NewRequest("GET", "/some/path/part", nil)
+	reqPartial.Header.Set("Accept", PartialContentType)
 
 	cycle := Partial{
-		Extends: "root",
-		Content: "test.templ.html",
+		Extends:  "root",
+		Template: "test.templ.html",
 		HandlerFunc: func(dw DataWriter, req *http.Request) {
 			d, _ := dw.BlockData("testblock", req)
 			dw.Data(fmt.Sprintf("Loaded sub data: %s", d))
@@ -36,26 +38,39 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		Blocks: []*Partial{
 			{
 				Extends:     "testblock",
-				Content:     "sub.templ.html",
+				Template:    "sub.templ.html",
 				HandlerFunc: Constant("my sub data"),
 			},
 		},
 	}
 	cycle.Blocks[0].Blocks = append(cycle.Blocks[0].Blocks, &cycle)
 
+	pagePart := Partial{
+		Template:    "base.templ.html",
+		HandlerFunc: Constant("base data"),
+		Blocks:      []*Partial{},
+	}
+	pagePart.Blocks = append(pagePart.Blocks, &Partial{
+		Extends:     "test",
+		Template:    "test.templ.html",
+		HandlerFunc: Constant("partial data"),
+		Root:        &pagePart,
+	})
+
 	tests := []struct {
-		name      string
-		fields    fields
-		args      args
-		expect    string
-		status    int
-		expectLog string
+		name              string
+		fields            fields
+		args              args
+		expect            string
+		status            int
+		expectLog         string
+		expectContentType string
 	}{
 		{
 			name: "Basic",
 			fields: fields{
 				Partial: &Partial{
-					Content:     "test.templ.html",
+					Template:    "test.templ.html",
 					HandlerFunc: Constant("somedata"),
 				},
 				Postscript: []*Partial{},
@@ -72,7 +87,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			name: "Partial with a block",
 			fields: fields{
 				Partial: &Partial{
-					Content: "test.templ.html",
+					Template: "test.templ.html",
 					HandlerFunc: func(dw DataWriter, req *http.Request) {
 						d, _ := dw.BlockData("testblock", req)
 						dw.Data(fmt.Sprintf("Loaded sub data: %s", d))
@@ -80,7 +95,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					Blocks: []*Partial{
 						{
 							Extends:     "testblock",
-							Content:     "sub.templ.html",
+							Template:    "sub.templ.html",
 							HandlerFunc: Constant("my sub data"),
 						},
 					},
@@ -99,39 +114,39 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			name: "Partial with a nested blocks",
 			fields: fields{
 				Partial: &Partial{
-					Content:     "test.templ.html",
+					Template:    "test.templ.html",
 					HandlerFunc: blockDebug([]string{"testblock", "testblock2"}),
 					Blocks: []*Partial{
 						{
 							Extends:     "testblock",
-							Content:     "sub.templ.html",
+							Template:    "sub.templ.html",
 							HandlerFunc: blockDebug([]string{"deepblock", "deepblockB"}),
 							Blocks: []*Partial{
 								{
 									Extends:     "deepblock",
-									Content:     "sub-sub.templ.html",
+									Template:    "sub-sub.templ.html",
 									HandlerFunc: Constant("~~sub-subA-data~~"),
 								},
 								{
 									Extends:     "deepblockB",
-									Content:     "sub-subB.templ.html",
+									Template:    "sub-subB.templ.html",
 									HandlerFunc: Constant("~~sub-subB-data~~"),
 								},
 							},
 						},
 						{
 							Extends:     "testblock2",
-							Content:     "sub2.templ.html",
+							Template:    "sub2.templ.html",
 							HandlerFunc: blockDebug([]string{"deepblock2", "deepblock2B"}),
 							Blocks: []*Partial{
 								{
 									Extends:     "deepblock2",
-									Content:     "sub2-sub.templ.html",
+									Template:    "sub2-sub.templ.html",
 									HandlerFunc: Constant("~~sub2-subA-data~~"),
 								},
 								{
 									Extends:     "deepblock2B",
-									Content:     "sub2-subB.templ.html",
+									Template:    "sub2-subB.templ.html",
 									HandlerFunc: Constant("~~sub2-subB-data~~"),
 								},
 							},
@@ -167,6 +182,36 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			expectLog: "aggregateTemplates: Encountered naming cycle within nested blocks:\n" +
 				"* root -> testblock -> root",
 		},
+		{
+			name: "Page partial (only load part of a page)",
+			fields: fields{
+				Partial:    pagePart.Blocks[0],
+				Postscript: []*Partial{},
+				Renderer:   TemplExec,
+			},
+			args: args{
+				resp: httptest.NewRecorder(),
+				req:  reqPartial,
+			},
+			expect:            "Partials: [test.templ.html], Data: partial data",
+			status:            200,
+			expectContentType: PartialContentType,
+		},
+		{
+			name: "Full page load from partial endpoint",
+			fields: fields{
+				Partial:    pagePart.Blocks[0],
+				Postscript: []*Partial{},
+				Renderer:   TemplExec,
+			},
+			args: args{
+				resp: httptest.NewRecorder(),
+				req:  req,
+			},
+			expect:            "Partials: [base.templ.html test.templ.html], Data: base data",
+			status:            200,
+			expectContentType: "text/html",
+		},
 	}
 	for _, tt := range tests {
 		var output string
@@ -191,6 +236,9 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		}
 		if len(tt.expectLog) > 0 && !strings.Contains(output, tt.expectLog) {
 			t.Errorf("Log output = %v, want %v", output, tt.expectLog)
+		}
+		if len(tt.expectContentType) > 0 && tt.args.resp.Header().Get("Content-Type") != tt.expectContentType {
+			t.Errorf("ContentType header = %v, want %v", tt.args.resp.Header().Get("Content-Type"), tt.expectContentType)
 		}
 	}
 }
@@ -233,12 +281,12 @@ func blockDebug(blocknames []string) HandlerFunc {
 func TestPartial_TemplateList(t *testing.T) {
 	cycle := Partial{
 		Extends:     "prev",
-		Content:     "test.templ.html",
+		Template:    "test.templ.html",
 		HandlerFunc: Delegate("next"),
 		Blocks: []*Partial{
 			{
 				Extends:     "next",
-				Content:     "sub.templ.html",
+				Template:    "sub.templ.html",
 				HandlerFunc: Constant("my sub data"),
 			},
 		},
@@ -247,9 +295,9 @@ func TestPartial_TemplateList(t *testing.T) {
 
 	type fields struct {
 		Extends     string
-		Content     string
+		Template    string
 		HandlerFunc HandlerFunc
-		Parent      *Partial
+		Root        *Partial
 		Blocks      []*Partial
 	}
 	tests := []struct {
@@ -262,39 +310,39 @@ func TestPartial_TemplateList(t *testing.T) {
 			name: "Nested example",
 			fields: fields{
 				Extends:     "base",
-				Content:     "test.templ.html",
+				Template:    "test.templ.html",
 				HandlerFunc: blockDebug([]string{"testblock", "testblock2"}),
 				Blocks: []*Partial{
 					{
 						Extends:     "testblock",
-						Content:     "sub.templ.html",
+						Template:    "sub.templ.html",
 						HandlerFunc: blockDebug([]string{"deepblock", "deepblockB"}),
 						Blocks: []*Partial{
 							{
 								Extends:     "deepblock",
-								Content:     "sub-sub.templ.html",
+								Template:    "sub-sub.templ.html",
 								HandlerFunc: Constant("~~sub-subA-data~~"),
 							},
 							{
 								Extends:     "deepblockB",
-								Content:     "sub-subB.templ.html",
+								Template:    "sub-subB.templ.html",
 								HandlerFunc: Constant("~~sub-subB-data~~"),
 							},
 						},
 					},
 					{
 						Extends:     "testblock2",
-						Content:     "sub2.templ.html",
+						Template:    "sub2.templ.html",
 						HandlerFunc: blockDebug([]string{"deepblock2", "deepblock2B"}),
 						Blocks: []*Partial{
 							{
 								Extends:     "deepblock2",
-								Content:     "sub2-sub.templ.html",
+								Template:    "sub2-sub.templ.html",
 								HandlerFunc: Constant("~~sub2-subA-data~~"),
 							},
 							{
 								Extends:     "deepblock2B",
-								Content:     "sub2-subB.templ.html",
+								Template:    "sub2-subB.templ.html",
 								HandlerFunc: Constant("~~sub2-subB-data~~"),
 							},
 						},
@@ -312,7 +360,7 @@ func TestPartial_TemplateList(t *testing.T) {
 			name: "Nested example",
 			fields: fields{
 				Extends:     "base",
-				Content:     "test.templ.html",
+				Template:    "test.templ.html",
 				HandlerFunc: blockDebug([]string{"testblock", "testblock2"}),
 				Blocks:      []*Partial{&cycle},
 			},
@@ -323,9 +371,9 @@ func TestPartial_TemplateList(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			p := &Partial{
 				Extends:     tt.fields.Extends,
-				Content:     tt.fields.Content,
+				Template:    tt.fields.Template,
 				HandlerFunc: tt.fields.HandlerFunc,
-				Parent:      tt.fields.Parent,
+				Root:        tt.fields.Root,
 				Blocks:      tt.fields.Blocks,
 			}
 			got, err := p.TemplateList()
