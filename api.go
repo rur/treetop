@@ -15,7 +15,7 @@ type DataWriter interface {
 	Data(interface{})
 	Status(int)
 	BlockData(string, *http.Request) (interface{}, bool)
-	LocalToken() uint32
+	ResponseId() uint32
 }
 
 type TemplateExec func(io.Writer, []string, interface{}) error

@@ -14,7 +14,7 @@ var token uint32
 // Generate a token which can be used to identify treetop
 // responses *locally*. The only uniqueness requirement
 // is that concurrent active requests must not possess the same value.
-func nextLocalToken() uint32 {
+func nextResponseId() uint32 {
 	return atomic.AddUint32(&token, 1)
 }
 
@@ -41,7 +41,7 @@ type Handler struct {
 func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	dw := &dataWriter{
 		writer:     resp,
-		localToken: nextLocalToken(),
+		responseId: nextResponseId(),
 		partial:    h.Partial,
 	}
 

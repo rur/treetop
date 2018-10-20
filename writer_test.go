@@ -11,7 +11,7 @@ import (
 func Test_dataWriter_BlockData(t *testing.T) {
 	type fields struct {
 		writer          http.ResponseWriter
-		localToken      uint32
+		responseId      uint32
 		responseWritten bool
 		dataCalled      bool
 		data            interface{}
@@ -35,7 +35,7 @@ func Test_dataWriter_BlockData(t *testing.T) {
 			name: "Nil case",
 			fields: fields{
 				writer:     &httptest.ResponseRecorder{},
-				localToken: 1234,
+				responseId: 1234,
 				partial:    Partial{},
 			},
 			args: args{
@@ -49,7 +49,7 @@ func Test_dataWriter_BlockData(t *testing.T) {
 			name: "Simple data",
 			fields: fields{
 				writer:     &httptest.ResponseRecorder{},
-				localToken: 1234,
+				responseId: 1234,
 				partial: Partial{
 					Blocks: []Partial{
 						Partial{
@@ -70,7 +70,7 @@ func Test_dataWriter_BlockData(t *testing.T) {
 			name: "Adopt sub-handler HTTP status",
 			fields: fields{
 				writer:     &httptest.ResponseRecorder{},
-				localToken: 1234,
+				responseId: 1234,
 				status:     400,
 				partial: Partial{
 					Blocks: []Partial{
@@ -93,16 +93,16 @@ func Test_dataWriter_BlockData(t *testing.T) {
 			status: 501,
 		},
 		{
-			name: "LocalToken passed down",
+			name: "ResponseId passed down",
 			fields: fields{
 				writer:     &httptest.ResponseRecorder{},
-				localToken: 1234,
+				responseId: 1234,
 				partial: Partial{
 					Blocks: []Partial{
 						Partial{
 							Extends: "some-block",
 							HandlerFunc: func(dw DataWriter, _ *http.Request) {
-								dw.Data(fmt.Sprintf("Response token %v", dw.LocalToken()))
+								dw.Data(fmt.Sprintf("Response token %v", dw.ResponseId()))
 							},
 						},
 					},
@@ -119,7 +119,7 @@ func Test_dataWriter_BlockData(t *testing.T) {
 			name: "Block not found",
 			fields: fields{
 				writer:     &httptest.ResponseRecorder{},
-				localToken: 1234,
+				responseId: 1234,
 				partial: Partial{
 					Blocks: []Partial{
 						Partial{
@@ -141,7 +141,7 @@ func Test_dataWriter_BlockData(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dw := &dataWriter{
 				writer:          tt.fields.writer,
-				localToken:      tt.fields.localToken,
+				responseId:      tt.fields.responseId,
 				responseWritten: tt.fields.responseWritten,
 				dataCalled:      tt.fields.dataCalled,
 				data:            tt.fields.data,

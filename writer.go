@@ -4,7 +4,7 @@ import "net/http"
 
 type dataWriter struct {
 	writer          http.ResponseWriter
-	localToken      uint32
+	responseId      uint32
 	responseWritten bool
 	dataCalled      bool
 	data            interface{}
@@ -74,7 +74,7 @@ func (dw *dataWriter) BlockData(name string, req *http.Request) (interface{}, bo
 	// 3. construct a sub dataWriter
 	subWriter := dataWriter{
 		writer:     dw.writer,
-		localToken: dw.localToken,
+		responseId: dw.responseId,
 		partial:    part,
 	}
 	// 4. invoke handler
@@ -91,6 +91,6 @@ func (dw *dataWriter) BlockData(name string, req *http.Request) (interface{}, bo
 
 // Locally unique ID for Treetop HTTP response. This is intended to be used to keep track of
 // the request as is passes between handlers.
-func (dw *dataWriter) LocalToken() uint32 {
-	return dw.localToken
+func (dw *dataWriter) ResponseId() uint32 {
+	return dw.responseId
 }
