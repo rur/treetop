@@ -22,17 +22,16 @@ type Partial struct {
 	Extends     string
 	Template    string
 	HandlerFunc HandlerFunc
-	Root        *Partial
-	Blocks      []*Partial
+	Blocks      []Partial
 }
 
 type Handler struct {
 	// Pointer within a hierarchy of templates connected via 'blocks'
 	Partial *Partial
+	// Pointer within a hierarchy of templates connected via 'blocks'
+	Page *Partial
 	// Handlers that will be appended to response *only* for a partial request
-	Postscript []*Partial
-	// Only accept request for treetop fragment content type (end-point will not serve a full page)
-	FragmentOnly bool
+	Postscript []Partial
 	// Function that will be responsible for executing template contents against
 	// data yielded from handlers
 	Renderer TemplateExec
@@ -50,21 +49,17 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	var contentType string
 	if IsTreetopRequest(req) {
 		part = h.Partial
-		if h.FragmentOnly {
+		if h.Page == nil {
 			contentType = FragmentContentType
 		} else {
 			contentType = PartialContentType
 		}
-	} else if h.FragmentOnly {
+	} else if h.Page == nil {
 		// TODO: Consider allowing a '303 See Other' redirect to be configured
 		http.Error(resp, http.StatusText(http.StatusNotAcceptable), http.StatusNotAcceptable)
 		return
 	} else {
-		if h.Partial.Root != nil {
-			part = h.Partial.Root
-		} else {
-			part = h.Partial
-		}
+		part = h.Page
 		contentType = "text/html"
 	}
 
@@ -114,7 +109,7 @@ func (p *Partial) TemplateList() ([]string, error) {
 	return tmpls, nil
 }
 
-func aggregateTemplates(seen []string, partials []*Partial) ([]string, error) {
+func aggregateTemplates(seen []string, partials []Partial) ([]string, error) {
 	var these []string
 	var next []string
 	for i := 0; i < len(partials); i++ {

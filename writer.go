@@ -63,7 +63,7 @@ func (dw *dataWriter) BlockData(name string, req *http.Request) (interface{}, bo
 	for i := 0; i < len(dw.partial.Blocks); i++ {
 		// 2. find a child-template which extends the named block
 		if dw.partial.Blocks[i].Extends == name {
-			part = dw.partial.Blocks[i]
+			part = &dw.partial.Blocks[i]
 			break
 		}
 	}
