@@ -64,8 +64,8 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	// Topo-sort of templates connected via blocks. The order is important for how template inheritance is resolved.
-	// TODO: The result should not change been requests so cache it when the handler instance is created.
-	tmpls, err := part.TemplateList()
+	// TODO: The result should not change between requests so cache it when the handler instance is created.
+	templates, err := part.TemplateList()
 	if err != nil {
 		log.Printf(err.Error())
 		http.Error(resp, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -74,10 +74,18 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 
 	// executes data handlers
 	part.HandlerFunc(dw, req)
+	if dw.responseWritten {
+		// response headers were already sent by one of the handlers, nothing left to do
+		return
+	}
 
 	// TODO: use buffer pool
 	var buf bytes.Buffer
-	h.Renderer(&buf, tmpls, dw.data)
+	if tplErr := h.Renderer(&buf, templates, dw.data); tplErr != nil {
+		log.Printf(tplErr.Error())
+		http.Error(resp, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
 
 	resp.Header().Set("Content-Type", contentType)
 
@@ -100,13 +108,13 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 
 // obtain a list of all partial templates dependent through block associations, sorted topologically
 func (p *Partial) TemplateList() ([]string, error) {
-	tmpls, err := aggregateTemplates([]string{p.Extends}, p.Blocks)
+	tpls, err := aggregateTemplates([]string{p.Extends}, p.Blocks)
 	if err != nil {
 		return nil, err
 	}
-	tmpls = append([]string{p.Template}, tmpls...)
+	tpls = append([]string{p.Template}, tpls...)
 
-	return tmpls, nil
+	return tpls, nil
 }
 
 func aggregateTemplates(seen []string, partials []Partial) ([]string, error) {
