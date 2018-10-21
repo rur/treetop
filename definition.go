@@ -41,12 +41,7 @@ func (t *partialDefImpl) PartialHandler() *Handler {
 
 func (t *partialDefImpl) FragmentHandler() *Handler {
 	return &Handler{
-		Partial: &Partial{
-			Extends:     t.extends.name,
-			Template:    t.template,
-			HandlerFunc: t.handler,
-			Blocks:      []Partial{},
-		},
+		Partial:  t.derivePartial(nil),
 		Renderer: t.renderer,
 	}
 }

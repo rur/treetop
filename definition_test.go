@@ -64,6 +64,22 @@ func Test_extend_block_basic(t *testing.T) {
 	}
 }
 
+func Test_fragment_with_blocks(t *testing.T) {
+	part := basePartial()
+	b := part.Block("test")
+	p := b.Extend("test.templ.html", Noop)
+	p.Block("sub").Default("sub.templ.html", Noop)
+
+	got, err := p.FragmentHandler().Partial.TemplateList()
+	if err != nil {
+		t.Errorf("Unepxected error while aggregating templates: %s", err.Error())
+	}
+	expecting := []string{"test.templ.html", "sub.templ.html"}
+	if !reflect.DeepEqual(got, expecting) {
+		t.Errorf("Extended template, expecting: %#v, got %#v", expecting, got)
+	}
+}
+
 func Test_extend_block_partial(t *testing.T) {
 	part := basePartial()
 	b := part.Block("test")
