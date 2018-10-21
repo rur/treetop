@@ -386,7 +386,7 @@ func TestPartial_TemplateList(t *testing.T) {
 	}
 }
 
-func TestPartial_combine(t *testing.T) {
+func Test_insertPartial(t *testing.T) {
 	type fields struct {
 		Extends     string
 		Template    string
@@ -543,8 +543,8 @@ func TestPartial_combine(t *testing.T) {
 				HandlerFunc: tt.fields.HandlerFunc,
 				Blocks:      tt.fields.Blocks,
 			}
-			if got := p.combine(tt.args.part, tt.args.seen...); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Partial.combine() = %v, want %v", got, tt.want)
+			if got := insertPartial(p, tt.args.part, tt.args.seen...); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("insertPartial(a,b) = %v, want %v", got, tt.want)
 			}
 		})
 	}

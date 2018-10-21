@@ -116,50 +116,17 @@ func (h *Handler) Include(defs ...PartialDef) *Handler {
 	}
 	for _, def := range defs {
 		defH := def.FragmentHandler()
-		if newPartial := newHandler.Partial.combine(defH.Partial); newPartial != nil {
+		if newPartial := insertPartial(newHandler.Partial, defH.Partial); newPartial != nil {
 			newHandler.Partial = newPartial
 		} else {
 			// add it to postscript
 			newHandler.Postscript = append(newHandler.Postscript, *defH.Partial)
 		}
-		if newPartial := newHandler.Page.combine(defH.Partial); newPartial != nil {
-			newHandler.Page = newPartial
+		if newPage := insertPartial(newHandler.Page, defH.Partial); newPage != nil {
+			newHandler.Page = newPage
 		}
 	}
 	return &newHandler
-}
-
-func (p *Partial) combine(part *Partial, seen ...string) *Partial {
-	// create a copy incorporating a new partial into the template hierarchy if possible.
-	// if the returned pointer is nil, then the new partial could not be incorporated
-	copy := Partial{
-		p.Extends,
-		p.Template,
-		p.HandlerFunc,
-		make([]Partial, len(p.Blocks)),
-	}
-	found := false
-	for i := 0; i < len(p.Blocks); i++ {
-		sub := p.Blocks[i]
-		if contains(seen, sub.Extends) {
-			// block naming cycle encountered, a combined partial cannot be produced.
-			return nil
-		}
-		if sub.Extends == part.Extends {
-			found = true
-			copy.Blocks[i] = *part
-		} else if updated := sub.combine(part, append(seen, sub.Extends)...); updated != nil {
-			found = true
-			copy.Blocks[i] = *updated
-		} else {
-			copy.Blocks[i] = sub
-		}
-	}
-	if found {
-		return &copy
-	} else {
-		return nil
-	}
 }
 
 // obtain a list of all partial templates dependent through block associations, sorted topologically
@@ -172,6 +139,10 @@ func (p *Partial) TemplateList() ([]string, error) {
 
 	return tpls, nil
 }
+
+// ---------
+// Internal
+// ---------
 
 func aggregateTemplates(partials []Partial, seen ...string) ([]string, error) {
 	var these []string
@@ -202,4 +173,37 @@ func contains(values []string, query string) bool {
 		}
 	}
 	return false
+}
+
+func insertPartial(parent, child *Partial, seen ...string) *Partial {
+	// Create a copy of the parent with the child partial incorporated into the template hierarchy, if possible.
+	// If the child partial does not match any blocks in the hierarchy, a nil pointer will be returned.
+	copy := Partial{
+		parent.Extends,
+		parent.Template,
+		parent.HandlerFunc,
+		make([]Partial, len(parent.Blocks)),
+	}
+	found := false
+	for i := 0; i < len(parent.Blocks); i++ {
+		sub := parent.Blocks[i]
+		if contains(seen, sub.Extends) {
+			// block naming cycle encountered, a combined partial cannot be produced.
+			return nil
+		}
+		if sub.Extends == child.Extends {
+			found = true
+			copy.Blocks[i] = *child
+		} else if updated := insertPartial(&sub, child, append(seen, sub.Extends)...); updated != nil {
+			found = true
+			copy.Blocks[i] = *updated
+		} else {
+			copy.Blocks[i] = sub
+		}
+	}
+	if found {
+		return &copy
+	} else {
+		return nil
+	}
 }
