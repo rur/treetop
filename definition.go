@@ -71,16 +71,17 @@ func (t *partialDefImpl) derivePartial(override *Partial) *Partial {
 			blP = override
 		} else if b.defaultpartial != nil {
 			blP = b.defaultpartial.derivePartial(override)
+		} else {
+			// fallback when there is no default
+			blP = &Partial{Extends: b.name, HandlerFunc: Noop}
 		}
 
-		if blP != nil {
-			p.Blocks = append(p.Blocks, Partial{
-				Extends:     b.name,
-				Template:    blP.Template,
-				HandlerFunc: blP.HandlerFunc,
-				Blocks:      blP.Blocks,
-			})
-		}
+		p.Blocks = append(p.Blocks, Partial{
+			Extends:     b.name,
+			Template:    blP.Template,
+			HandlerFunc: blP.HandlerFunc,
+			Blocks:      blP.Blocks,
+		})
 	}
 	return &p
 }

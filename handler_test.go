@@ -341,7 +341,7 @@ func TestPartial_TemplateList(t *testing.T) {
 			},
 		},
 		{
-			name: "Nested example",
+			name: "Partial with a cycle",
 			fields: fields{
 				Extends:     "base",
 				Template:    "test.templ.html",
@@ -349,6 +349,21 @@ func TestPartial_TemplateList(t *testing.T) {
 				Blocks:      []Partial{cycle},
 			},
 			wantErr: true,
+		},
+		{
+			name: "Partial with cycles",
+			fields: fields{
+				Extends:     "base",
+				Template:    "test.templ.html",
+				HandlerFunc: blockDebug([]string{"testblock", "testblock2"}),
+				Blocks: []Partial{
+					{
+						Extends:     "testblock",
+						HandlerFunc: Noop,
+					},
+				},
+			},
+			want: []string{"test.templ.html"},
 		},
 	}
 	for _, tt := range tests {
@@ -365,7 +380,262 @@ func TestPartial_TemplateList(t *testing.T) {
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Partial.TemplateList() = %v, want %v", got, tt.want)
+				t.Errorf("Partial.TemplateList() = %#v, want %#v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPartial_combine(t *testing.T) {
+	type fields struct {
+		Extends     string
+		Template    string
+		HandlerFunc HandlerFunc
+		Blocks      []Partial
+	}
+	type args struct {
+		part *Partial
+		seen []string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   *Partial
+	}{
+		{
+			name: "basic",
+			fields: fields{
+				Extends:  "base",
+				Template: "base.templ.html",
+				Blocks: []Partial{
+					Partial{
+						Extends: "test",
+					},
+				},
+			},
+			args: args{
+				part: &Partial{
+					Extends:  "test",
+					Template: "test-extended.templ.html",
+				},
+			},
+			want: &Partial{
+				Extends:  "base",
+				Template: "base.templ.html",
+				Blocks: []Partial{
+					Partial{
+						Extends:  "test",
+						Template: "test-extended.templ.html",
+					},
+				},
+			},
+		},
+		{
+			name: "no match",
+			fields: fields{
+				Extends:  "base",
+				Template: "base.templ.html",
+				Blocks: []Partial{
+					Partial{
+						Extends: "test",
+					},
+				},
+			},
+			args: args{
+				part: &Partial{
+					Extends:  "matches-nothing",
+					Template: "test-extended.templ.html",
+				},
+			},
+			want: nil,
+		},
+		{
+			name: "keep sublings",
+			fields: fields{
+				Extends:  "base",
+				Template: "base.templ.html",
+				Blocks: []Partial{
+					Partial{
+						Extends: "test",
+					},
+					Partial{
+						Extends:  "test2",
+						Template: "test2.templ.html",
+					},
+				},
+			},
+			args: args{
+				part: &Partial{
+					Extends:  "test",
+					Template: "test-extended.templ.html",
+				},
+			},
+			want: &Partial{
+				Extends:  "base",
+				Template: "base.templ.html",
+				Blocks: []Partial{
+					Partial{
+						Extends:  "test",
+						Template: "test-extended.templ.html",
+					},
+					Partial{
+						Extends:  "test2",
+						Template: "test2.templ.html",
+					},
+				},
+			},
+		},
+		{
+			name: "keep depth",
+			fields: fields{
+				Extends:  "base",
+				Template: "base.templ.html",
+				Blocks: []Partial{
+					Partial{
+						Extends: "test",
+					},
+					Partial{
+						Extends:  "test2",
+						Template: "test2.templ.html",
+					},
+				},
+			},
+			args: args{
+				part: &Partial{
+					Extends:  "test",
+					Template: "test-extended.templ.html",
+					Blocks: []Partial{
+						Partial{
+							Extends:  "test-sub",
+							Template: "test-sub.templ.html",
+						},
+					},
+				},
+			},
+			want: &Partial{
+				Extends:  "base",
+				Template: "base.templ.html",
+				Blocks: []Partial{
+					Partial{
+						Extends:  "test",
+						Template: "test-extended.templ.html",
+						Blocks: []Partial{
+							Partial{
+								Extends:  "test-sub",
+								Template: "test-sub.templ.html",
+							},
+						},
+					},
+					Partial{
+						Extends:  "test2",
+						Template: "test2.templ.html",
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &Partial{
+				Extends:     tt.fields.Extends,
+				Template:    tt.fields.Template,
+				HandlerFunc: tt.fields.HandlerFunc,
+				Blocks:      tt.fields.Blocks,
+			}
+			if got := p.combine(tt.args.part, tt.args.seen...); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Partial.combine() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestHandler_Include(t *testing.T) {
+	type fields struct {
+		Partial    *Partial
+		Page       *Partial
+		Postscript []Partial
+		Renderer   TemplateExec
+	}
+	type args struct {
+		defs []PartialDef
+	}
+	tests := []struct {
+		name        string
+		fields      fields
+		args        args
+		wantPage    []string
+		wantPartial []string
+		wantError   bool
+	}{
+		{
+			name: "basic",
+			fields: fields{
+				Partial: &Partial{
+					Extends:  "test",
+					Template: "test.templ.html",
+					Blocks: []Partial{
+						Partial{
+							Extends: "sub",
+						},
+					},
+				},
+				Page: &Partial{
+					Extends:  "base",
+					Template: "base.templ.html",
+					Blocks: []Partial{
+						Partial{
+							Extends:  "test",
+							Template: "test.templ.html",
+							Blocks: []Partial{
+								Partial{
+									Extends: "sub",
+								},
+							},
+						},
+					},
+				},
+			},
+			args: args{
+				defs: []PartialDef{
+					&partialDefImpl{
+						extends:  &blockDefImpl{name: "sub"},
+						template: "sub-impl.templ.html",
+					},
+				},
+			},
+			wantPage: []string{
+				"base.templ.html",
+				"test.templ.html",
+				"sub-impl.templ.html",
+			},
+			wantPartial: []string{
+				"test.templ.html",
+				"sub-impl.templ.html",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := &Handler{
+				Partial:    tt.fields.Partial,
+				Page:       tt.fields.Page,
+				Postscript: tt.fields.Postscript,
+				Renderer:   tt.fields.Renderer,
+			}
+			gotHandler := h.Include(tt.args.defs...)
+
+			gotPage, err := gotHandler.Page.TemplateList()
+			if err != nil && !tt.wantError {
+				t.Errorf("Handler.Include() Page = got unexpected error %s", err.Error())
+			} else if !reflect.DeepEqual(gotPage, tt.wantPage) {
+				t.Errorf("Handler.Include() Page = %#v, want %#v", gotPage, tt.wantPage)
+			}
+			gotPartial, err := gotHandler.Partial.TemplateList()
+			if err != nil && !tt.wantError {
+				t.Errorf("Handler.Include() Partial = got unexpected error %s", err.Error())
+			} else if !reflect.DeepEqual(gotPartial, tt.wantPartial) {
+				t.Errorf("Handler.Include() Partial = %#v, want %#v", gotPartial, tt.wantPartial)
 			}
 		})
 	}
