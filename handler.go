@@ -49,7 +49,11 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	var contentType string
 	if IsTreetopRequest(req) {
 		part = h.Partial
-		if h.Page == nil {
+		if h.Partial == nil {
+			// this is a page only handler, do not accept partial requests
+			http.Error(resp, http.StatusText(http.StatusNotAcceptable), http.StatusNotAcceptable)
+			return
+		} else if h.Page == nil {
 			contentType = FragmentContentType
 		} else {
 			contentType = PartialContentType

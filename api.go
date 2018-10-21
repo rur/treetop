@@ -23,10 +23,15 @@ type HandlerFunc func(DataWriter, *http.Request)
 
 type PartialDef interface {
 	Block(string) BlockDef
+	PageHandler() *Handler
 	PartialHandler() *Handler
 	FragmentHandler() *Handler
 }
 type BlockDef interface {
 	Extend(string, HandlerFunc) PartialDef
 	Default(string, HandlerFunc) PartialDef
+}
+
+type Renderer interface {
+	Define(string, HandlerFunc) PartialDef
 }

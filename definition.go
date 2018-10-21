@@ -22,6 +22,22 @@ func (t *partialDefImpl) Block(name string) BlockDef {
 	return block
 }
 
+func (t *partialDefImpl) PageHandler() *Handler {
+	part := t.derivePartial(nil)
+	page := part
+	root := t
+	for root.extends != nil && root.extends.parent != nil {
+		root = root.extends.parent
+		page = root.derivePartial(page)
+	}
+	handler := Handler{
+		Page:     page,
+		Renderer: t.renderer,
+	}
+
+	return &handler
+}
+
 func (t *partialDefImpl) PartialHandler() *Handler {
 	part := t.derivePartial(nil)
 	page := part
