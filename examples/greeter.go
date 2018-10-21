@@ -24,6 +24,7 @@ var (
 		</form>
 	</div>
 {{ block "message" .Message}}{{ end }}
+<script>TREETOP_CONFIG={/*defaults*/}</script>
 <script src="https://rawgit.com/rur/treetop-client/master/treetop.js" async></script>
 </body>
 </html>
@@ -45,19 +46,19 @@ var (
 
 func main() {
 	renderer := treetop.NewRenderer(treetop.StringTemplateExec)
-	page := renderer.Page(base, baseHandler)
+	page := renderer.Define(base, baseHandler)
 	messsage := page.Block("message")
-	greetForm := messsage.Partial(landing, treetop.Noop)
-	greetMessage := messsage.Partial(greeting, greetingHandler)
+	greetForm := messsage.Extend(landing, treetop.Noop)
+	greetMessage := messsage.Extend(greeting, greetingHandler)
 
-	http.Handle("/", greetForm)
-	http.Handle("/greet", greetMessage)
+	http.Handle("/", greetForm.PartialHandler())
+	http.Handle("/greet", greetMessage.PartialHandler())
 	fmt.Println("serving on http://0.0.0.0:3000/")
 	log.Fatal(http.ListenAndServe(":3000", nil))
 }
 
 func baseHandler(w treetop.DataWriter, req *http.Request) {
-	msg, _ := w.PartialData("message", req)
+	msg, _ := w.BlockData("message", req)
 	w.Data(struct {
 		Message interface{}
 	}{
