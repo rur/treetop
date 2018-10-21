@@ -39,12 +39,6 @@ type Handler struct {
 
 // implement http.Handler interface, see https://golang.org/pkg/net/http/?#Handler
 func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	dw := &dataWriter{
-		writer:     resp,
-		responseId: nextResponseId(),
-		partial:    h.Partial,
-	}
-
 	var part *Partial
 	var contentType string
 	if IsTreetopRequest(req) {
@@ -65,6 +59,12 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	} else {
 		part = h.Page
 		contentType = "text/html"
+	}
+
+	dw := &dataWriter{
+		writer:     resp,
+		responseId: nextResponseId(),
+		partial:    part,
 	}
 
 	// Topo-sort of templates connected via blocks. The order is important for how template inheritance is resolved.
