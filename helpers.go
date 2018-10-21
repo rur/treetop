@@ -22,6 +22,12 @@ func Delegate(blockname string) HandlerFunc {
 	}
 }
 
+func RequestHandler(f func(*http.Request) interface{}) HandlerFunc {
+	return func(dw DataWriter, req *http.Request) {
+		dw.Data(f(req))
+	}
+}
+
 func IsTreetopRequest(req *http.Request) bool {
 	for _, accept := range strings.Split(req.Header.Get("Accept"), ",") {
 		accept = strings.ToLower(strings.TrimSpace(accept))

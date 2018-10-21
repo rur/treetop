@@ -109,8 +109,8 @@ func (dw *dataWriter) ResponseId() uint32 {
 	return dw.responseId
 }
 
+// Load data from handlers hierarchy and execute template. Body will be written to IO writer passed in.
 func (dw *dataWriter) execute(body io.Writer, exec TemplateExec, req *http.Request) error {
-	// trigger data handlers
 	dw.partial.HandlerFunc(dw, req)
 	if dw.responseWritten {
 		// response headers were already sent by one of the handlers, nothing left to do

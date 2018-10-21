@@ -6,11 +6,6 @@ import (
 	"net/http"
 )
 
-const (
-	PartialContentType  = "application/x.treetop-html-partial+xml"
-	FragmentContentType = "application/x.treetop-html-fragment+xml"
-)
-
 type DataWriter interface {
 	http.ResponseWriter
 	Data(interface{})
@@ -32,8 +27,4 @@ type PartialDef interface {
 type BlockDef interface {
 	Extend(string, HandlerFunc) PartialDef
 	Default(string, HandlerFunc) PartialDef
-}
-
-type Renderer interface {
-	Define(string, HandlerFunc) PartialDef
 }

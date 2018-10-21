@@ -27,8 +27,9 @@ func PrintHandler(h *Handler) string {
 	}
 }
 
-// Used to preview an arbitrary template string on a single line. A middle ellipsis will be inserted
-// if the string is too long. All whitespace is stripped and quotes are escaped.
+// Used to preview an arbitrary template string on a single line.
+// All whitespace will be stripped and it will be quoted and escaped.
+// A middle ellipsis will be inserted if the string is too long.
 func previewTemplate(str string, before, after int) string {
 	re := regexp.MustCompile(`\s`)
 	str = strconv.Quote(re.ReplaceAllString(str, ""))
