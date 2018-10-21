@@ -1,10 +1,18 @@
 package treetop
 
-import "net/http"
+import (
+	"context"
+	"errors"
+	"io"
+	"net/http"
+)
+
+var errRespWritten = errors.New("Response headers have already been written")
 
 type dataWriter struct {
 	writer          http.ResponseWriter
 	responseId      uint32
+	context         context.Context
 	responseWritten bool
 	dataCalled      bool
 	data            interface{}
@@ -75,6 +83,7 @@ func (dw *dataWriter) BlockData(name string, req *http.Request) (interface{}, bo
 	subWriter := dataWriter{
 		writer:     dw.writer,
 		responseId: dw.responseId,
+		context:    dw.context,
 		partial:    part,
 	}
 	// 4. invoke handler
@@ -89,8 +98,35 @@ func (dw *dataWriter) BlockData(name string, req *http.Request) (interface{}, bo
 	}
 }
 
+// context which allows request to be cancelled
+func (dw *dataWriter) Context() context.Context {
+	return dw.context
+}
+
 // Locally unique ID for Treetop HTTP response. This is intended to be used to keep track of
 // the request as is passes between handlers.
 func (dw *dataWriter) ResponseId() uint32 {
 	return dw.responseId
+}
+
+func (dw *dataWriter) execute(body io.Writer, exec TemplateExec, req *http.Request) error {
+	// trigger data handlers
+	dw.partial.HandlerFunc(dw, req)
+	if dw.responseWritten {
+		// response headers were already sent by one of the handlers, nothing left to do
+		return errRespWritten
+	}
+
+	// Topo-sort of templates connected via blocks. The order is important for how template inheritance is resolved.
+	// TODO: The result should not change between requests so cache it when the handler instance is created.
+	templates, err := dw.partial.TemplateList()
+	if err != nil {
+		return err
+	}
+
+	// execute the templates with data loaded from handlers
+	if tplErr := exec(body, templates, dw.data); tplErr != nil {
+		return tplErr
+	}
+	return nil
 }

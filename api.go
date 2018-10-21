@@ -1,6 +1,7 @@
 package treetop
 
 import (
+	"context"
 	"io"
 	"net/http"
 )
@@ -16,6 +17,7 @@ type DataWriter interface {
 	Status(int)
 	BlockData(string, *http.Request) (interface{}, bool)
 	ResponseId() uint32
+	Context() context.Context
 }
 
 type TemplateExec func(io.Writer, []string, interface{}) error

@@ -2,6 +2,7 @@ package treetop
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -39,6 +40,10 @@ type Handler struct {
 
 // implement http.Handler interface, see https://golang.org/pkg/net/http/?#Handler
 func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+	responseID := nextResponseId()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel ctx as soon as handleSearch returns.
+
 	var part *Partial
 	var contentType string
 	if IsTreetopRequest(req) {
@@ -61,39 +66,54 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		contentType = "text/html"
 	}
 
+	// TODO: use buffer pool
+	var buf bytes.Buffer
+
 	dw := &dataWriter{
 		writer:     resp,
-		responseId: nextResponseId(),
+		context:    ctx,
+		responseId: responseID,
 		partial:    part,
 	}
 
-	// Topo-sort of templates connected via blocks. The order is important for how template inheritance is resolved.
-	// TODO: The result should not change between requests so cache it when the handler instance is created.
-	templates, err := part.TemplateList()
-	if err != nil {
-		log.Printf(err.Error())
-		http.Error(resp, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-
-	// executes data handlers
-	part.HandlerFunc(dw, req)
-	if dw.responseWritten {
-		// response headers were already sent by one of the handlers, nothing left to do
-		return
-	}
-
-	// TODO: use buffer pool
-	var buf bytes.Buffer
-	if tplErr := h.Renderer(&buf, templates, dw.data); tplErr != nil {
-		log.Printf(tplErr.Error())
-		http.Error(resp, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
+	if err := dw.execute(&buf, h.Renderer, req); err != nil {
+		switch err {
+		case errRespWritten:
+			// a response has been written, abort treetop response
+			return
+		default:
+			log.Printf(err.Error())
+			http.Error(resp, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	resp.Header().Set("Content-Type", contentType)
 
 	if contentType == PartialContentType || contentType == FragmentContentType {
+		// Execute postscript templates for partial requests only
+		// each rendered template will be appended to the content body.
+		for index := 0; index < len(h.Postscript); index++ {
+			psDw := &dataWriter{
+				writer:     resp,
+				context:    ctx,
+				responseId: responseID,
+				partial:    &h.Postscript[index],
+			}
+
+			if err := psDw.execute(&buf, h.Renderer, req); err != nil {
+				switch err {
+				case errRespWritten:
+					// a response has been written, abort treetop response
+					return
+				default:
+					log.Printf(err.Error())
+					http.Error(resp, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+					return
+				}
+			}
+		}
+
 		// this is useful for XHR requests because if a redirect occurred
 		// the final response URL is not necessarily available to the client
 		resp.Header().Set("X-Response-Url", req.URL.RequestURI())
