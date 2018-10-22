@@ -15,7 +15,7 @@ type TreetopWriter interface {
 type treetopWriter struct {
 	responseWriter http.ResponseWriter
 	status         int
-	responseURI    string
+	responseURL    string
 	contentType    string
 }
 
@@ -24,11 +24,11 @@ func (t *treetopWriter) Status(code int) {
 }
 
 func (t *treetopWriter) ResponseURI(uri string) {
-	t.responseURI = uri
+	t.responseURL = uri
 }
 
 func (tw *treetopWriter) Write(p []byte) (n int, err error) {
-	respURI, err := url.Parse(tw.responseURI)
+	respURI, err := url.Parse(tw.responseURL)
 	if err != nil {
 		return n, err
 	}
@@ -40,30 +40,23 @@ func (tw *treetopWriter) Write(p []byte) (n int, err error) {
 	return tw.responseWriter.Write(p)
 }
 
-func PartialWriter(w http.ResponseWriter, req *http.Request) (TreetopWriter, bool) {
-	var isPartial bool
+func Writer(w http.ResponseWriter, req *http.Request, isPartial bool) (TreetopWriter, bool) {
+	var contentType string
+	if isPartial {
+		contentType = PartialContentType
+	} else {
+		contentType = FragmentContentType
+	}
+	var writer *treetopWriter
 	for _, accept := range strings.Split(req.Header.Get("Accept"), ",") {
-		if strings.TrimSpace(accept) == PartialContentType {
-			isPartial = true
+		if strings.TrimSpace(accept) == contentType {
+			writer = &treetopWriter{
+				responseWriter: w,
+				responseURL:    req.URL.RequestURI(),
+				contentType:    contentType,
+			}
 			break
 		}
 	}
-	if !isPartial {
-		return nil, false
-	}
-	return &treetopWriter{w, 200, req.URL.RequestURI(), PartialContentType}, true
-}
-
-func FragmentWriter(w http.ResponseWriter, req *http.Request) (TreetopWriter, bool) {
-	var isPartial bool
-	for _, accept := range strings.Split(req.Header.Get("Accept"), ",") {
-		if strings.TrimSpace(accept) == FragmentContentType {
-			isPartial = true
-			break
-		}
-	}
-	if !isPartial {
-		return nil, false
-	}
-	return &treetopWriter{w, 200, req.URL.RequestURI(), FragmentContentType}, true
+	return writer, (writer != nil)
 }
