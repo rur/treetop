@@ -5,7 +5,7 @@ import (
 	"{{ .Namespace }}/page"
 )
 
-func Page(server *page.Server, m page.Mux, tt treetop.Treetop) {
+func Page(server page.Server, m page.Mux, tt *treetop.Treetop) {
 	page := tt.Define(
 		"{{ .Template }}",
 		server.Bind({{ .Handler }}),

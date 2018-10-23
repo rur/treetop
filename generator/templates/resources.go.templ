@@ -24,7 +24,9 @@ type Server interface {
 // Server configuration state
 // eg: resource pools, auth provider, secrets, etc..
 func NewServer() Server {
-	return &server{}
+	return &server{
+		responses: make(map[uint32]*Resources),
+	}
 }
 
 type server struct {
@@ -52,7 +54,7 @@ func (s *server) Bind(f func(Resources, treetop.DataWriter, *http.Request)) tree
 				<-w.Context().Done()
 				// clean up
 				s.Lock()
-				delete(w.responses, respId)
+				delete(s.responses, respId)
 				s.Unlock()
 			}()
 		}

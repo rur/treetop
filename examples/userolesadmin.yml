@@ -1,4 +1,4 @@
-namespace: github.com/rur/treetop
+namespace: github.com/rur/treetop-example
 pages:
   - name: home
     doc: Landing page of the site
