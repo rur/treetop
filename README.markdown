@@ -20,15 +20,17 @@ _TODO: Add more examples_
 
 ### Why was this created?
 
-As an approach to software development, conventional multi-page web applications are secure, well supported, maintainable and loosely coupled. They are a great solution for systems with a broad range of content or that encapsulate other complex systems. The main drawback versus native or single-page apps is usability. Modern applications must deliver an efficient user experience; linking documents doesn't always cut it.
+Multi-page web applications are secure, well supported and promote loose coupling. They are a great solution for systems with a broad range of content or that encapsulate other complex systems. The main drawback versus native or single-page apps is interactivity. Modern software must deliver a modern user experience; linking documents together doesn't always cut it.
 
-Treetop is a prototype which aims to close the gap by extending the navigation model for multi-page apps with HTML partials and fragments. In addition to generating a full HTML page, a Treetop enabled endpoint can render HTML update fragments in response to HTTP requests.
+Treetop is a prototype which aims to close the gap by extending conventional multi-page endpoints with 'partials' and 'fragments'. Treetop endpoints are capable of rendering a valid HTML document, or snippets for modifying a loaded page, depending upon which is requested.
 
-The main focus of this implementation is to find an uncomplicated mechanism to achieve this while staying as close as possible to the standard HTTP + HTML application model.
+The main focus of this implementation is to find an uncomplicated mechanism to achieve this, while staying as close as possible to the standard model of HTML over HTTP.
 
 #### No client configuration necessary
 
-A lightweight JS library is the only thing required in the browser to facilitate in-page navigation. JavaScript component hooks are supported. For more information see [Treetop Client Library](https://github.com/rur/treetop-client).
+A JavaScript library is provided to help negotiate Treetop requests in the browser. While some component hooks are supported, this library does not require any specific configuration.
+
+For more information see [Treetop Client Library](https://github.com/rur/treetop-client).
 
 
 ## How a Treetop Request Works
@@ -37,7 +39,7 @@ The client library uses XHR to fullfil in-page requests. Each treetop request in
 
     Accept: application/x.treetop-html-partial+xml, application/x.treetop-html-fragment+xml
 
-If this server endpoint supports this content type, the response will include corresponding headers and a list of HTML snippets
+If the server path supports either content type, the response will include corresponding headers and a list of HTML snippets
 to be applied to the current document. For example,
 
     HTTP/1.1 200 OK
@@ -50,24 +52,24 @@ to be applied to the current document. For example,
     <section id="content"><p>Hello, Treetop!</p></section>
     <div id="sidebar"><a href="/">Homepage</a></div>
 
-Once the `Content-Type` has been recognized in the response headers, the client library will parse the body as an HTMLTemplate. The `id` attribute of each top level element will be matched to an existing node in the document.
+Once the `Content-Type` has been recognized in the response headers, the client library will parse the body as a list of HTML fragments. The `id` attribute of each top level element will be matched to an existing node in the document.
 
 * Matched elements in the current DOM will be replaced.
-* Unmatched elements from the response will be discarded.
+* Unmatched fragments will be silently discarded.
 
 
 ### Fragment vs Partial
+
+Partial content type, `application/x.treetop-html-partial+xml`
+
+* 'Part' of a full page,
+* This endpoint supports rendering a valid HTML document,
+* A new browser history entry will be pushed (updating the URL bar).
 
 Fragment content type, `application/x.treetop-html-fragment+xml`
 
 * Transient view update,
 * This endpoint is not necessarily capable of yielding a valid HTML document.
-
-Partial content type, `application/x.treetop-html-partial+xml`
-
-* 'Part' of a full page,
-* This endpoint supports rendering a valid HTML document.
-* A new browser history entry will be pushed (updating the URL bar),
 
 ## Server Side Handlers
 
@@ -95,13 +97,13 @@ The Treetop library includes an abstraction for creating more complex networks o
     mux.Handler("/contact", contactForm.PartialHandler())
     mux.Handler("/contact/submit", submit.FragmentHandler())
 
-These handlers implement the `http.Handler` interface so you are free to use whatever routing library you wish.
+All handler instances implement the `http.Handler` interface so you are free to use whatever routing library you wish.
 
-Notice that each template file path is paired with a function. This is responsible for yielding the template data from the request. For example,
+Each template file path is paired with a data handler. This function is responsible for yielding execution data for the corresponding template. For example,
 
     func contactSubmitHandler(dw treetop.DataWriter, req *http.Request) {
         // do stuff...
-        dw.Data("Thanks!")
+        dw.Data("Say Thanks!")
     }
 
 The standard Go [html/template](https://golang.org/pkg/html/template/) library is used under the hood. However, a preferred engine can be configured without much fuss (once it supports inheritance).
