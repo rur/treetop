@@ -1,21 +1,16 @@
 package treetop
 
-const (
-	PartialContentType  = "application/x.treetop-html-partial+xml"
-	FragmentContentType = "application/x.treetop-html-fragment+xml"
-)
-
-type Treetop struct {
+type Renderer struct {
 	Execute TemplateExec
 }
 
-func NewTreetop(execute TemplateExec) *Treetop {
-	return &Treetop{
+func NewRenderer(execute TemplateExec) *Renderer {
+	return &Renderer{
 		Execute: execute,
 	}
 }
 
-func (r *Treetop) Define(template string, handlerFunc HandlerFunc) PartialDef {
+func (r *Renderer) Define(template string, handlerFunc HandlerFunc) PartialDef {
 	def := partialDefImpl{
 		template: template,
 		handler:  handlerFunc,

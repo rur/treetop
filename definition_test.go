@@ -55,7 +55,7 @@ func Test_retrieve_an_existing_block(t *testing.T) {
 func Test_extend_block_basic(t *testing.T) {
 	part := basePartial()
 	b := part.Block("test")
-	p := b.Extend("test.templ.html", Noop)
+	p := b.Define("test.templ.html", Noop)
 
 	got := PrintHandler(p.FragmentHandler())
 	expecting := `FragmentHandler("test.templ.html", github.com/rur/treetop.Noop)`
@@ -67,7 +67,7 @@ func Test_extend_block_basic(t *testing.T) {
 func Test_fragment_with_blocks(t *testing.T) {
 	part := basePartial()
 	b := part.Block("test")
-	p := b.Extend("test.templ.html", Noop)
+	p := b.Define("test.templ.html", Noop)
 	p.Block("sub").Default("sub.templ.html", Noop)
 
 	got, err := p.FragmentHandler().Partial.TemplateList()
@@ -83,7 +83,7 @@ func Test_fragment_with_blocks(t *testing.T) {
 func Test_extend_block_partial(t *testing.T) {
 	part := basePartial()
 	b := part.Block("test")
-	p := b.Extend("test.templ.html", Noop)
+	p := b.Define("test.templ.html", Noop)
 
 	handler := p.PartialHandler()
 	expecting := `PartialHandler("test.templ.html", github.com/rur/treetop.Noop)`
@@ -107,13 +107,13 @@ func Test_extend_multiple_levels(t *testing.T) {
 	_ = b.Default("test.templ.html", Noop)
 
 	b2 := part.Block("test2")
-	p2 := b2.Extend("test2.templ.html", Noop)
+	p2 := b2.Define("test2.templ.html", Noop)
 
 	a := p2.Block("A")
 	_ = a.Default("deflt_A.templ.html", Noop)
 
 	a_b := p2.Block("B")
-	b2_bp := a_b.Extend("ext_B.templ.html", Noop)
+	b2_bp := a_b.Define("ext_B.templ.html", Noop)
 
 	b2_bp.Block("B_plus").Default("ext_B_plus.templ.html", Noop)
 

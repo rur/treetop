@@ -25,6 +25,6 @@ type PartialDef interface {
 	FragmentHandler() *Handler
 }
 type BlockDef interface {
-	Extend(string, HandlerFunc) PartialDef
+	Define(string, HandlerFunc) PartialDef
 	Default(string, HandlerFunc) PartialDef
 }

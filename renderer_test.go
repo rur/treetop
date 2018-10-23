@@ -5,16 +5,16 @@ import (
 	"testing"
 )
 
-func Test_treetop_Define(t *testing.T) {
-	tt := NewTreetop(DefaultTemplateExec)
+func Test_renderer_Define(t *testing.T) {
+	renderer := NewRenderer(DefaultTemplateExec)
 
-	page := tt.Define("base.templ.html", Noop)
+	page := renderer.Define("base.templ.html", Noop)
 
 	a := page.Block("A")
 	b := page.Block("B")
 
 	a.Default("a.templ.html", Noop)
-	def := b.Extend("b.templ.html", Noop)
+	def := b.Define("b.templ.html", Noop)
 
 	handler := def.PartialHandler()
 
