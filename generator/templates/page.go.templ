@@ -2,11 +2,11 @@ package {{ .Name }}
 
 import (
 	"github.com/rur/treetop"
-	"{{ .Namespace }}/pages"
+	"{{ .Namespace }}/page"
 )
 
-func Page(server *pages.ServerContext, m pages.Mux, renderer treetop.Renderer) {
-	page := renderer.Page(
+func Page(server *page.Server, m page.Mux, tt treetop.Treetop) {
+	page := tt.Define(
 		"{{ .Template }}",
 		server.Bind({{ .Handler }}),
 	)
@@ -16,25 +16,23 @@ func Page(server *pages.ServerContext, m pages.Mux, renderer treetop.Renderer) {
 	{{ range $index, $entry := .Entries -}}
 	{{ if eq $entry.Type "Block" -}}
 	{{ $entry.Identifier }} {{ $entry.Extends }}.Block("{{ $entry.Name }}")
-	{{- else if eq $entry.Type "DefaultPartial" -}}
-	{{ $entry.Identifier }} {{ $entry.Extends }}.DefaultPartial(
+	{{- else if eq $entry.Type "Default" -}}
+	{{ $entry.Identifier }} {{ $entry.Extends }}.Default(
 		"{{ $entry.Template }}",
 		server.Bind({{ $entry.Handler }}),
 	)
-	{{- else if eq $entry.Type "Partial" -}}
-	{{ $entry.Identifier }} {{ $entry.Extends }}.Partial(
+	{{- else if eq $entry.Type "Extend" -}}
+	{{ $entry.Identifier }} {{ $entry.Extends }}.Extend(
 		"{{ $entry.Template }}",
 		server.Bind({{ $entry.Handler }}),
 	)
-	{{- else if eq $entry.Type "Fragment" -}}
-	{{ $entry.Identifier }} {{ $entry.Extends }}.Fragment(
-		"{{ $entry.Template }}",
-		server.Bind({{ $entry.Handler }}),
-	)
-{{- else if eq $entry.Type "Spacer" }}{{ else -}}
+	{{- else if eq $entry.Type "Spacer" }}{{ else -}}
 	nil // unknown entry type: {{ $entry.Type }}
 	{{- end }}
 	{{ end }}{{ range $index, $route := .Routes }}
-	m.Handle("{{ $route.Path }}", {{ $route.Reference }}{{ if $route.PartialAsFragment }}.AsFragment(){{ end }})
+	m.Handle("{{ $route.Path }}", {{ $route.Reference }}
+	{{- if eq $route.Type "Page" }}.PageHandler()
+	{{- else if eq $route.Type "Partial" }}.PartialHandler()
+	{{- else if eq $route.Type "Fragment" }}.FragmentHandler(){{ end }})
 	{{- end }}
 }

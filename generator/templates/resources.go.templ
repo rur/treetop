@@ -1,0 +1,62 @@
+package page
+
+import (
+	"net/http"
+	"sync"
+
+	"github.com/rur/treetop"
+)
+
+// Info and resources to be passed into the request handlers
+// eg: query facade, user info, authorization, etc..
+type Resources struct {
+	Example bool
+}
+
+type Mux interface {
+	Handle(pattern string, handler http.Handler)
+}
+
+type Server interface {
+	Bind(func(Resources, treetop.DataWriter, *http.Request)) treetop.HandlerFunc
+}
+
+// Server configuration state
+// eg: resource pools, auth provider, secrets, etc..
+func NewServer() Server {
+	return &server{}
+}
+
+type server struct {
+	sync.RWMutex
+	responses map[uint32]*Resources
+}
+
+func (s *server) Bind(f func(Resources, treetop.DataWriter, *http.Request)) treetop.HandlerFunc {
+	return func(w treetop.DataWriter, req *http.Request) {
+		// Here the Treetop response ID is being used to permit resources to be shared
+		// between data handlers within the scope of a request.
+		respId := w.ResponseId()
+		s.RLock()
+		rcs, ok := s.responses[respId]
+		s.RUnlock()
+
+		if !ok {
+			// potentially expensive resource initialization here
+			rcs = &Resources{true}
+			s.Lock()
+			s.responses[respId] = rcs
+			s.Unlock()
+
+			go func() {
+				<-w.Context().Done()
+				// clean up
+				s.Lock()
+				delete(w.responses, respId)
+				s.Unlock()
+			}()
+		}
+		// pass Resources by value to avoid mutation
+		f(*rcs, w, req)
+	}
+}

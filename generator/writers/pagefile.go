@@ -24,9 +24,9 @@ type pageEntryData struct {
 }
 
 type pageRouteData struct {
-	Reference         string
-	Path              string
-	PartialAsFragment bool
+	Reference string
+	Path      string
+	Type      string
 }
 
 type pageTemplateData struct {
@@ -81,6 +81,7 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 		routes = append(routes, pageRouteData{
 			Reference: "page",
 			Path:      strings.Trim(pageDef.Path, " "),
+			Type:      "Page",
 		})
 	}
 
@@ -101,7 +102,7 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 			blockEntries, blockRoutes, err := processEntries(
 				block.ident,
 				&partial,
-				filepath.Join("pages", pageName, "templates", block.ident),
+				filepath.Join("page", pageName, "templates", block.ident),
 			)
 			if err != nil {
 				return "", err
@@ -118,7 +119,7 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 	page := pageData{
 		Namespace: namespace,
 		Name:      pageName,
-		Template:  filepath.Join("pages", pageName, "templates", "index.templ.html"),
+		Template:  filepath.Join("page", pageName, "templates", "index.templ.html"),
 		Handler:   pageName + "PageHandler",
 		Blocks:    blocks,
 		Entries:   entries,
@@ -140,13 +141,13 @@ func processEntries(extends string, def *generator.PartialDef, templatePath stri
 	var routes []pageRouteData
 
 	if def.Default {
-		entryType = "DefaultPartial"
+		entryType = "Default"
 		suffix = "dfl"
 	} else if def.Fragment {
-		entryType = "Fragment"
+		entryType = "Extend"
 		suffix = "frg"
 	} else {
-		entryType = "Partial"
+		entryType = "Extend"
 		suffix = "ptl"
 	}
 
@@ -165,11 +166,16 @@ func processEntries(extends string, def *generator.PartialDef, templatePath stri
 	}
 
 	if def.Path != "" {
-		routes = append(routes, pageRouteData{
-			Reference:         entryName + "_" + suffix,
-			Path:              strings.Trim(def.Path, " "),
-			PartialAsFragment: def.Fragment && def.Default,
-		})
+		route := pageRouteData{
+			Reference: entryName + "_" + suffix,
+			Path:      strings.Trim(def.Path, " "),
+		}
+		if def.Fragment {
+			route.Type = "Fragment"
+		} else {
+			route.Type = "Partial"
+		}
+		routes = append(routes, route)
 	}
 
 	entries = append(entries, entry)

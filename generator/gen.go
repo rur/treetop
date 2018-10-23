@@ -29,7 +29,7 @@ func main() {
 		"templates/partial.templ.html":  "partialTempl",
 		"templates/fragment.templ.html": "fragmentTempl",
 		"templates/start.go.templ":      "startTempl",
-		"templates/context.go.templ":    "contextTempl",
+		"templates/resources.go.templ":  "resourcesTempl",
 		"templates/page.go.templ":       "pageTempl",
 		"templates/handler.go.templ":    "handlerTempl",
 	}

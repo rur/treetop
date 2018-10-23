@@ -5,20 +5,20 @@ import (
 	"path/filepath"
 )
 
-type contextdata struct {
+type resourcesdata struct {
 	Namespace string
 }
 
 func WriteContextFile(dir string) (string, error) {
-	fileName := "context.go"
-	filePath := filepath.Join(dir, "context.go")
+	fileName := "resources.go"
+	filePath := filepath.Join(dir, "resources.go")
 	sf, err := os.Create(filePath)
 	if err != nil {
 		return fileName, err
 	}
 	defer sf.Close()
 
-	err = contextTemplate.Execute(sf, nil)
+	err = resourcesTemplate.Execute(sf, nil)
 	if err != nil {
 		return fileName, err
 	}

@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/rur/treetop"
-	"{{ .Namespace }}/pages"
+	"{{ .Namespace }}/page"
 )
 
 {{ range $index, $handler := .Handlers }}
@@ -12,9 +12,9 @@ import (
 // Extends: {{ $handler.Extends }}{{ end }}{{ if $handler.Doc }}
 // Doc: {{ $handler.Doc }}
 {{- end }}{{ if len $handler.Blocks}}
-func {{ $handler.Identifier }}(cxt *pages.RequestContext, w treetop.DataWriter, req *http.Request) {
+func {{ $handler.Identifier }}(rcs page.Resources, w treetop.DataWriter, req *http.Request) {
 	{{ range $index, $block := .Blocks -}}
-	{{ $block.Identifier }}, ok := w.PartialData("{{ $block.Name }}", req)
+	{{ $block.Identifier }}, ok := w.BlockData("{{ $block.Name }}", req)
 	if !ok {
 		// default {{ $block.Name }} data
 		{{ $block.Identifier }} = nil
@@ -30,7 +30,7 @@ func {{ $handler.Identifier }}(cxt *pages.RequestContext, w treetop.DataWriter, 
 		{{- end }}
 	})
 }{{ else }}
-func {{ $handler.Identifier }}(cxt *pages.RequestContext, w treetop.DataWriter, req *http.Request) {
+func {{ $handler.Identifier }}(rcs page.Resources, w treetop.DataWriter, req *http.Request) {
 	w.Data("{{ $handler.Info }} template data here!")
 }{{ end }}
 {{ end }}
