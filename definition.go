@@ -103,7 +103,7 @@ type blockDefImpl struct {
 	defaultpartial *partialDefImpl
 }
 
-func (b *blockDefImpl) Extend(template string, handler HandlerFunc) PartialDef {
+func (b *blockDefImpl) Define(template string, handler HandlerFunc) PartialDef {
 	return &partialDefImpl{
 		extends:  b,
 		template: template,

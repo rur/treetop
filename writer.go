@@ -6,6 +6,11 @@ import (
 	"strings"
 )
 
+const (
+	PartialContentType  = "application/x.treetop-html-partial+xml"
+	FragmentContentType = "application/x.treetop-html-fragment+xml"
+)
+
 type TreetopWriter interface {
 	Write([]byte) (int, error)
 	Status(int)

@@ -45,11 +45,11 @@ var (
 )
 
 func main() {
-	renderer := treetop.NewTreetop(treetop.StringTemplateExec)
+	renderer := treetop.NewRenderer(treetop.StringTemplateExec)
 	page := renderer.Define(base, baseHandler)
 	messsage := page.Block("message")
-	greetForm := messsage.Extend(landing, treetop.Noop)
-	greetMessage := messsage.Extend(greeting, greetingHandler)
+	greetForm := messsage.Define(landing, treetop.Noop)
+	greetMessage := messsage.Define(greeting, greetingHandler)
 
 	http.Handle("/", greetForm.PartialHandler())
 	http.Handle("/greet", greetMessage.PartialHandler())
