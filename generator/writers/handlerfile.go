@@ -44,15 +44,18 @@ func WriteHandlerFile(dir string, pageDef *generator.PartialDef, namespace strin
 	defer sf.Close()
 
 	var handlers []*handlerData
-	// base page handler
-	pageHandler := handlerData{
-		Info:       pageName,
-		Doc:        pageDef.Doc,
-		Type:       "(page)",
-		Blocks:     make([]*handlerBlockData, 0, len(pageDef.Blocks)),
-		Identifier: pageName + "PageHandler",
+	var pageHandler *handlerData
+	if pageDef.Handler == "" {
+		// base page handler
+		pageHandler = &handlerData{
+			Info:       pageName,
+			Doc:        pageDef.Doc,
+			Type:       "(page)",
+			Blocks:     make([]*handlerBlockData, 0, len(pageDef.Blocks)),
+			Identifier: pageName + "PageHandler",
+		}
+		handlers = append(handlers, pageHandler)
 	}
-	handlers = append(handlers, &pageHandler)
 
 	blocks, err := iterateSortedBlocks(pageDef.Blocks)
 	if err != nil {
@@ -60,11 +63,13 @@ func WriteHandlerFile(dir string, pageDef *generator.PartialDef, namespace strin
 	}
 
 	for _, block := range blocks {
-		pageHandler.Blocks = append(pageHandler.Blocks, &handlerBlockData{
-			Identifier: block.ident + "Data",
-			Name:       block.name,
-			FieldName:  generator.ValidPublicIdentifier(block.name),
-		})
+		if pageHandler != nil {
+			pageHandler.Blocks = append(pageHandler.Blocks, &handlerBlockData{
+				Identifier: block.ident + "Data",
+				Name:       block.name,
+				FieldName:  generator.ValidPublicIdentifier(block.name),
+			})
+		}
 
 		for _, partial := range block.partials {
 			blockHandlers, err := processHandlersDef(block.ident, &partial)
@@ -103,16 +108,20 @@ func processHandlersDef(blockName string, def *generator.PartialDef) ([]*handler
 		return handlers, fmt.Errorf("Invalid name '%s'", def.Name)
 	}
 
-	// base page handler
-	handler := handlerData{
-		Info:       entryName,
-		Extends:    blockName,
-		Doc:        def.Doc,
-		Type:       entryType,
-		Blocks:     make([]*handlerBlockData, 0, len(def.Blocks)),
-		Identifier: entryName + "Handler",
+	var handler *handlerData
+
+	if def.Handler == "" {
+		// base page handler
+		handler = &handlerData{
+			Info:       entryName,
+			Extends:    blockName,
+			Doc:        def.Doc,
+			Type:       entryType,
+			Blocks:     make([]*handlerBlockData, 0, len(def.Blocks)),
+			Identifier: entryName + "Handler",
+		}
+		handlers = append(handlers, handler)
 	}
-	handlers = append(handlers, &handler)
 
 	blocks, err := iterateSortedBlocks(def.Blocks)
 	if err != nil {
@@ -120,11 +129,13 @@ func processHandlersDef(blockName string, def *generator.PartialDef) ([]*handler
 	}
 
 	for _, block := range blocks {
-		handler.Blocks = append(handler.Blocks, &handlerBlockData{
-			Identifier: block.ident + "Data",
-			Name:       block.name,
-			FieldName:  generator.ValidPublicIdentifier(block.name),
-		})
+		if handler != nil {
+			handler.Blocks = append(handler.Blocks, &handlerBlockData{
+				Identifier: block.ident + "Data",
+				Name:       block.name,
+				FieldName:  generator.ValidPublicIdentifier(block.name),
+			})
+		}
 
 		for _, partial := range block.partials {
 			blockHandlers, err := processHandlersDef(block.ident, &partial)

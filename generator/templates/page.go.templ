@@ -5,10 +5,14 @@ import (
 	"{{ .Namespace }}/page"
 )
 
-func Page(server page.Server, m page.Mux, tt *treetop.Treetop) {
-	page := tt.Define(
+func Page(server page.Server, m page.Mux, renderer *treetop.Renderer) {
+	page := renderer.Define(
 		"{{ .Template }}",
+		{{ if .OverrideHandler -}}
+		{{ .Handler }},
+		{{- else -}}
 		server.Bind({{ .Handler }}),
+		{{- end }}
 	)
 	{{ range $index, $block := .Blocks -}}
 		{{ $block.Identifier }} page.Block("{{ $block.Name }}")
@@ -19,12 +23,20 @@ func Page(server page.Server, m page.Mux, tt *treetop.Treetop) {
 	{{- else if eq $entry.Type "Default" -}}
 	{{ $entry.Identifier }} {{ $entry.Extends }}.Default(
 		"{{ $entry.Template }}",
+		{{ if $entry.OverrideHandler -}}
+		{{ $entry.Handler }},
+		{{- else -}}
 		server.Bind({{ $entry.Handler }}),
+		{{- end }}
 	)
 	{{- else if eq $entry.Type "Extend" -}}
-	{{ $entry.Identifier }} {{ $entry.Extends }}.Extend(
+	{{ $entry.Identifier }} {{ $entry.Extends }}.Define(
 		"{{ $entry.Template }}",
+		{{ if $entry.OverrideHandler -}}
+		{{ $entry.Handler }},
+		{{- else -}}
 		server.Bind({{ $entry.Handler }}),
+		{{- end }}
 	)
 	{{- else if eq $entry.Type "Spacer" }}{{ else -}}
 	nil // unknown entry type: {{ $entry.Type }}

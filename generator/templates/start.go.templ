@@ -22,8 +22,8 @@ func main() {
 
 	server := page.NewServer()
 
-	tt := treetop.NewTreetop(treetop.DefaultTemplateExec){{ range $index, $page := .Pages }}
-	{{ $page }}.Page(server, m, tt)
+	renderer := treetop.NewRenderer(treetop.DefaultTemplateExec){{ range $index, $page := .Pages }}
+	{{ $page }}.Page(server, m, renderer)
 {{- end }}
 
 	fmt.Printf("Starting {{ $.Namespace }} server at %s", addr)
