@@ -5,16 +5,13 @@ import (
 	"testing"
 )
 
-func Test_renderer_Define(t *testing.T) {
+func Test_renderer_new_page(t *testing.T) {
 	renderer := NewRenderer(DefaultTemplateExec)
 
-	page := renderer.Define("base.templ.html", Noop)
+	page := renderer.NewPageView("base.templ.html", Noop)
 
-	a := page.Block("A")
-	b := page.Block("B")
-
-	a.Default("a.templ.html", Noop)
-	def := b.Define("b.templ.html", Noop)
+	page.DefaultSubView("A", "a.templ.html", Noop)
+	def := page.SubView("B", "b.templ.html", Noop)
 
 	handler := def.PartialHandler()
 

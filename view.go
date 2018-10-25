@@ -1,28 +1,66 @@
 package treetop
 
-type partialDefImpl struct {
+type viewImpl struct {
 	template string
-	extends  *blockDefImpl
+	extends  *blockImpl
 	handler  HandlerFunc
-	blocks   []*blockDefImpl
+	blocks   []*blockImpl
 	renderer TemplateExec
 }
 
-func (t *partialDefImpl) Block(name string) BlockDef {
-	for i := 0; i < len(t.blocks); i++ {
-		if t.blocks[i].name == name {
-			return t.blocks[i]
-		}
-	}
-	block := &blockDefImpl{
-		parent: t,
-		name:   name,
-	}
-	t.blocks = append(t.blocks, block)
-	return block
+type blockImpl struct {
+	name           string
+	parent         *viewImpl
+	defaultpartial *viewImpl
 }
 
-func (t *partialDefImpl) PageHandler() *Handler {
+func (t *viewImpl) SubView(blockName, template string, handler HandlerFunc) View {
+	var block *blockImpl
+	for i := 0; i < len(t.blocks); i++ {
+		if t.blocks[i].name == blockName {
+			block = t.blocks[i]
+		}
+	}
+	if block == nil {
+		block = &blockImpl{
+			parent: t,
+			name:   blockName,
+		}
+		t.blocks = append(t.blocks, block)
+	}
+	return &viewImpl{
+		extends:  block,
+		template: template,
+		handler:  handler,
+		renderer: t.renderer,
+	}
+}
+
+func (t *viewImpl) DefaultSubView(blockName, template string, handler HandlerFunc) View {
+	var block *blockImpl
+	for i := 0; i < len(t.blocks); i++ {
+		if t.blocks[i].name == blockName {
+			block = t.blocks[i]
+		}
+	}
+	if block == nil {
+		block = &blockImpl{
+			parent: t,
+			name:   blockName,
+		}
+		t.blocks = append(t.blocks, block)
+	}
+	sub := &viewImpl{
+		extends:  block,
+		template: template,
+		handler:  handler,
+		renderer: t.renderer,
+	}
+	block.defaultpartial = sub
+	return sub
+}
+
+func (t *viewImpl) PageHandler() *Handler {
 	part := t.derivePartial(nil)
 	page := part
 	root := t
@@ -38,7 +76,7 @@ func (t *partialDefImpl) PageHandler() *Handler {
 	return &handler
 }
 
-func (t *partialDefImpl) PartialHandler() *Handler {
+func (t *viewImpl) PartialHandler() *Handler {
 	part := t.derivePartial(nil)
 	page := part
 	root := t
@@ -55,14 +93,14 @@ func (t *partialDefImpl) PartialHandler() *Handler {
 	return &handler
 }
 
-func (t *partialDefImpl) FragmentHandler() *Handler {
+func (t *viewImpl) FragmentHandler() *Handler {
 	return &Handler{
 		Partial:  t.derivePartial(nil),
 		Renderer: t.renderer,
 	}
 }
 
-func (t *partialDefImpl) derivePartial(override *Partial) *Partial {
+func (t *viewImpl) derivePartial(override *Partial) *Partial {
 	var extends string
 	if t.extends != nil {
 		extends = t.extends.name
@@ -95,29 +133,4 @@ func (t *partialDefImpl) derivePartial(override *Partial) *Partial {
 		})
 	}
 	return &p
-}
-
-type blockDefImpl struct {
-	name           string
-	parent         *partialDefImpl
-	defaultpartial *partialDefImpl
-}
-
-func (b *blockDefImpl) Define(template string, handler HandlerFunc) PartialDef {
-	return &partialDefImpl{
-		extends:  b,
-		template: template,
-		handler:  handler,
-		renderer: b.parent.renderer,
-	}
-}
-func (b *blockDefImpl) Default(template string, handler HandlerFunc) PartialDef {
-	p := &partialDefImpl{
-		extends:  b,
-		template: template,
-		handler:  handler,
-		renderer: b.parent.renderer,
-	}
-	b.defaultpartial = p
-	return p
 }

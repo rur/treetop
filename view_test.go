@@ -6,19 +6,19 @@ import (
 	"testing"
 )
 
-func basePartial() *partialDefImpl {
-	return &partialDefImpl{
+func basePartial() *viewImpl {
+	return &viewImpl{
 		template: "base.templ.html",
 		extends:  nil,
 		handler:  Noop,
-		blocks:   []*blockDefImpl{},
+		blocks:   []*blockImpl{},
 	}
 }
 
 func Test_define_basic_block(t *testing.T) {
 	part := basePartial()
 
-	_ = part.Block("test")
+	_ = part.SubView("test", "test.html", Noop)
 
 	if len(part.blocks) != 1 {
 		t.Errorf("New block should have been added to the list of blocks")
@@ -36,8 +36,8 @@ func Test_retrieve_an_existing_block(t *testing.T) {
 	// calling block with the same name should return an instance of the same block
 	part := basePartial()
 
-	_ = part.Block("test")
-	_ = part.Block("test")
+	_ = part.SubView("test", "test.html", Noop)
+	_ = part.SubView("test", "test.html", Noop)
 
 	if len(part.blocks) != 1 {
 		t.Errorf("Only one new block should have been created")
@@ -54,8 +54,7 @@ func Test_retrieve_an_existing_block(t *testing.T) {
 
 func Test_extend_block_basic(t *testing.T) {
 	part := basePartial()
-	b := part.Block("test")
-	p := b.Define("test.templ.html", Noop)
+	p := part.SubView("test", "test.templ.html", Noop)
 
 	got := PrintHandler(p.FragmentHandler())
 	expecting := `FragmentHandler("test.templ.html", github.com/rur/treetop.Noop)`
@@ -66,13 +65,12 @@ func Test_extend_block_basic(t *testing.T) {
 
 func Test_fragment_with_blocks(t *testing.T) {
 	part := basePartial()
-	b := part.Block("test")
-	p := b.Define("test.templ.html", Noop)
-	p.Block("sub").Default("sub.templ.html", Noop)
+	p := part.SubView("test", "test.templ.html", Noop)
+	p.DefaultSubView("sub", "sub.templ.html", Noop)
 
 	got, err := p.FragmentHandler().Partial.TemplateList()
 	if err != nil {
-		t.Errorf("Unepxected error while aggregating templates: %s", err.Error())
+		t.Errorf("Unexpected error while aggregating templates: %s", err.Error())
 	}
 	expecting := []string{"test.templ.html", "sub.templ.html"}
 	if !reflect.DeepEqual(got, expecting) {
@@ -82,8 +80,7 @@ func Test_fragment_with_blocks(t *testing.T) {
 
 func Test_extend_block_partial(t *testing.T) {
 	part := basePartial()
-	b := part.Block("test")
-	p := b.Define("test.templ.html", Noop)
+	p := part.SubView("test", "test.templ.html", Noop)
 
 	handler := p.PartialHandler()
 	expecting := `PartialHandler("test.templ.html", github.com/rur/treetop.Noop)`
@@ -102,25 +99,21 @@ func Test_extend_block_partial(t *testing.T) {
 }
 
 func Test_extend_multiple_levels(t *testing.T) {
-	part := basePartial()
-	b := part.Block("test")
-	_ = b.Default("test.templ.html", Noop)
+	base := basePartial()
+	_ = base.DefaultSubView("test", "test.templ.html", Noop)
 
-	b2 := part.Block("test2")
-	p2 := b2.Define("test2.templ.html", Noop)
+	test2 := base.SubView("test2", "test2.templ.html", Noop)
 
-	a := p2.Block("A")
-	_ = a.Default("deflt_A.templ.html", Noop)
+	_ = test2.DefaultSubView("A", "default_A.templ.html", Noop)
 
-	a_b := p2.Block("B")
-	b2_bp := a_b.Define("ext_B.templ.html", Noop)
+	test2_b := test2.SubView("B", "test2_B.templ.html", Noop)
 
-	b2_bp.Block("B_plus").Default("ext_B_plus.templ.html", Noop)
+	test2_b.DefaultSubView("B_plus", "test2_B_plus.templ.html", Noop)
 
-	handler := b2_bp.PartialHandler()
+	handler := test2_b.PartialHandler()
 
 	var expectingTempl []string
-	expectingTempl = []string{"ext_B.templ.html", "ext_B_plus.templ.html"}
+	expectingTempl = []string{"test2_B.templ.html", "test2_B_plus.templ.html"}
 	if templates, err := handler.Partial.TemplateList(); err != nil {
 		t.Errorf("Failed to load partial template, error: %s", err.Error())
 	} else if !reflect.DeepEqual(templates, expectingTempl) {
@@ -131,9 +124,9 @@ func Test_extend_multiple_levels(t *testing.T) {
 		"base.templ.html",
 		"test.templ.html",
 		"test2.templ.html",
-		"deflt_A.templ.html",
-		"ext_B.templ.html",
-		"ext_B_plus.templ.html",
+		"default_A.templ.html",
+		"test2_B.templ.html",
+		"test2_B_plus.templ.html",
 	}
 	if templates, err := handler.Page.TemplateList(); err != nil {
 		t.Errorf("Failed to load page template, error: %s", err.Error())

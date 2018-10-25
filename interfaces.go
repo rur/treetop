@@ -18,13 +18,10 @@ type DataWriter interface {
 type TemplateExec func(io.Writer, []string, interface{}) error
 type HandlerFunc func(DataWriter, *http.Request)
 
-type PartialDef interface {
-	Block(string) BlockDef
+type View interface {
+	SubView(string, string, HandlerFunc) View
+	DefaultSubView(string, string, HandlerFunc) View
 	PageHandler() *Handler
 	PartialHandler() *Handler
 	FragmentHandler() *Handler
-}
-type BlockDef interface {
-	Define(string, HandlerFunc) PartialDef
-	Default(string, HandlerFunc) PartialDef
 }

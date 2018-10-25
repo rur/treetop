@@ -10,21 +10,21 @@ func NewRenderer(execute TemplateExec) *Renderer {
 	}
 }
 
-func (r *Renderer) Define(template string, handlerFunc HandlerFunc) PartialDef {
-	def := partialDefImpl{
+func (r *Renderer) NewPageView(template string, handlerFunc HandlerFunc) View {
+	view := &viewImpl{
 		template: template,
 		handler:  handlerFunc,
 		renderer: r.Execute,
 	}
-	return &def
+	return view
 }
 
 // module level define uses default template exec
-func Define(template string, handlerFunc HandlerFunc) PartialDef {
-	def := partialDefImpl{
+func NewPageView(template string, handlerFunc HandlerFunc) View {
+	view := &viewImpl{
 		template: template,
 		handler:  handlerFunc,
 		renderer: DefaultTemplateExec,
 	}
-	return &def
+	return view
 }
