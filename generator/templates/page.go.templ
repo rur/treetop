@@ -6,7 +6,7 @@ import (
 )
 
 func Page(server page.Server, m page.Mux, renderer *treetop.Renderer) {
-	page := renderer.Define(
+	page := renderer.NewPageView(
 		"{{ .Template }}",
 		{{ if .OverrideHandler -}}
 		{{ .Handler }},
@@ -14,14 +14,10 @@ func Page(server page.Server, m page.Mux, renderer *treetop.Renderer) {
 		server.Bind({{ .Handler }}),
 		{{- end }}
 	)
-	{{ range $index, $block := .Blocks -}}
-		{{ $block.Identifier }} page.Block("{{ $block.Name }}")
-	{{ end }}
 	{{ range $index, $entry := .Entries -}}
-	{{ if eq $entry.Type "Block" -}}
-	{{ $entry.Identifier }} {{ $entry.Extends }}.Block("{{ $entry.Name }}")
-	{{- else if eq $entry.Type "Default" -}}
-	{{ $entry.Identifier }} {{ $entry.Extends }}.Default(
+	{{ if eq $entry.Type "Default" -}}
+	{{ $entry.Identifier }} {{ $entry.Extends }}.DefaultSubView(
+		"{{ $entry.Block }}",
 		"{{ $entry.Template }}",
 		{{ if $entry.OverrideHandler -}}
 		{{ $entry.Handler }},
@@ -29,8 +25,9 @@ func Page(server page.Server, m page.Mux, renderer *treetop.Renderer) {
 		server.Bind({{ $entry.Handler }}),
 		{{- end }}
 	)
-	{{- else if eq $entry.Type "Extend" -}}
-	{{ $entry.Identifier }} {{ $entry.Extends }}.Define(
+	{{- else if eq $entry.Type "SubView" -}}
+	{{ $entry.Identifier }} {{ $entry.Extends }}.SubView(
+		"{{ $entry.Block }}",
 		"{{ $entry.Template }}",
 		{{ if $entry.OverrideHandler -}}
 		{{ $entry.Handler }},
@@ -45,6 +42,9 @@ func Page(server page.Server, m page.Mux, renderer *treetop.Renderer) {
 	m.Handle("{{ $route.Path }}", {{ $route.Reference }}
 	{{- if eq $route.Type "Page" }}.PageHandler()
 	{{- else if eq $route.Type "Partial" }}.PartialHandler()
-	{{- else if eq $route.Type "Fragment" }}.FragmentHandler(){{ end }})
+	{{- else if eq $route.Type "Fragment" }}.FragmentHandler()
+	{{- else }}
+	nil // unknown route type: {{ $route.Type }}
+	{{- end }})
 	{{- end }}
 }

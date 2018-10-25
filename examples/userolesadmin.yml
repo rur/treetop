@@ -8,6 +8,7 @@ pages:
         - name: nav
           default: true
           doc: principle navigatio
+          handler: treetop.Constant("ok")
 
       wrapper:
         - name: landing

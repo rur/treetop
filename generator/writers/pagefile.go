@@ -18,6 +18,7 @@ type pageEntryData struct {
 	Identifier      string
 	Name            string
 	Extends         string
+	Block           string
 	Handler         string
 	OverrideHandler bool
 	Type            string
@@ -94,15 +95,10 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 		return fileName, err
 	}
 	for _, block := range sortedBlocks {
-		// for nme, partials := range pageDef.Blocks {
-		blocks = append(blocks, pageBlockData{
-			Identifier: assignBlock(block.partials, block.ident+"Blk"),
-			Name:       block.name,
-		})
-
 		for _, partial := range block.partials {
 			blockEntries, blockRoutes, err := processEntries(
-				block.ident+"Blk",
+				"page",
+				block.name,
 				&partial,
 				filepath.Join("page", pageName, "templates", block.ident),
 			)
@@ -142,7 +138,7 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 	return fileName, nil
 }
 
-func processEntries(extends string, def *generator.PartialDef, templatePath string) ([]pageEntryData, []pageRouteData, error) {
+func processEntries(extends, blockName string, def *generator.PartialDef, templatePath string) ([]pageEntryData, []pageRouteData, error) {
 	var entryType string
 	var entries []pageEntryData
 	var routes []pageRouteData
@@ -150,7 +146,7 @@ func processEntries(extends string, def *generator.PartialDef, templatePath stri
 	if def.Default {
 		entryType = "Default"
 	} else {
-		entryType = "Extend"
+		entryType = "SubView"
 	}
 
 	entryName, err := SanitizeName(def.Name)
@@ -164,9 +160,10 @@ func processEntries(extends string, def *generator.PartialDef, templatePath stri
 	}
 
 	entry := pageEntryData{
-		Identifier:      assignHandler(def, entryName+"Def"),
+		Identifier:      assignHandler(def, entryName),
 		Name:            entryName,
 		Extends:         extends,
+		Block:           blockName,
 		Handler:         handler,
 		OverrideHandler: def.Handler != "",
 		Type:            entryType,
@@ -175,7 +172,7 @@ func processEntries(extends string, def *generator.PartialDef, templatePath stri
 
 	if def.Path != "" {
 		route := pageRouteData{
-			Reference: entryName + "Def",
+			Reference: entryName,
 			Path:      strings.Trim(def.Path, " "),
 		}
 		if def.Fragment {
@@ -193,18 +190,17 @@ func processEntries(extends string, def *generator.PartialDef, templatePath stri
 		return entries, routes, err
 	}
 	for _, block := range sortedBlocks {
+		if len(block.partials) == 0 {
+			continue
+		}
 		entries = append(entries, pageEntryData{
 			Type: "Spacer",
-		}, pageEntryData{
-			Identifier: assignBlock(block.partials, entryName+"_"+block.ident+"Blk"),
-			Name:       block.ident,
-			Extends:    entryName + "Def",
-			Type:       "Block",
 		})
 
 		for _, partial := range block.partials {
 			blockEntries, blockRoutes, err := processEntries(
-				entryName+"_"+block.ident+"Blk",
+				entry.Name,
+				block.name,
 				&partial,
 				filepath.Join(templatePath, block.ident),
 			)
