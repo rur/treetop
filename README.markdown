@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/rur/treetop.svg?branch=api2)](https://travis-ci.org/rur/treetop)
+
 # Treetop
 
 ### Modern web UX for multi-page applications
@@ -84,14 +86,24 @@ The Treetop Go library provides utilities for writing compatible HTTP responses.
 
 ### Hierarchical Handlers
 
-The Treetop library includes an abstraction for creating more complex networks of handlers. A definition API is available for building handler instances which take advantage of the template inheritance feature supported by the Go standard library<sup>(1)</sup>.
+The Treetop library includes an abstraction for creating more complex networks of handlers. The 'PageView' API is available for building handler instances which take advantage of the template inheritance feature supported by the Go standard library<sup>(1)</sup>.
 
-    base := treetop.Define("base.templ.html", baseHandler)
-    content := base.Block("content")
-    landing := content.Extend("landing.templ.html", landingHandler)
-    contactForm := content.Extend("contact.templ.html", contactHandler)
-    message := contactForm.Block("message")
-    submit := message.Extend("contactSubmit.templ.html", contactSubmitHandler)
+    base := treetop.NewPageView("base.templ.html", baseHandler)
+    landing := base.SubView(
+        "content",
+        "landing.templ.html",
+        landingHandler,
+    )
+    contactForm := base.SubView(
+        "content",
+        "contact.templ.html",
+        contactHandler,
+    )
+    submit := contactForm.SubView(
+        "message",
+        "contactSubmit.templ.html",
+        contactSubmitHandler,
+    )
 
     mux.Handler("/", landing.PartialHandler())
     mux.Handler("/contact", contactForm.PartialHandler())
