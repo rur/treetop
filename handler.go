@@ -130,7 +130,7 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	buf.WriteTo(resp)
 }
 
-func (h *Handler) Include(defs ...PartialDef) *Handler {
+func (h *Handler) Include(views ...View) *Handler {
 	// Create a new handler which incorporates the templates from the supplied partial definition
 	newHandler := Handler{
 		h.Partial,
@@ -138,15 +138,15 @@ func (h *Handler) Include(defs ...PartialDef) *Handler {
 		h.Postscript,
 		h.Renderer,
 	}
-	for _, def := range defs {
-		defH := def.FragmentHandler()
-		if newPartial := insertPartial(newHandler.Partial, defH.Partial); newPartial != nil {
+	for _, view := range views {
+		iH := view.FragmentHandler()
+		if newPartial := insertPartial(newHandler.Partial, iH.Partial); newPartial != nil {
 			newHandler.Partial = newPartial
 		} else {
 			// add it to postscript
-			newHandler.Postscript = append(newHandler.Postscript, *defH.Partial)
+			newHandler.Postscript = append(newHandler.Postscript, *iH.Partial)
 		}
-		if newPage := insertPartial(newHandler.Page, defH.Partial); newPage != nil {
+		if newPage := insertPartial(newHandler.Page, iH.Partial); newPage != nil {
 			newHandler.Page = newPage
 		}
 	}

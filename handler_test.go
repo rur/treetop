@@ -558,7 +558,7 @@ func TestHandler_Include(t *testing.T) {
 		Renderer   TemplateExec
 	}
 	type args struct {
-		defs []PartialDef
+		defs []View
 	}
 	tests := []struct {
 		name        string
@@ -597,9 +597,9 @@ func TestHandler_Include(t *testing.T) {
 				},
 			},
 			args: args{
-				defs: []PartialDef{
-					&partialDefImpl{
-						extends:  &blockDefImpl{name: "sub"},
+				defs: []View{
+					&viewImpl{
+						extends:  &blockImpl{name: "sub"},
 						template: "sub-impl.templ.html",
 					},
 				},
