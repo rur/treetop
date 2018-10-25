@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/rur/treetop.svg?branch=api2)](https://travis-ci.org/rur/treetop)
+
 # Treetop
 
 ### Modern web UX for multi-page applications
