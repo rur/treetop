@@ -24,19 +24,11 @@ type htmlBlockData struct {
 }
 
 type partialData struct {
-	Path    string
-	Extends string
-	Name    string
-	Blocks  []*htmlBlockData
-}
-
-// NOTE: Make fragment data a duplicate of partial template data for now,
-//       if they do not diverge as we refine the templates then they
-//       should be merged again.
-type fragmentData struct {
-	Path    string
-	Extends string
-	Name    string
+	Path     string
+	Extends  string
+	Fragment bool
+	Name     string
+	Blocks   []*htmlBlockData
 }
 
 type indexSiteLinksData struct {
@@ -120,20 +112,12 @@ func WriteTemplateBlock(dir string, blocks map[string][]generator.PartialDef) ([
 			}
 		}
 		for _, def := range block.partials {
-			if def.Fragment && !def.Default {
-				file, err := writeFragmentFile(blockTemplDir, &def, block.name)
-				if err != nil {
-					return created, fmt.Errorf("Error creating fragment %s for block %s", def.Name, block.name)
-				}
+			files, err := writePartialFiles(blockTemplDir, &def, block.name)
+			if err != nil {
+				return created, err
+			}
+			for _, file := range files {
 				created = append(created, path.Join(block.ident, file))
-			} else {
-				files, err := writePartialFiles(blockTemplDir, &def, block.name)
-				if err != nil {
-					return created, err
-				}
-				for _, file := range files {
-					created = append(created, path.Join(block.ident, file))
-				}
 			}
 		}
 	}
@@ -148,10 +132,11 @@ func writePartialFiles(dir string, def *generator.PartialDef, extends string) ([
 	}
 
 	partial := partialData{
-		Path:    def.Path,
-		Extends: extends,
-		Name:    def.Name,
-		Blocks:  make([]*htmlBlockData, 0, len(def.Blocks)),
+		Path:     def.Path,
+		Extends:  extends,
+		Fragment: def.Fragment,
+		Name:     def.Name,
+		Blocks:   make([]*htmlBlockData, 0, len(def.Blocks)),
 	}
 	blockList, err := iterateSortedBlocks(def.Blocks)
 	if err != nil {
@@ -182,6 +167,7 @@ func writePartialFiles(dir string, def *generator.PartialDef, extends string) ([
 		return created, err
 	}
 	defer sf.Close()
+	created = append(created, fileName)
 
 	err = partialTemplate.Execute(sf, partial)
 	if err != nil {
@@ -196,31 +182,4 @@ func writePartialFiles(dir string, def *generator.PartialDef, extends string) ([
 	created = append(created, files...)
 
 	return created, nil
-}
-
-func writeFragmentFile(dir string, def *generator.PartialDef, extends string) (string, error) {
-	name, err := SanitizeName(def.Name)
-	if err != nil {
-		return "", fmt.Errorf("Invalid Fragment name: '%s'", def.Name)
-	}
-
-	fragment := fragmentData{
-		Path:    def.Path,
-		Extends: extends,
-		Name:    def.Name,
-	}
-
-	fileName := fmt.Sprintf("%s.templ.html", name)
-	filePath := filepath.Join(dir, fileName)
-	sf, err := os.Create(filePath)
-	if err != nil {
-		return fileName, err
-	}
-	defer sf.Close()
-
-	err = fragmentTemplate.Execute(sf, fragment)
-	if err != nil {
-		return fileName, fmt.Errorf("Error executing fragment template '%s': %s", fileName, err)
-	}
-	return fileName, nil
 }
