@@ -10,7 +10,7 @@ import (
 
 func Test_dataWriter_BlockData(t *testing.T) {
 	type fields struct {
-		writer          http.ResponseWriter
+		http.ResponseWriter
 		responseId      uint32
 		responseWritten bool
 		dataCalled      bool
@@ -34,9 +34,9 @@ func Test_dataWriter_BlockData(t *testing.T) {
 		{
 			name: "Nil case",
 			fields: fields{
-				writer:     &httptest.ResponseRecorder{},
-				responseId: 1234,
-				partial:    Partial{},
+				ResponseWriter: &httptest.ResponseRecorder{},
+				responseId:     1234,
+				partial:        Partial{},
 			},
 			args: args{
 				name: "no-such-block",
@@ -48,8 +48,8 @@ func Test_dataWriter_BlockData(t *testing.T) {
 		{
 			name: "Simple data",
 			fields: fields{
-				writer:     &httptest.ResponseRecorder{},
-				responseId: 1234,
+				ResponseWriter: &httptest.ResponseRecorder{},
+				responseId:     1234,
 				partial: Partial{
 					Blocks: []Partial{
 						Partial{
@@ -69,9 +69,9 @@ func Test_dataWriter_BlockData(t *testing.T) {
 		{
 			name: "Adopt sub-handler HTTP status",
 			fields: fields{
-				writer:     &httptest.ResponseRecorder{},
-				responseId: 1234,
-				status:     400,
+				ResponseWriter: &httptest.ResponseRecorder{},
+				responseId:     1234,
+				status:         400,
 				partial: Partial{
 					Blocks: []Partial{
 						Partial{
@@ -95,8 +95,8 @@ func Test_dataWriter_BlockData(t *testing.T) {
 		{
 			name: "ResponseId passed down",
 			fields: fields{
-				writer:     &httptest.ResponseRecorder{},
-				responseId: 1234,
+				ResponseWriter: &httptest.ResponseRecorder{},
+				responseId:     1234,
 				partial: Partial{
 					Blocks: []Partial{
 						Partial{
@@ -118,8 +118,8 @@ func Test_dataWriter_BlockData(t *testing.T) {
 		{
 			name: "Block not found",
 			fields: fields{
-				writer:     &httptest.ResponseRecorder{},
-				responseId: 1234,
+				ResponseWriter: &httptest.ResponseRecorder{},
+				responseId:     1234,
 				partial: Partial{
 					Blocks: []Partial{
 						Partial{
@@ -140,7 +140,7 @@ func Test_dataWriter_BlockData(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dw := &dataWriter{
-				writer:          tt.fields.writer,
+				ResponseWriter:  tt.fields.ResponseWriter,
 				responseId:      tt.fields.responseId,
 				responseWritten: tt.fields.responseWritten,
 				dataCalled:      tt.fields.dataCalled,
