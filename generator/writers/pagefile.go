@@ -95,18 +95,30 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 		return fileName, err
 	}
 	for _, block := range sortedBlocks {
+		entries = append(entries, pageEntryData{
+			Name: block.name,
+			Type: "Spacer",
+		})
+
 		for _, partial := range block.partials {
 			blockEntries, blockRoutes, err := processEntries(
 				"page",
 				block.name,
 				&partial,
 				filepath.Join("pages", pageName, "templates", block.ident),
+				block.name,
 			)
 			if err != nil {
 				return "", err
 			}
 			entries = append(entries, blockEntries...)
 			routes = append(routes, blockRoutes...)
+			if len(blockEntries) > 1 {
+				entries = append(entries, pageEntryData{
+					Name: block.name,
+					Type: "Spacer",
+				})
+			}
 		}
 	}
 
@@ -138,20 +150,20 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 	return fileName, nil
 }
 
-func processEntries(extends, blockName string, def *generator.PartialDef, templatePath string) ([]pageEntryData, []pageRouteData, error) {
+func processEntries(extends, blockName string, def *generator.PartialDef, templatePath string, seen ...string) ([]pageEntryData, []pageRouteData, error) {
 	var entryType string
 	var entries []pageEntryData
 	var routes []pageRouteData
 
 	if def.Default {
-		entryType = "Default"
+		entryType = "DefaultSubView"
 	} else {
 		entryType = "SubView"
 	}
 
 	entryName, err := SanitizeName(def.Name)
 	if err != nil {
-		return entries, routes, fmt.Errorf("Invalid %s name '%s'", entryType, def.Name)
+		return entries, routes, fmt.Errorf("Invalid %s name '%s' @ %s", entryType, def.Name, strings.Join(seen, " -> "))
 	}
 
 	handler := def.Handler
@@ -194,6 +206,7 @@ func processEntries(extends, blockName string, def *generator.PartialDef, templa
 			continue
 		}
 		entries = append(entries, pageEntryData{
+			Name: strings.Join(append(seen, block.name), " -> "),
 			Type: "Spacer",
 		})
 
@@ -203,6 +216,7 @@ func processEntries(extends, blockName string, def *generator.PartialDef, templa
 				block.name,
 				&partial,
 				filepath.Join(templatePath, block.ident),
+				append(seen, block.name)...,
 			)
 			if err != nil {
 				return entries, routes, err

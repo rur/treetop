@@ -15,7 +15,7 @@ func Page(server pages.Server, m pages.Mux, renderer *treetop.Renderer) {
 		{{- end }}
 	)
 	{{ range $index, $entry := .Entries -}}
-	{{ if eq $entry.Type "Default" -}}
+	{{ if eq $entry.Type "DefaultSubView" -}}
 	{{ $entry.Identifier }} {{ $entry.Extends }}.DefaultSubView(
 		"{{ $entry.Block }}",
 		"{{ $entry.Template }}",
@@ -35,7 +35,9 @@ func Page(server pages.Server, m pages.Mux, renderer *treetop.Renderer) {
 		server.Bind({{ $entry.Handler }}),
 		{{- end }}
 	)
-	{{- else if eq $entry.Type "Spacer" }}{{ else -}}
+	{{- else if eq $entry.Type "Spacer" }}
+	// {{ $entry.Name }}
+	{{- else -}}
 	nil // unknown entry type: {{ $entry.Type }}
 	{{- end }}
 	{{ end }}{{ range $index, $route := .Routes }}
