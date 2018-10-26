@@ -100,7 +100,7 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 				"page",
 				block.name,
 				&partial,
-				filepath.Join("page", pageName, "templates", block.ident),
+				filepath.Join("pages", pageName, "templates", block.ident),
 			)
 			if err != nil {
 				return "", err

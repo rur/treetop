@@ -7,9 +7,9 @@ import (
 
 	"github.com/rur/treetop"
 
-	"{{ .Namespace }}/page"
+	"{{ .Namespace }}/pages"
 	{{ range $index, $page := .Pages -}}
-	"{{ $.Namespace }}/page/{{ $page }}"
+	"{{ $.Namespace }}/pages/{{ $page }}"
 	{{ end }}
 )
 
@@ -20,7 +20,7 @@ var (
 func main() {
 	m := http.NewServeMux()
 
-	server := page.NewServer()
+	server := pages.NewServer()
 
 	renderer := treetop.NewRenderer(treetop.DefaultTemplateExec){{ range $index, $page := .Pages }}
 	{{ $page }}.Page(server, m, renderer)

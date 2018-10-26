@@ -126,7 +126,7 @@ func generate(outDir string, sitemap generator.Sitemap) ([]string, error) {
 		return created, fmt.Errorf("Invalid site namespace in config: %s", sitemap.Namespace)
 	}
 
-	pageDir := filepath.Join(outDir, "page")
+	pageDir := filepath.Join(outDir, "pages")
 	if err := os.Mkdir(pageDir, os.ModePerm); err != nil {
 		return created, fmt.Errorf("Error creating 'page' dir in temp directory. %s", err)
 	}
@@ -149,26 +149,26 @@ func generate(outDir string, sitemap generator.Sitemap) ([]string, error) {
 		if err != nil {
 			return created, fmt.Errorf("Error creating page.go file for '%s'. %s", def.Name, err)
 		}
-		created = append(created, path.Join("page", pageName, file))
+		created = append(created, path.Join("pages", pageName, file))
 
 		file, err = writers.WriteHandlerFile(pageDir, &def, sitemap.Namespace)
 		if err != nil {
 			return created, fmt.Errorf("Error creating handler.go file for page '%s'. %s", def.Name, err)
 		}
-		created = append(created, path.Join("page", pageName, file))
+		created = append(created, path.Join("pages", pageName, file))
 
 		file, err = writers.WriteIndexFile(templatesDir, &def, sitemap.Pages)
 		if err != nil {
 			return created, fmt.Errorf("Error creating index.templ.html file for page '%s'. %s", def.Name, err)
 		}
-		created = append(created, path.Join("page", pageName, "templates", file))
+		created = append(created, path.Join("pages", pageName, "templates", file))
 
 		files, err := writers.WriteTemplateBlock(templatesDir, def.Blocks)
 		if err != nil {
 			return created, fmt.Errorf("Error creating HTML partials for page '%s'. %s", def.Name, err)
 		}
 		for _, file = range files {
-			created = append(created, path.Join("page", pageName, "templates", file))
+			created = append(created, path.Join("pages", pageName, "templates", file))
 		}
 	}
 
@@ -176,7 +176,7 @@ func generate(outDir string, sitemap generator.Sitemap) ([]string, error) {
 	if err != nil {
 		return created, fmt.Errorf("Error creating context.go file. %s", err)
 	}
-	created = append(created, path.Join("page", file))
+	created = append(created, path.Join("pages", file))
 
 	file, err = writers.WriteStartFile(outDir, sitemap.Pages, sitemap.Namespace)
 	if err != nil {
