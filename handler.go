@@ -70,10 +70,10 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	var buf bytes.Buffer
 
 	dw := &dataWriter{
-		writer:     resp,
-		context:    ctx,
-		responseId: responseID,
-		partial:    part,
+		ResponseWriter: resp,
+		context:        ctx,
+		responseId:     responseID,
+		partial:        part,
 	}
 
 	if err := dw.execute(&buf, h.Renderer, req); err != nil {
@@ -95,10 +95,10 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		// each rendered template will be appended to the content body.
 		for index := 0; index < len(h.Postscript); index++ {
 			psDw := &dataWriter{
-				writer:     resp,
-				context:    ctx,
-				responseId: responseID,
-				partial:    &h.Postscript[index],
+				ResponseWriter: resp,
+				context:        ctx,
+				responseId:     responseID,
+				partial:        &h.Postscript[index],
 			}
 
 			if err := psDw.execute(&buf, h.Renderer, req); err != nil {

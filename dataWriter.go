@@ -10,7 +10,7 @@ import (
 var errRespWritten = errors.New("Response headers have already been written")
 
 type dataWriter struct {
-	writer          http.ResponseWriter
+	http.ResponseWriter
 	responseId      uint32
 	context         context.Context
 	responseWritten bool
@@ -22,19 +22,19 @@ type dataWriter struct {
 
 // Implement http.ResponseWriter interface by delegating to embedded instance
 func (dw *dataWriter) Header() http.Header {
-	return dw.writer.Header()
+	return dw.ResponseWriter.Header()
 }
 
 // Implement http.ResponseWriter interface by delegating to embedded instance
 func (dw *dataWriter) Write(b []byte) (int, error) {
 	dw.responseWritten = true
-	return dw.writer.Write(b)
+	return dw.ResponseWriter.Write(b)
 }
 
 // Implement http.ResponseWriter interface by delegating to embedded instance
 func (dw *dataWriter) WriteHeader(statusCode int) {
 	dw.responseWritten = true
-	dw.writer.WriteHeader(statusCode)
+	dw.ResponseWriter.WriteHeader(statusCode)
 }
 
 // Handler pass down data for template execution
@@ -81,13 +81,17 @@ func (dw *dataWriter) BlockData(name string, req *http.Request) (interface{}, bo
 	}
 	// 3. construct a sub dataWriter
 	subWriter := dataWriter{
-		writer:     dw.writer,
-		responseId: dw.responseId,
-		context:    dw.context,
-		partial:    part,
+		ResponseWriter: dw.ResponseWriter,
+		responseId:     dw.responseId,
+		context:        dw.context,
+		partial:        part,
 	}
 	// 4. invoke handler
 	part.HandlerFunc(&subWriter, req)
+	if subWriter.responseWritten {
+		dw.responseWritten = true
+		return nil, false
+	}
 	// 5. adopt status of sub handler (if applicable, see .Status doc)
 	dw.Status(subWriter.status)
 	// 6. return resulting data and flag indicating if .Data(...) was called
