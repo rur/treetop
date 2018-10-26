@@ -122,7 +122,7 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 	page := pageData{
 		Namespace:       namespace,
 		Name:            pageName,
-		Template:        filepath.Join("page", pageName, "templates", "index.templ.html"),
+		Template:        filepath.Join("pages", pageName, "templates", "index.templ.html"),
 		Handler:         handler,
 		OverrideHandler: pageDef.Handler != "",
 		Blocks:          blocks,
