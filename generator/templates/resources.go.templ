@@ -40,14 +40,14 @@ func (s *server) Bind(f func(Resources, treetop.DataWriter, *http.Request)) tree
 		// between data handlers within the scope of a request.
 		respId := w.ResponseId()
 		s.RLock()
-		rcs, ok := s.responses[respId]
+		rsc, ok := s.responses[respId]
 		s.RUnlock()
 
 		if !ok {
 			// potentially expensive resource initialization here
-			rcs = &Resources{true}
+			rsc = &Resources{true}
 			s.Lock()
-			s.responses[respId] = rcs
+			s.responses[respId] = rsc
 			s.Unlock()
 
 			go func() {
@@ -59,6 +59,6 @@ func (s *server) Bind(f func(Resources, treetop.DataWriter, *http.Request)) tree
 			}()
 		}
 		// pass Resources by value to avoid mutation
-		f(*rcs, w, req)
+		f(*rsc, w, req)
 	}
 }
