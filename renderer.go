@@ -1,49 +1,30 @@
 package treetop
 
-import "net/http"
-
-type renderer struct {
-	execute TemplateExec
+type Renderer struct {
+	Execute TemplateExec
 }
 
-func NewRenderer(execute TemplateExec) Renderer {
-	return &renderer{execute}
+func NewRenderer(execute TemplateExec) *Renderer {
+	return &Renderer{
+		Execute: execute,
+	}
 }
 
-func (r *renderer) Page(template string, handlerFunc HandlerFunc) Partial {
-	rootBlock := blockInternal{
-		name:    "page root",
-		execute: r.execute,
+func (r *Renderer) NewPageView(template string, handlerFunc HandlerFunc) View {
+	view := &viewImpl{
+		template: template,
+		handler:  handlerFunc,
+		renderer: r.Execute,
 	}
-	partial := partialInternal{
-		template:    template,
-		handlerFunc: handlerFunc,
-		extends:     &rootBlock,
-		includes:    make(map[Block]Partial),
-		blocks:      make(map[string]Block),
-		execute:     r.execute,
-	}
-	rootBlock.defaultPartial = &partial
-	return &partial
+	return view
 }
 
-func (r *renderer) Fragment(template string, handlerFunc HandlerFunc) Fragment {
-	fragment := fragmentInternal{
-		template:    template,
-		handlerFunc: handlerFunc,
-		execute:     r.execute,
+// module level define uses default template exec
+func NewPageView(template string, handlerFunc HandlerFunc) View {
+	view := &viewImpl{
+		template: template,
+		handler:  handlerFunc,
+		renderer: DefaultTemplateExec,
 	}
-	return &fragment
-}
-
-func (r *renderer) Append(partial Partial, fragments ...Fragment) http.Handler {
-	fs := make([]Fragment, len(fragments))
-	for i, f := range fragments {
-		fs[i] = f
-	}
-	return &appended{
-		partial,
-		fs,
-		r.execute,
-	}
+	return view
 }

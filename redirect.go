@@ -9,39 +9,6 @@ import (
 	"unicode/utf8"
 )
 
-func Noop(_ DataWriter, _ *http.Request) {}
-
-func Constant(data interface{}) HandlerFunc {
-	return func(dw DataWriter, _ *http.Request) {
-		dw.Data(data)
-	}
-}
-
-func RequestHandler(f func(*http.Request) interface{}) HandlerFunc {
-	return func(dw DataWriter, req *http.Request) {
-		dw.Data(f(req))
-	}
-}
-
-func IsTreetopRequest(req *http.Request) bool {
-	for _, accept := range strings.Split(req.Header.Get("Accept"), ",") {
-		if strings.TrimSpace(accept) == FragmentContentType {
-			return true
-		}
-		if strings.TrimSpace(accept) == PartialContentType {
-			return true
-		}
-	}
-	return false
-}
-
-func Delegate(block string) HandlerFunc {
-	return func(dw DataWriter, req *http.Request) {
-		data, _ := dw.PartialData(block, req)
-		dw.Data(data)
-	}
-}
-
 // Instruct treetop client to immediately direct the web browser to a new location.
 // This allows the server to effectively 'break out' of in-page navigation.
 //
