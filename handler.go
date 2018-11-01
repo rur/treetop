@@ -45,13 +45,12 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		return
 	default:
 	}
-	responseID := nextResponseId()
-	writer := &statusRecorder{ResponseWriter: resp}
 	done := make(chan struct{})
-	go func() {
-		<-req.Context().Done()
+	defer func() {
 		close(done)
 	}()
+	responseID := nextResponseId()
+	writer := &statusRecorder{ResponseWriter: resp}
 
 	var part *Partial
 	var contentType string
