@@ -29,7 +29,7 @@ func main() {
 		"templates/partial.templ.html": "partialTempl",
 		"templates/start.go.templ":     "startTempl",
 		"templates/resources.go.templ": "resourcesTempl",
-		"templates/page.go.templ":      "pageTempl",
+		"templates/routes.go.templ":    "routesTempl",
 		"templates/handler.go.templ":   "handlerTempl",
 	}
 	content := make([]genTemplate, 0, 4)

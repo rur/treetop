@@ -112,7 +112,7 @@ func WriteTemplateBlock(dir string, blocks map[string][]generator.PartialDef) ([
 			}
 		}
 		for _, def := range block.partials {
-			files, err := writePartialFiles(blockTemplDir, &def, block.name)
+			files, err := writePartialTemplate(blockTemplDir, &def, block.name)
 			if err != nil {
 				return created, err
 			}
@@ -124,54 +124,57 @@ func WriteTemplateBlock(dir string, blocks map[string][]generator.PartialDef) ([
 	return created, nil
 }
 
-func writePartialFiles(dir string, def *generator.PartialDef, extends string) ([]string, error) {
+func writePartialTemplate(dir string, def *generator.PartialDef, extends string) ([]string, error) {
 	var created []string
 	name, err := SanitizeName(def.Name)
 	if err != nil {
 		return created, fmt.Errorf("Invalid Partial name: '%s'", def.Name)
 	}
 
-	partial := partialData{
-		Path:     def.Path,
-		Extends:  extends,
-		Fragment: def.Fragment,
-		Name:     def.Name,
-		Blocks:   make([]*htmlBlockData, 0, len(def.Blocks)),
-	}
-	blockList, err := iterateSortedBlocks(def.Blocks)
-	if err != nil {
-		return created, err
-	}
-	for _, block := range blockList {
-		blockData := htmlBlockData{
-			FieldName:  generator.ValidPublicIdentifier(block.name),
-			Identifier: block.ident,
-			Name:       block.name,
-			Partials:   make([]*htmlBlockPartialData, 0, len(block.partials)),
+	if def.Template == "" {
+		// a template is not already defined, generate one
+		partial := partialData{
+			Path:     def.Path,
+			Extends:  extends,
+			Fragment: def.Fragment,
+			Name:     def.Name,
+			Blocks:   make([]*htmlBlockData, 0, len(def.Blocks)),
 		}
-		for _, bPartial := range block.partials {
-			blockData.Partials = append(blockData.Partials, &htmlBlockPartialData{
-				Path:     bPartial.Path,
-				Name:     bPartial.Name,
-				Fragment: bPartial.Fragment,
-				Default:  bPartial.Default,
-			})
+		blockList, err := iterateSortedBlocks(def.Blocks)
+		if err != nil {
+			return created, err
 		}
-		partial.Blocks = append(partial.Blocks, &blockData)
-	}
+		for _, block := range blockList {
+			blockData := htmlBlockData{
+				FieldName:  generator.ValidPublicIdentifier(block.name),
+				Identifier: block.ident,
+				Name:       block.name,
+				Partials:   make([]*htmlBlockPartialData, 0, len(block.partials)),
+			}
+			for _, bPartial := range block.partials {
+				blockData.Partials = append(blockData.Partials, &htmlBlockPartialData{
+					Path:     bPartial.Path,
+					Name:     bPartial.Name,
+					Fragment: bPartial.Fragment,
+					Default:  bPartial.Default,
+				})
+			}
+			partial.Blocks = append(partial.Blocks, &blockData)
+		}
 
-	fileName := fmt.Sprintf("%s.templ.html", name)
-	filePath := filepath.Join(dir, fileName)
-	sf, err := os.Create(filePath)
-	if err != nil {
-		return created, err
-	}
-	defer sf.Close()
-	created = append(created, fileName)
+		fileName := fmt.Sprintf("%s.templ.html", name)
+		filePath := filepath.Join(dir, fileName)
+		sf, err := os.Create(filePath)
+		if err != nil {
+			return created, err
+		}
+		defer sf.Close()
+		created = append(created, fileName)
 
-	err = partialTemplate.Execute(sf, partial)
-	if err != nil {
-		return created, fmt.Errorf("Error executing partial template '%s': %s", fileName, err)
+		err = partialTemplate.Execute(sf, partial)
+		if err != nil {
+			return created, fmt.Errorf("Error executing partial template '%s': %s", fileName, err)
+		}
 	}
 
 	// writer nested templates

@@ -70,8 +70,8 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 		return "", fmt.Errorf("Invalid page name '%s'.", err)
 	}
 
-	fileName := "page.go"
-	filePath := filepath.Join(dir, "page.go")
+	fileName := "routes.go"
+	filePath := filepath.Join(dir, "routes.go")
 	sf, err := os.Create(filePath)
 	if err != nil {
 		return "", err
@@ -82,7 +82,7 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 	var routes []pageRouteData
 	if pageDef.Path != "" {
 		routes = append(routes, pageRouteData{
-			Reference: "page",
+			Reference: "pageView",
 			Path:      strings.Trim(pageDef.Path, " "),
 			Type:      "Page",
 		})
@@ -100,12 +100,12 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 			Type: "Spacer",
 		})
 
-		for _, partial := range block.partials {
+		for i, partial := range block.partials {
 			blockEntries, blockRoutes, err := processEntries(
-				"page",
+				"pageView",
 				block.name,
 				&partial,
-				filepath.Join("pages", pageName, "templates", block.ident),
+				filepath.Join("page", pageName, "templates", block.ident),
 				block.name,
 			)
 			if err != nil {
@@ -113,7 +113,7 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 			}
 			entries = append(entries, blockEntries...)
 			routes = append(routes, blockRoutes...)
-			if len(blockEntries) > 1 {
+			if len(blockEntries) > 1 && i < len(block.partials)-1 {
 				entries = append(entries, pageEntryData{
 					Name: block.name,
 					Type: "Spacer",
@@ -131,10 +131,15 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 		handler = pageName + "PageHandler"
 	}
 
+	template := pageDef.Template
+	if template == "" {
+		template = filepath.Join("page", pageName, "templates", "index.templ.html")
+	}
+
 	page := pageData{
 		Namespace:       namespace,
 		Name:            pageName,
-		Template:        filepath.Join("pages", pageName, "templates", "index.templ.html"),
+		Template:        template,
 		Handler:         handler,
 		OverrideHandler: pageDef.Handler != "",
 		Blocks:          blocks,
@@ -142,7 +147,7 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 		Routes:          routes,
 	}
 
-	err = pageTemplate.Execute(sf, page)
+	err = routesTemplate.Execute(sf, page)
 	if err != nil {
 		return fileName, err
 	}
@@ -171,6 +176,11 @@ func processEntries(extends, blockName string, def *generator.PartialDef, templa
 		handler = entryName + "Handler"
 	}
 
+	template := def.Template
+	if template == "" {
+		template = filepath.Join(templatePath, entryName+".templ.html")
+	}
+
 	entry := pageEntryData{
 		Identifier:      assignHandler(def, entryName),
 		Name:            entryName,
@@ -179,7 +189,7 @@ func processEntries(extends, blockName string, def *generator.PartialDef, templa
 		Handler:         handler,
 		OverrideHandler: def.Handler != "",
 		Type:            entryType,
-		Template:        filepath.Join(templatePath, entryName+".templ.html"),
+		Template:        template,
 	}
 
 	if def.Path != "" {

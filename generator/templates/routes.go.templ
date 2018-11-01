@@ -2,11 +2,11 @@ package {{ .Name }}
 
 import (
 	"github.com/rur/treetop"
-	"{{ .Namespace }}/pages"
+	"{{ .Namespace }}/page"
 )
 
-func Page(server pages.Server, m pages.Mux, renderer *treetop.Renderer) {
-	page := renderer.NewPageView(
+func Routes(server page.Server, m page.Mux, renderer *treetop.Renderer) {
+	pageView := renderer.NewPageView(
 		"{{ .Template }}",
 		{{ if .OverrideHandler -}}
 		{{ .Handler }},
