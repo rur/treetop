@@ -40,9 +40,15 @@ type Handler struct {
 
 // implement http.Handler interface, see https://golang.org/pkg/net/http/?#Handler
 func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+	select {
+	case <-req.Context().Done():
+		// request has already been cancelled, do nothing
+		return
+	default:
+	}
 	responseID := nextResponseId()
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Cancel ctx as soon as handleSearch returns.
+	ctx, cancel := context.WithCancel(req.Context())
+	defer cancel() // Cancel treetop ctx when handler has done it's work.
 
 	var part *Partial
 	var contentType string
