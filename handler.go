@@ -2,6 +2,7 @@ package treetop
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -41,17 +42,13 @@ type Handler struct {
 func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	select {
 	case <-req.Context().Done():
-		// dont do *anything* if the request context is already closed
+		// request has already been cancelled, do nothing
 		return
 	default:
 	}
 	responseID := nextResponseId()
-	writer := &statusRecorder{ResponseWriter: resp}
-	done := make(chan struct{})
-	go func() {
-		<-req.Context().Done()
-		close(done)
-	}()
+	ctx, cancel := context.WithCancel(req.Context())
+	defer cancel() // Cancel treetop ctx when handler has done it's work.
 
 	var part *Partial
 	var contentType string
@@ -59,7 +56,7 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		part = h.Partial
 		if h.Partial == nil {
 			// this is a page only handler, do not accept partial requests
-			http.Error(writer, http.StatusText(http.StatusNotAcceptable), http.StatusNotAcceptable)
+			http.Error(resp, http.StatusText(http.StatusNotAcceptable), http.StatusNotAcceptable)
 			return
 		} else if h.Page == nil {
 			contentType = FragmentContentType
@@ -68,7 +65,7 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		}
 	} else if h.Page == nil {
 		// TODO: Consider allowing a '303 See Other' redirect to be configured
-		http.Error(writer, http.StatusText(http.StatusNotAcceptable), http.StatusNotAcceptable)
+		http.Error(resp, http.StatusText(http.StatusNotAcceptable), http.StatusNotAcceptable)
 		return
 	} else {
 		part = h.Page
@@ -77,11 +74,12 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 
 	// TODO: use buffer pool
 	var buf bytes.Buffer
+
 	dw := &dataWriter{
-		writer:     writer,
-		responseId: responseID,
-		partial:    part,
-		done:       done,
+		ResponseWriter: resp,
+		context:        ctx,
+		responseId:     responseID,
+		partial:        part,
 	}
 
 	if err := dw.execute(&buf, h.Renderer, req); err != nil {
@@ -91,22 +89,22 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 			return
 		default:
 			log.Printf(err.Error())
-			http.Error(writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			http.Error(resp, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 	}
 
-	writer.Header().Set("Content-Type", contentType)
+	resp.Header().Set("Content-Type", contentType)
 
 	if contentType == PartialContentType || contentType == FragmentContentType {
 		// Execute postscript templates for partial requests only
 		// each rendered template will be appended to the content body.
 		for index := 0; index < len(h.Postscript); index++ {
 			psDw := &dataWriter{
-				writer:     writer,
-				done:       done,
-				responseId: responseID,
-				partial:    &h.Postscript[index],
+				ResponseWriter: resp,
+				context:        ctx,
+				responseId:     responseID,
+				partial:        &h.Postscript[index],
 			}
 
 			if err := psDw.execute(&buf, h.Renderer, req); err != nil {
@@ -116,7 +114,7 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 					return
 				default:
 					log.Printf(err.Error())
-					http.Error(writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+					http.Error(resp, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 					return
 				}
 			}
@@ -124,18 +122,18 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 
 		// this is useful for XHR requests because if a redirect occurred
 		// the final response URL is not necessarily available to the client
-		writer.Header().Set("X-Response-Url", req.URL.RequestURI())
+		resp.Header().Set("X-Response-Url", req.URL.RequestURI())
 	}
 
 	// Since we are modulating the representation based upon a header value, it is
 	// necessary to inform the caches. See https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.6
-	writer.Header().Set("Vary", "Accept")
+	resp.Header().Set("Vary", "Accept")
 
 	// if a status code was specified, use it. Otherwise fallback to the net/http default.
 	if dw.status > 0 {
-		writer.WriteHeader(dw.status)
+		resp.WriteHeader(dw.status)
 	}
-	buf.WriteTo(writer)
+	buf.WriteTo(resp)
 }
 
 func (h *Handler) Include(views ...View) *Handler {
