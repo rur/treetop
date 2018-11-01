@@ -140,7 +140,7 @@ func Test_dataWriter_BlockData(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dw := &dataWriter{
-				writer:          &statusRecorder{ResponseWriter: tt.fields.ResponseWriter},
+				ResponseWriter:  tt.fields.ResponseWriter,
 				responseId:      tt.fields.responseId,
 				responseWritten: tt.fields.responseWritten,
 				dataCalled:      tt.fields.dataCalled,
