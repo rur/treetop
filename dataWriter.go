@@ -1,7 +1,6 @@
 package treetop
 
 import (
-	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -9,32 +8,51 @@ import (
 
 var errRespWritten = errors.New("Response headers have already been written")
 
-type dataWriter struct {
+// used to capture the status of the response
+type statusRecorder struct {
 	http.ResponseWriter
+	status int
+}
+
+func (w *statusRecorder) WriteHeader(status int) {
+	w.status = status
+	w.ResponseWriter.WriteHeader(status)
+}
+
+func (w *statusRecorder) Write(b []byte) (int, error) {
+	if w.status == 0 {
+		w.status = 200
+	}
+	n, err := w.ResponseWriter.Write(b)
+	return n, err
+}
+
+type dataWriter struct {
+	writer          *statusRecorder
 	responseId      uint32
-	context         context.Context
 	responseWritten bool
 	dataCalled      bool
 	data            interface{}
 	status          int
 	partial         *Partial
+	done            <-chan struct{}
 }
 
 // Implement http.ResponseWriter interface by delegating to embedded instance
 func (dw *dataWriter) Header() http.Header {
-	return dw.ResponseWriter.Header()
+	return dw.writer.Header()
 }
 
 // Implement http.ResponseWriter interface by delegating to embedded instance
 func (dw *dataWriter) Write(b []byte) (int, error) {
 	dw.responseWritten = true
-	return dw.ResponseWriter.Write(b)
+	return dw.writer.Write(b)
 }
 
 // Implement http.ResponseWriter interface by delegating to embedded instance
 func (dw *dataWriter) WriteHeader(statusCode int) {
 	dw.responseWritten = true
-	dw.ResponseWriter.WriteHeader(statusCode)
+	dw.writer.WriteHeader(statusCode)
 }
 
 // Handler pass down data for template execution
@@ -81,10 +99,10 @@ func (dw *dataWriter) BlockData(name string, req *http.Request) (interface{}, bo
 	}
 	// 3. construct a sub dataWriter
 	subWriter := dataWriter{
-		ResponseWriter: dw.ResponseWriter,
-		responseId:     dw.responseId,
-		context:        dw.context,
-		partial:        part,
+		writer:     dw.writer,
+		responseId: dw.responseId,
+		partial:    part,
+		done:       dw.done,
 	}
 	// 4. invoke handler
 	part.HandlerFunc(&subWriter, req)
@@ -103,8 +121,14 @@ func (dw *dataWriter) BlockData(name string, req *http.Request) (interface{}, bo
 }
 
 // context which allows request to be cancelled
-func (dw *dataWriter) Context() context.Context {
-	return dw.context
+func (dw *dataWriter) Done() <-chan int {
+	status := make(chan int, 1)
+	go func() {
+		<-dw.done
+		status <- dw.writer.status
+		close(status)
+	}()
+	return status
 }
 
 // Locally unique ID for Treetop HTTP response. This is intended to be used to keep track of
