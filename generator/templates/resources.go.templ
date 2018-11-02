@@ -1,7 +1,6 @@
 package page
 
 import (
-	"fmt"
 	"net/http"
 	"sync"
 
@@ -51,14 +50,9 @@ func (s *server) get(respId uint32) *Resources {
 	}
 }
 
-// Cache 'Resources' to be shared by server-bound handlers responding to the same request.
-// The following operation will panic if the response ID is already in use.
-func (s *server) mustSet(respId uint32, rsc *Resources) {
+func (s *server) set(respId uint32, rsc *Resources) {
 	s.Lock()
 	defer s.Unlock()
-	if _, found := s.responses[respId]; found {
-		panic(fmt.Sprintf("server.Resources: internal error: duplicate entries for Treetop response ID  %d", respId))
-	}
 	s.responses[respId] = rsc
 }
 
@@ -80,8 +74,7 @@ func (s *server) Bind(f ResourcesHandler) treetop.HandlerFunc {
 		if rsc == nil {
 			// potentially blocking resource initialization here
 			rsc = &Resources{true}
-			// A panic here would mean that concurrent handlers somehow share the same response ID (internal error).
-			s.mustSet(respId, rsc)
+			s.set(respId, rsc)
 			go func() {
 				<-w.Context().Done()
 				// assume that the request lifecycle is finished, just free up resources
