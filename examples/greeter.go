@@ -46,7 +46,7 @@ var (
 
 func main() {
 	renderer := treetop.NewRenderer(treetop.StringTemplateExec)
-	page := renderer.NewPageView(base, baseHandler)
+	page := renderer.NewView(base, baseHandler)
 	greetForm := page.SubView("message", landing, treetop.Noop)
 	greetMessage := page.SubView("message", greeting, greetingHandler)
 

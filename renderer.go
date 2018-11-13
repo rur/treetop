@@ -10,7 +10,7 @@ func NewRenderer(execute TemplateExec) *Renderer {
 	}
 }
 
-func (r *Renderer) NewPageView(template string, handlerFunc HandlerFunc) View {
+func (r *Renderer) NewView(template string, handlerFunc HandlerFunc) View {
 	view := &viewImpl{
 		template: template,
 		handler:  handlerFunc,
@@ -20,7 +20,7 @@ func (r *Renderer) NewPageView(template string, handlerFunc HandlerFunc) View {
 }
 
 // module level define uses default template exec
-func NewPageView(template string, handlerFunc HandlerFunc) View {
+func NewView(template string, handlerFunc HandlerFunc) View {
 	view := &viewImpl{
 		template: template,
 		handler:  handlerFunc,
