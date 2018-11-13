@@ -6,7 +6,7 @@ import (
 )
 
 func Routes(server page.Server, m page.Mux, renderer *treetop.Renderer) {
-	pageView := renderer.NewPageView(
+	pageView := renderer.NewView(
 		"{{ .Template }}",
 		{{ if .OverrideHandler -}}
 		{{ .Handler }},
