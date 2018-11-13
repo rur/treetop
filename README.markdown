@@ -88,7 +88,7 @@ The Treetop Go library provides utilities for writing compatible HTTP responses.
 
 The Treetop library includes an abstraction for creating more complex networks of handlers. The 'PageView' API is available for building handler instances which take advantage of the template inheritance feature supported by the Go standard library<sup>(1)</sup>.
 
-    base := treetop.NewPageView("base.templ.html", baseHandler)
+    base := treetop.NewView("base.templ.html", baseHandler)
     landing := base.SubView(
         "content",
         "landing.templ.html",

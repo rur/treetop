@@ -8,7 +8,7 @@ import (
 func Test_renderer_new_page(t *testing.T) {
 	renderer := NewRenderer(DefaultTemplateExec)
 
-	page := renderer.NewPageView("base.templ.html", Noop)
+	page := renderer.NewView("base.templ.html", Noop)
 
 	page.DefaultSubView("A", "a.templ.html", Noop)
 	def := page.SubView("B", "b.templ.html", Noop)
