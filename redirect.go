@@ -57,6 +57,14 @@ func SeeOtherPage(w http.ResponseWriter, req *http.Request, location string) boo
 	return true
 }
 
+// Helper that will do a treetop 'SeeOtherPage' redirect if the request is for a partial
+// or fall back to a standard HTTP redirect otherwise using the status code supplied.
+func Redirect(w http.ResponseWriter, req *http.Request, location string, status int) {
+	if ok := SeeOtherPage(w, req, location); !ok {
+		http.Redirect(w, req, location, status)
+	}
+}
+
 // Lifted from golang codebase,
 // see issue https://go-review.googlesource.com/c/go/+/31732
 func hexEscapeNonASCII(s string) string {
