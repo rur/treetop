@@ -75,14 +75,14 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	// TODO: use buffer pool
 	var buf bytes.Buffer
 
-	dw := &dataWriter{
+	rsp := &responseImpl{
 		ResponseWriter: resp,
 		context:        ctx,
 		responseId:     responseID,
 		partial:        part,
 	}
 
-	if err := dw.execute(&buf, h.Renderer, req); err != nil {
+	if err := rsp.execute(&buf, h.Renderer, req); err != nil {
 		switch err {
 		case errRespWritten:
 			// a response has been written, abort treetop response
@@ -100,7 +100,7 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		// Execute postscript templates for partial requests only
 		// each rendered template will be appended to the content body.
 		for index := 0; index < len(h.Postscript); index++ {
-			psDw := &dataWriter{
+			psDw := &responseImpl{
 				ResponseWriter: resp,
 				context:        ctx,
 				responseId:     responseID,
@@ -130,8 +130,8 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	resp.Header().Set("Vary", "Accept")
 
 	// if a status code was specified, use it. Otherwise fallback to the net/http default.
-	if dw.status > 0 {
-		resp.WriteHeader(dw.status)
+	if rsp.status > 0 {
+		resp.WriteHeader(rsp.status)
 	}
 	buf.WriteTo(resp)
 }

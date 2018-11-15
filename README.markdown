@@ -22,7 +22,7 @@ _TODO: Add more examples_
 
 ### Why was this created?
 
-Multi-page web applications are secure, well supported and promote loose coupling. They are a great solution for systems with a broad range of content or that encapsulate other complex systems. The main drawback versus native or single-page apps is interactivity. Modern software must deliver a modern user experience; linking documents together doesn't always cut it.
+Multi-page web applications are secure, well supported and promote loose coupling. They are a great solution for systems with a broad range of content or that encapsulate other complex systems. A major drawback versus native or single-page apps is interactivity. Modern software must deliver a modern user experience; linking documents together doesn't always cut it.
 
 Treetop is a prototype which aims to close the gap by extending conventional multi-page endpoints with 'partials' and 'fragments'. Treetop endpoints are capable of rendering a valid HTML document, or snippets for modifying a loaded page, depending upon which is requested.
 
@@ -113,9 +113,9 @@ All handler instances implement the `http.Handler` interface so you are free to 
 
 Each template file path is paired with a data handler. This function is responsible for yielding execution data for the corresponding template. For example,
 
-    func contactSubmitHandler(dw treetop.DataWriter, req *http.Request) {
+    func contactSubmitHandler(rsp treetop.Response, req *http.Request) {
         // do stuff...
-        dw.Data("Say Thanks!")
+        rsp.Data("Thanks friend!")
     }
 
 The standard Go [html/template](https://golang.org/pkg/html/template/) library is used under the hood. However, a preferred engine can be configured without much fuss (once it supports inheritance).

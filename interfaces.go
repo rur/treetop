@@ -6,17 +6,18 @@ import (
 	"net/http"
 )
 
-type DataWriter interface {
+type Response interface {
 	http.ResponseWriter
 	Data(interface{})
 	Status(int)
-	BlockData(string, *http.Request) (interface{}, bool)
+	Delegate(string, *http.Request) (interface{}, bool)
+	DelegateWithDefault(string, *http.Request, interface{}) interface{}
 	ResponseId() uint32
 	Context() context.Context
 }
 
 type TemplateExec func(io.Writer, []string, interface{}) error
-type HandlerFunc func(DataWriter, *http.Request)
+type HandlerFunc func(Response, *http.Request)
 
 type View interface {
 	SubView(string, string, HandlerFunc) View

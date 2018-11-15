@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func Test_dataWriter_BlockData(t *testing.T) {
+func Test_responseImpl_Delegate(t *testing.T) {
 	type fields struct {
 		http.ResponseWriter
 		responseId      uint32
@@ -76,9 +76,9 @@ func Test_dataWriter_BlockData(t *testing.T) {
 					Blocks: []Partial{
 						Partial{
 							Extends: "some-block",
-							HandlerFunc: func(dw DataWriter, _ *http.Request) {
-								dw.Status(501)
-								dw.Data("Not Implemented")
+							HandlerFunc: func(rsp Response, _ *http.Request) {
+								rsp.Status(501)
+								rsp.Data("Not Implemented")
 							},
 						},
 					},
@@ -101,8 +101,8 @@ func Test_dataWriter_BlockData(t *testing.T) {
 					Blocks: []Partial{
 						Partial{
 							Extends: "some-block",
-							HandlerFunc: func(dw DataWriter, _ *http.Request) {
-								dw.Data(fmt.Sprintf("Response token %v", dw.ResponseId()))
+							HandlerFunc: func(rsp Response, _ *http.Request) {
+								rsp.Data(fmt.Sprintf("Response token %v", rsp.ResponseId()))
 							},
 						},
 					},
@@ -139,7 +139,7 @@ func Test_dataWriter_BlockData(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dw := &dataWriter{
+			rsp := &responseImpl{
 				ResponseWriter:  tt.fields.ResponseWriter,
 				responseId:      tt.fields.responseId,
 				responseWritten: tt.fields.responseWritten,
@@ -148,15 +148,15 @@ func Test_dataWriter_BlockData(t *testing.T) {
 				status:          tt.fields.status,
 				partial:         &tt.fields.partial,
 			}
-			got, got1 := dw.BlockData(tt.args.name, tt.args.req)
+			got, got1 := rsp.Delegate(tt.args.name, tt.args.req)
 			if !reflect.DeepEqual(got, tt.data) {
-				t.Errorf("dataWriter.BlockData() got = %v, want %v", got, tt.data)
+				t.Errorf("responseImpl.Delegate() got = %v, want %v", got, tt.data)
 			}
 			if got1 != tt.flag {
-				t.Errorf("dataWriter.BlockData() flag = %v, want %v", got1, tt.flag)
+				t.Errorf("responseImpl.Delegate() flag = %v, want %v", got1, tt.flag)
 			}
-			if dw.status != tt.status {
-				t.Errorf("dataWriter.status = %v, want %v", dw.status, tt.status)
+			if rsp.status != tt.status {
+				t.Errorf("responseImpl.status = %v, want %v", rsp.status, tt.status)
 			}
 		})
 	}

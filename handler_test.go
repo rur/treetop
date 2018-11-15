@@ -30,9 +30,9 @@ func TestHandler_ServeHTTP(t *testing.T) {
 	cycle := Partial{
 		Extends:  "root",
 		Template: "test.templ.html",
-		HandlerFunc: func(dw DataWriter, req *http.Request) {
-			d, _ := dw.BlockData("testblock", req)
-			dw.Data(fmt.Sprintf("Loaded sub data: %s", d))
+		HandlerFunc: func(rsp Response, req *http.Request) {
+			d, _ := rsp.Delegate("testblock", req)
+			rsp.Data(fmt.Sprintf("Loaded sub data: %s", d))
 		},
 		Blocks: []Partial{
 			{
@@ -86,9 +86,9 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			fields: fields{
 				Partial: &Partial{
 					Template: "test.templ.html",
-					HandlerFunc: func(dw DataWriter, req *http.Request) {
-						d, _ := dw.BlockData("testblock", req)
-						dw.Data(fmt.Sprintf("Loaded sub data: %s", d))
+					HandlerFunc: func(rsp Response, req *http.Request) {
+						d, _ := rsp.Delegate("testblock", req)
+						rsp.Data(fmt.Sprintf("Loaded sub data: %s", d))
 					},
 					Blocks: []Partial{
 						{
@@ -241,13 +241,13 @@ func captureOutput(f func()) string {
 }
 
 func blockDebug(blocknames []string) HandlerFunc {
-	return func(dw DataWriter, req *http.Request) {
+	return func(rsp Response, req *http.Request) {
 		var d []struct {
 			Block string
 			Data  interface{}
 		}
 		for _, n := range blocknames {
-			data, ok := dw.BlockData(n, req)
+			data, ok := rsp.Delegate(n, req)
 			if ok {
 				d = append(
 					d,
@@ -258,7 +258,7 @@ func blockDebug(blocknames []string) HandlerFunc {
 				)
 			}
 		}
-		dw.Data(d)
+		rsp.Data(d)
 	}
 }
 

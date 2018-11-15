@@ -9,7 +9,7 @@ import (
 
 var errRespWritten = errors.New("Response headers have already been written")
 
-type dataWriter struct {
+type responseImpl struct {
 	http.ResponseWriter
 	responseId      uint32
 	context         context.Context
@@ -21,27 +21,27 @@ type dataWriter struct {
 }
 
 // Implement http.ResponseWriter interface by delegating to embedded instance
-func (dw *dataWriter) Header() http.Header {
-	return dw.ResponseWriter.Header()
+func (rsp *responseImpl) Header() http.Header {
+	return rsp.ResponseWriter.Header()
 }
 
 // Implement http.ResponseWriter interface by delegating to embedded instance
-func (dw *dataWriter) Write(b []byte) (int, error) {
-	dw.responseWritten = true
-	return dw.ResponseWriter.Write(b)
+func (rsp *responseImpl) Write(b []byte) (int, error) {
+	rsp.responseWritten = true
+	return rsp.ResponseWriter.Write(b)
 }
 
 // Implement http.ResponseWriter interface by delegating to embedded instance
-func (dw *dataWriter) WriteHeader(statusCode int) {
-	dw.responseWritten = true
-	dw.ResponseWriter.WriteHeader(statusCode)
+func (rsp *responseImpl) WriteHeader(statusCode int) {
+	rsp.responseWritten = true
+	rsp.ResponseWriter.WriteHeader(statusCode)
 }
 
 // Handler pass down data for template execution
 // If called multiple times on the final call will to observed
-func (dw *dataWriter) Data(d interface{}) {
-	dw.dataCalled = true
-	dw.data = d
+func (rsp *responseImpl) Data(d interface{}) {
+	rsp.dataCalled = true
+	rsp.data = d
 }
 
 // Indicate what the HTTP status should be for the response.
@@ -51,9 +51,9 @@ func (dw *dataWriter) Data(d interface{}) {
 //
 // For example, given: Bad Request, Unauthorized and Internal Server Error.
 // Status values are differentiated as follows, 400 < 401 < 500, so 'Internal Server Error' wins!
-func (dw *dataWriter) Status(status int) {
-	if status > dw.status {
-		dw.status = status
+func (rsp *responseImpl) Status(status int) {
+	if status > rsp.status {
+		rsp.status = status
 	}
 }
 
@@ -61,17 +61,17 @@ func (dw *dataWriter) Status(status int) {
 //
 // The second return value indicates whether the delegated handler called Data(...)
 // or not. This is necessary to discern the meaning of a `nil` data value.
-func (dw *dataWriter) BlockData(name string, req *http.Request) (interface{}, bool) {
+func (rsp *responseImpl) Delegate(name string, req *http.Request) (interface{}, bool) {
 	// don't do anything if a response has already been written
-	if dw.responseWritten {
+	if rsp.responseWritten {
 		return nil, false
 	}
 	var part *Partial
 	// 1. loop children of the template
-	for i := 0; i < len(dw.partial.Blocks); i++ {
+	for i := 0; i < len(rsp.partial.Blocks); i++ {
 		// 2. find a child-template which extends the named block
-		if dw.partial.Blocks[i].Extends == name {
-			part = &dw.partial.Blocks[i]
+		if rsp.partial.Blocks[i].Extends == name {
+			part = &rsp.partial.Blocks[i]
 			break
 		}
 	}
@@ -79,21 +79,21 @@ func (dw *dataWriter) BlockData(name string, req *http.Request) (interface{}, bo
 		// a template which extends block name was not found, return nothing
 		return nil, false
 	}
-	// 3. construct a sub dataWriter
-	subWriter := dataWriter{
-		ResponseWriter: dw.ResponseWriter,
-		responseId:     dw.responseId,
-		context:        dw.context,
+	// 3. construct a sub responseImpl
+	subWriter := responseImpl{
+		ResponseWriter: rsp.ResponseWriter,
+		responseId:     rsp.responseId,
+		context:        rsp.context,
 		partial:        part,
 	}
 	// 4. invoke handler
 	part.HandlerFunc(&subWriter, req)
 	if subWriter.responseWritten {
-		dw.responseWritten = true
+		rsp.responseWritten = true
 		return nil, false
 	}
 	// 5. adopt status of sub handler (if applicable, see .Status doc)
-	dw.Status(subWriter.status)
+	rsp.Status(subWriter.status)
 	// 6. return resulting data and flag indicating if .Data(...) was called
 	if subWriter.dataCalled {
 		return subWriter.data, true
@@ -102,34 +102,42 @@ func (dw *dataWriter) BlockData(name string, req *http.Request) (interface{}, bo
 	}
 }
 
+func (rsp *responseImpl) DelegateWithDefault(name string, req *http.Request, dfl interface{}) interface{} {
+	if data, ok := rsp.Delegate(name, req); !ok {
+		return dfl
+	} else {
+		return data
+	}
+}
+
 // context which allows request to be cancelled
-func (dw *dataWriter) Context() context.Context {
-	return dw.context
+func (rsp *responseImpl) Context() context.Context {
+	return rsp.context
 }
 
 // Locally unique ID for Treetop HTTP response. This is intended to be used to keep track of
 // the request as is passes between handlers.
-func (dw *dataWriter) ResponseId() uint32 {
-	return dw.responseId
+func (rsp *responseImpl) ResponseId() uint32 {
+	return rsp.responseId
 }
 
 // Load data from handlers hierarchy and execute template. Body will be written to IO writer passed in.
-func (dw *dataWriter) execute(body io.Writer, exec TemplateExec, req *http.Request) error {
-	dw.partial.HandlerFunc(dw, req)
-	if dw.responseWritten {
+func (rsp *responseImpl) execute(body io.Writer, exec TemplateExec, req *http.Request) error {
+	rsp.partial.HandlerFunc(rsp, req)
+	if rsp.responseWritten {
 		// response headers were already sent by one of the handlers, nothing left to do
 		return errRespWritten
 	}
 
 	// Topo-sort of templates connected via blocks. The order is important for how template inheritance is resolved.
 	// TODO: The result should not change between requests so cache it when the handler instance is created.
-	templates, err := dw.partial.TemplateList()
+	templates, err := rsp.partial.TemplateList()
 	if err != nil {
 		return err
 	}
 
 	// execute the templates with data loaded from handlers
-	if tplErr := exec(body, templates, dw.data); tplErr != nil {
+	if tplErr := exec(body, templates, rsp.data); tplErr != nil {
 		return tplErr
 	}
 	return nil
