@@ -120,10 +120,10 @@ Each template file path is paired with a data handler. This function is responsi
         return "Thanks friend!"
     }
 
-Hierarchy works by chaining handlers together to assemble the various levels of template data into one data structure.
+Hierarchy works by chaining handlers together to assemble tiers of template data into one data structure.
 
-    // parent view
-    func landingHandler(rsp treetop.Response, req *http.Request) interface{} {
+    // top-level handler delegates 'content' data loading to a sub handler
+    func baseHandler(rsp treetop.Response, req *http.Request) interface{} {
         return struct{
             Content interface{}
         }{
@@ -131,7 +131,7 @@ Hierarchy works by chaining handlers together to assemble the various levels of 
         }
     }
 
-    // 'content' sub-view
+    // sub-view which has the option to delegate further
     func contactHandler(_ treetop.Response, _ *http.Request) interface{} {
         return "...Contact form template data..."
     }
