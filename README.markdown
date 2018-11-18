@@ -113,9 +113,27 @@ All handler instances implement the `http.Handler` interface so you are free to 
 
 Each template file path is paired with a data handler. This function is responsible for yielding execution data for the corresponding template. For example,
 
-    func contactSubmitHandler(rsp treetop.Response, req *http.Request) {
-        // do stuff...
-        rsp.Data("Thanks friend!")
+
+    func contactSubmitHandler(_ treetop.Response, req *http.Request) interface{} {
+        // ...handle request here...
+        // data for template
+        return "Thanks friend!"
+    }
+
+Hierarchy works by chaining handlers together to assemble the various levels of template data into one data structure.
+
+    // parent view
+    func landingHandler(rsp treetop.Response, req *http.Request) interface{} {
+        return struct{
+            Content interface{}
+        }{
+            Content: rsp.HandlePartial("content", req),
+        }
+    }
+
+    // 'content' sub-view
+    func contactHandler(_ treetop.Response, _ *http.Request) interface{} {
+        return "...Contact form template data..."
     }
 
 The standard Go [html/template](https://golang.org/pkg/html/template/) library is used under the hood. However, a preferred engine can be configured without much fuss (once it supports inheritance).

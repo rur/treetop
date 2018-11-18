@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func Test_responseImpl_Delegate(t *testing.T) {
+func Test_responseImpl_PartialHandler(t *testing.T) {
 	type fields struct {
 		http.ResponseWriter
 		responseId      uint32
@@ -28,7 +28,6 @@ func Test_responseImpl_Delegate(t *testing.T) {
 		fields fields
 		args   args
 		data   interface{}
-		flag   bool
 		status int
 	}{
 		{
@@ -43,7 +42,6 @@ func Test_responseImpl_Delegate(t *testing.T) {
 				req:  req,
 			},
 			data: nil,
-			flag: false,
 		},
 		{
 			name: "Simple data",
@@ -64,7 +62,6 @@ func Test_responseImpl_Delegate(t *testing.T) {
 				req:  req,
 			},
 			data: "This is a test",
-			flag: true,
 		},
 		{
 			name: "Adopt sub-handler HTTP status",
@@ -76,9 +73,9 @@ func Test_responseImpl_Delegate(t *testing.T) {
 					Blocks: []Partial{
 						Partial{
 							Extends: "some-block",
-							HandlerFunc: func(rsp Response, _ *http.Request) {
+							HandlerFunc: func(rsp Response, _ *http.Request) interface{} {
 								rsp.Status(501)
-								rsp.Data("Not Implemented")
+								return "Not Implemented"
 							},
 						},
 					},
@@ -89,7 +86,6 @@ func Test_responseImpl_Delegate(t *testing.T) {
 				req:  req,
 			},
 			data:   "Not Implemented",
-			flag:   true,
 			status: 501,
 		},
 		{
@@ -101,8 +97,8 @@ func Test_responseImpl_Delegate(t *testing.T) {
 					Blocks: []Partial{
 						Partial{
 							Extends: "some-block",
-							HandlerFunc: func(rsp Response, _ *http.Request) {
-								rsp.Data(fmt.Sprintf("Response token %v", rsp.ResponseId()))
+							HandlerFunc: func(rsp Response, _ *http.Request) interface{} {
+								return fmt.Sprintf("Response token %v", rsp.ResponseId())
 							},
 						},
 					},
@@ -113,7 +109,6 @@ func Test_responseImpl_Delegate(t *testing.T) {
 				req:  req,
 			},
 			data: "Response token 1234",
-			flag: true,
 		},
 		{
 			name: "Block not found",
@@ -134,26 +129,20 @@ func Test_responseImpl_Delegate(t *testing.T) {
 				req:  req,
 			},
 			data: nil,
-			flag: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rsp := &responseImpl{
-				ResponseWriter:  tt.fields.ResponseWriter,
-				responseId:      tt.fields.responseId,
-				responseWritten: tt.fields.responseWritten,
-				dataCalled:      tt.fields.dataCalled,
-				data:            tt.fields.data,
-				status:          tt.fields.status,
-				partial:         &tt.fields.partial,
+				ResponseWriter: tt.fields.ResponseWriter,
+				responseId:     tt.fields.responseId,
+				finished:       tt.fields.responseWritten,
+				status:         tt.fields.status,
+				partial:        &tt.fields.partial,
 			}
-			got, got1 := rsp.Delegate(tt.args.name, tt.args.req)
+			got := rsp.HandlePartial(tt.args.name, tt.args.req)
 			if !reflect.DeepEqual(got, tt.data) {
-				t.Errorf("responseImpl.Delegate() got = %v, want %v", got, tt.data)
-			}
-			if got1 != tt.flag {
-				t.Errorf("responseImpl.Delegate() flag = %v, want %v", got1, tt.flag)
+				t.Errorf("responseImpl.PartialHandler() got = %v, want %v", got, tt.data)
 			}
 			if rsp.status != tt.status {
 				t.Errorf("responseImpl.status = %v, want %v", rsp.status, tt.status)

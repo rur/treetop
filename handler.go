@@ -83,15 +83,15 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	if err := rsp.execute(&buf, h.Renderer, req); err != nil {
-		switch err {
-		case errRespWritten:
-			// a response has been written, abort treetop response
-			return
-		default:
-			log.Printf(err.Error())
-			http.Error(resp, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
+		log.Printf(err.Error())
+		http.Error(resp, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	} else if rsp.finished {
+		// http response has already been resolved somehow, do not proceed
+		return
+	} else {
+		// mark response instance as finished
+		rsp.finished = true
 	}
 
 	resp.Header().Set("Content-Type", contentType)
@@ -100,23 +100,23 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		// Execute postscript templates for partial requests only
 		// each rendered template will be appended to the content body.
 		for index := 0; index < len(h.Postscript); index++ {
-			psDw := &responseImpl{
+			postRsp := &responseImpl{
 				ResponseWriter: resp,
 				context:        ctx,
 				responseId:     responseID,
 				partial:        &h.Postscript[index],
 			}
 
-			if err := psDw.execute(&buf, h.Renderer, req); err != nil {
-				switch err {
-				case errRespWritten:
-					// a response has been written, abort treetop response
-					return
-				default:
-					log.Printf(err.Error())
-					http.Error(resp, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-					return
-				}
+			if err := postRsp.execute(&buf, h.Renderer, req); err != nil {
+				log.Printf(err.Error())
+				http.Error(resp, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			} else if postRsp.finished {
+				// http response has already been resolved somehow, do not proceed
+				return
+			} else {
+				// mark response instance as finished
+				postRsp.finished = true
 			}
 		}
 

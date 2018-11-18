@@ -8,16 +8,15 @@ import (
 
 type Response interface {
 	http.ResponseWriter
-	Data(interface{})
-	Status(int)
-	Delegate(string, *http.Request) (interface{}, bool)
-	DelegateWithDefault(string, *http.Request, interface{}) interface{}
+	Status(int) int
+	Done() bool
+	HandlePartial(string, *http.Request) interface{}
 	ResponseId() uint32
 	Context() context.Context
 }
 
 type TemplateExec func(io.Writer, []string, interface{}) error
-type HandlerFunc func(Response, *http.Request)
+type HandlerFunc func(Response, *http.Request) interface{}
 
 type View interface {
 	SubView(string, string, HandlerFunc) View
