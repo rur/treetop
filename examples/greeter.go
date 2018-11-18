@@ -56,15 +56,14 @@ func main() {
 	log.Fatal(http.ListenAndServe(":3000", nil))
 }
 
-func baseHandler(w treetop.DataWriter, req *http.Request) {
-	msg, _ := w.BlockData("message", req)
-	w.Data(struct {
+func baseHandler(rsp treetop.Response, req *http.Request) interface{} {
+	return struct {
 		Message interface{}
 	}{
-		Message: msg,
-	})
+		Message: rsp.HandlePartial("message", req),
+	}
 }
 
-func greetingHandler(w treetop.DataWriter, req *http.Request) {
-	w.Data(req.URL.Query().Get("name"))
+func greetingHandler(_ treetop.Response, req *http.Request) interface{} {
+	return req.URL.Query().Get("name")
 }

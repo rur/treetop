@@ -5,26 +5,23 @@ import (
 	"strings"
 )
 
-func Noop(_ DataWriter, _ *http.Request) {}
+func Noop(_ Response, _ *http.Request) interface{} { return nil }
 
 func Constant(data interface{}) HandlerFunc {
-	return func(dw DataWriter, _ *http.Request) {
-		dw.Data(data)
+	return func(rsp Response, _ *http.Request) interface{} {
+		return data
 	}
 }
 
 func Delegate(blockname string) HandlerFunc {
-	return func(dw DataWriter, req *http.Request) {
-		data, ok := dw.BlockData(blockname, req)
-		if ok {
-			dw.Data(data)
-		}
+	return func(rsp Response, req *http.Request) interface{} {
+		return rsp.HandlePartial(blockname, req)
 	}
 }
 
 func RequestHandler(f func(*http.Request) interface{}) HandlerFunc {
-	return func(dw DataWriter, req *http.Request) {
-		dw.Data(f(req))
+	return func(_ Response, req *http.Request) interface{} {
+		return f(req)
 	}
 }
 
