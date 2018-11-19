@@ -12,25 +12,18 @@ import (
 // Extends: {{ $handler.Extends }}{{ end }}{{ if $handler.Doc }}
 // Doc: {{ $handler.Doc }}
 {{- end }}{{ if len $handler.Blocks}}
-func {{ $handler.Identifier }}(rsc page.Resources, w treetop.DataWriter, req *http.Request) {
-	{{ range $index, $block := .Blocks -}}
-	{{ $block.Identifier }}, ok := w.BlockData("{{ $block.Name }}", req)
-	if !ok {
-		// default {{ $block.Name }} data
-		{{ $block.Identifier }} = nil
-	}
-	{{ end }}
-	w.Data(struct {
+func {{ $handler.Identifier }}(rsc page.Resources, rsp treetop.Response, req *http.Request) interface{} {
+	return  struct {
 		HandlerInfo string{{ range $index, $block := .Blocks }}
 		{{ $block.FieldName }} interface{}
 		{{- end }}
 	}{
 		HandlerInfo: "{{ $handler.Info }}",{{ range $index, $block := .Blocks }}
-		{{ $block.FieldName }}: {{ $block.Identifier }},
+		{{ $block.FieldName }}: rsp.HandlePartial("{{ $block.Name }}", req),
 		{{- end }}
-	})
+	}
 }{{ else }}
-func {{ $handler.Identifier }}(rsc page.Resources, w treetop.DataWriter, req *http.Request) {
-	w.Data("{{ $handler.Info }} template data here!")
+func {{ $handler.Identifier }}(rsc page.Resources, rsp treetop.Response, req *http.Request) interface{} {
+	return  "{{ $handler.Info }} template data here!"
 }{{ end }}
 {{ end }}

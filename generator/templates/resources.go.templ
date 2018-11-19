@@ -20,7 +20,7 @@ type Mux interface {
 	Handle(pattern string, handler http.Handler)
 }
 
-type ResourcesHandler func(Resources, treetop.DataWriter, *http.Request)
+type ResourcesHandler func(Resources, treetop.Response, *http.Request) interface{}
 
 type Server interface {
 	Bind(ResourcesHandler) treetop.HandlerFunc
@@ -65,10 +65,10 @@ func (s *server) delete(respId uint32) {
 
 // wrap ;
 func (s *server) Bind(f ResourcesHandler) treetop.HandlerFunc {
-	return func(w treetop.DataWriter, req *http.Request) {
+	return func(rsp treetop.Response, req *http.Request) interface{} {
 		// Here the Treetop response ID is being used to permit resources to be shared
 		// between data handlers, within the scope of a request.
-		respId := w.ResponseId()
+		respId := rsp.ResponseId()
 		rsc := s.get(respId)
 
 		if rsc == nil {
@@ -76,11 +76,11 @@ func (s *server) Bind(f ResourcesHandler) treetop.HandlerFunc {
 			rsc = &Resources{true}
 			s.set(respId, rsc)
 			go func() {
-				<-w.Context().Done()
+				<-rsp.Context().Done()
 				// assume that the request lifecycle is finished, just free up resources
 				s.delete(respId)
 			}()
 		}
-		f(*rsc, w, req)
+		return f(*rsc, rsp, req)
 	}
 }
