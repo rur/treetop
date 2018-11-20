@@ -15,7 +15,7 @@ var token uint32
 // Generate a token which can be used to identify treetop
 // responses *locally*. The only uniqueness requirement
 // is that concurrent active requests must not possess the same value.
-func nextResponseId() uint32 {
+func nextResponseID() uint32 {
 	return atomic.AddUint32(&token, 1)
 }
 
@@ -46,7 +46,7 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		return
 	default:
 	}
-	responseID := nextResponseId()
+	responseID := nextResponseID()
 	ctx, cancel := context.WithCancel(req.Context())
 	defer cancel() // Cancel treetop ctx when handler has done it's work.
 
@@ -78,7 +78,7 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	rsp := &responseImpl{
 		ResponseWriter: resp,
 		context:        ctx,
-		responseId:     responseID,
+		responseID:     responseID,
 		partial:        part,
 	}
 
@@ -103,7 +103,7 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 			postRsp := &responseImpl{
 				ResponseWriter: resp,
 				context:        ctx,
-				responseId:     responseID,
+				responseID:     responseID,
 				partial:        &h.Postscript[index],
 			}
 

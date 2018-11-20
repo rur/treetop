@@ -8,7 +8,7 @@ import (
 
 type responseImpl struct {
 	http.ResponseWriter
-	responseId uint32
+	responseID uint32
 	context    context.Context
 	finished   bool
 	status     int
@@ -75,7 +75,7 @@ func (rsp *responseImpl) HandlePartial(name string, req *http.Request) interface
 	// 3. construct a sub responseImpl
 	subResp := responseImpl{
 		ResponseWriter: rsp.ResponseWriter,
-		responseId:     rsp.responseId,
+		responseID:     rsp.responseID,
 		context:        rsp.context,
 		partial:        part,
 	}
@@ -100,8 +100,8 @@ func (rsp *responseImpl) Context() context.Context {
 
 // Locally unique ID for Treetop HTTP response. This is intended to be used to keep track of
 // the request as is passes between handlers.
-func (rsp *responseImpl) ResponseId() uint32 {
-	return rsp.responseId
+func (rsp *responseImpl) ResponseID() uint32 {
+	return rsp.responseID
 }
 
 // Load data from handlers hierarchy and execute template. Body will be written to IO writer passed in.

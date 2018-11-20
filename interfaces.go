@@ -11,7 +11,7 @@ type Response interface {
 	Status(int) int
 	Done() bool
 	HandlePartial(string, *http.Request) interface{}
-	ResponseId() uint32
+	ResponseID() uint32
 	Context() context.Context
 }
 
