@@ -15,10 +15,11 @@ var token uint32
 // Generate a token which can be used to identify treetop
 // responses *locally*. The only uniqueness requirement
 // is that concurrent active requests must not possess the same value.
-func nextResponseId() uint32 {
+func nextResponseID() uint32 {
 	return atomic.AddUint32(&token, 1)
 }
 
+// Partial represents a template partial in a treetop Handler
 type Partial struct {
 	Extends     string
 	Template    string
@@ -26,6 +27,8 @@ type Partial struct {
 	Blocks      []Partial
 }
 
+// Handler implements http.Handler interface. The struct contains all configuration
+// necessary for a hierarchical style treetop endpoint.
 type Handler struct {
 	// partial request template+handler dependency tree
 	Partial *Partial
@@ -38,7 +41,7 @@ type Handler struct {
 	Renderer TemplateExec
 }
 
-// implement http.Handler interface, see https://golang.org/pkg/net/http/?#Handler
+// Implementation of http.Handler interface, see https://golang.org/pkg/net/http/?#Handler
 func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	select {
 	case <-req.Context().Done():
@@ -46,7 +49,7 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		return
 	default:
 	}
-	responseID := nextResponseId()
+	responseID := nextResponseID()
 	ctx, cancel := context.WithCancel(req.Context())
 	defer cancel() // Cancel treetop ctx when handler has done it's work.
 
@@ -78,7 +81,7 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	rsp := &responseImpl{
 		ResponseWriter: resp,
 		context:        ctx,
-		responseId:     responseID,
+		responseID:     responseID,
 		partial:        part,
 	}
 
@@ -103,7 +106,7 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 			postRsp := &responseImpl{
 				ResponseWriter: resp,
 				context:        ctx,
-				responseId:     responseID,
+				responseID:     responseID,
 				partial:        &h.Postscript[index],
 			}
 
@@ -136,6 +139,9 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	buf.WriteTo(resp)
 }
 
+// Include allows one or more unrelated View configurations to be combined with the current
+// handler instance. Unrelated parts of the page can be rendered with the same handler
+// and existing blocks in the current Handler can be further shadowed.
 func (h *Handler) Include(views ...View) *Handler {
 	// Create a new handler which incorporates the templates from the supplied partial definition
 	newHandler := Handler{
@@ -159,7 +165,8 @@ func (h *Handler) Include(views ...View) *Handler {
 	return &newHandler
 }
 
-// obtain a list of all partial templates dependent through block associations, sorted topologically
+// TemplateList is used to obtain all partial templates dependent through block
+// associations, sorted topologically
 func (p *Partial) TemplateList() ([]string, error) {
 	tpls, err := aggregateTemplates(p.Blocks, p.Extends)
 	if err != nil {
@@ -233,7 +240,6 @@ func insertPartial(parent, child *Partial, seen ...string) *Partial {
 	}
 	if found {
 		return &copy
-	} else {
-		return nil
 	}
+	return nil
 }
