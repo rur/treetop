@@ -68,7 +68,7 @@ func (s *server) Bind(f ResourcesHandler) treetop.HandlerFunc {
 	return func(rsp treetop.Response, req *http.Request) interface{} {
 		// Here the Treetop response ID is being used to permit resources to be shared
 		// between data handlers, within the scope of a request.
-		respId := rsp.ResponseId()
+		respId := rsp.ResponseID()
 		rsc := s.get(respId)
 
 		if rsc == nil {
