@@ -22,11 +22,11 @@ _TODO: Add more examples_
 
 ### Why was this created?
 
-Multi-page web apps are ideal when there is a lot of different content or a sophisticated backend. The main drawback versus client apps is interactivity. Modern apps must be interactive and linking documents together doesn't always cut it.
+Multi-page web apps are ideal when you have a lot of content or a sophisticated backend. The main drawback versus client apps is interactivity. Linking pages together doesn't always cut it.
 
-Treetop is a prototype which aims to close the gap by extending conventional multi-page endpoints with 'partials' and 'fragments'. Treetop endpoints are capable of rendering a valid HTML document, or snippets for modifying a loaded page, depending upon which is requested.
+Treetop is a prototype which aims to close the gap by extending the conventional model of multi-page navigation with partial page transitions. Treetop endpoints are capable of rendering a valid HTML document, or snippets to modify a loaded page as needed.
 
-The main focus of this implementation is to find an uncomplicated mechanism to achieve this, while staying as close as possible to the standard model of HTML over HTTP.
+No magic, or comp-sci exuberance. The focus is to find an uncomplicated mechanism to achieve this, while staying as close as possible to the standard model of HTML over HTTP.
 
 #### No client configuration necessary
 
