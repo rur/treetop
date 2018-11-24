@@ -22,7 +22,7 @@ _TODO: Add more examples_
 
 ### Why was this created?
 
-Multi-page web apps are ideal when you have a lot of content or a sophisticated backend. The main drawback versus client apps is interactivity. Linking pages together doesn't always cut it.
+Multi-page web apps are ideal when you have lots of content or a sophisticated backend. The main drawback versus client apps is interactivity. Linking pages together doesn't always cut it.
 
 Treetop is a prototype which aims to close the gap by extending the conventional model of multi-page navigation with partial page transitions. Treetop endpoints are capable of rendering a valid HTML document, or snippets to modify a loaded page as needed.
 
