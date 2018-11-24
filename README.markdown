@@ -22,7 +22,7 @@ _TODO: Add more examples_
 
 ### Why was this created?
 
-Multi-page web applications are secure, well supported and promote loose coupling. They are a great solution for systems with a broad range of content or that encapsulate other complex systems. A major drawback versus native or single-page apps is interactivity. Modern software must deliver a modern user experience; linking documents together doesn't always cut it.
+Multi-page web apps are ideal when there is a lot of different content or a sophisticated backend. The main drawback versus client apps is interactivity. Modern apps must be interactive and linking documents together doesn't always cut it.
 
 Treetop is a prototype which aims to close the gap by extending conventional multi-page endpoints with 'partials' and 'fragments'. Treetop endpoints are capable of rendering a valid HTML document, or snippets for modifying a loaded page, depending upon which is requested.
 
