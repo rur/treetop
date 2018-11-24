@@ -26,7 +26,7 @@ Multi-page web apps are ideal when you have a lot of content or a sophisticated 
 
 Treetop is a prototype which aims to close the gap by extending the conventional model of multi-page navigation with partial page transitions. Treetop endpoints are capable of rendering a valid HTML document, or snippets to modify a loaded page as needed.
 
-No magic, or comp-sci exuberance. The focus is to find an uncomplicated mechanism to achieve this, while staying as close as possible to the standard model of HTML over HTTP.
+No magic, or comp-sci exuberance. The purpose is to find an uncomplicated mechanism to achieve this, while staying as close as possible to the standard model of HTML over HTTP.
 
 #### No client configuration necessary
 
