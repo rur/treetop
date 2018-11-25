@@ -20,17 +20,15 @@ _TODO: Add more examples_
 
 ## Introduction
 
-### Why was this created?
+Multi-page web apps are an ideal choice for software that is content heavy or has a sophisticated backend. The main drawback versus client apps is interactivity. Linking pages together doesn't always cut it.
 
-Multi-page web apps are ideal when you have lots of content or a sophisticated backend. The main drawback versus client apps is interactivity. Linking pages together doesn't always cut it.
+Treetop is a prototype which aims to close the gap by extending the conventional model for multi-page navigation with partial page transitions. Treetop endpoints are capable of rendering either a valid HTML document, or snippets to modify a loaded page.
 
-Treetop is a prototype which aims to close the gap by extending the conventional model of multi-page navigation with partial page transitions. Treetop endpoints are capable of rendering a valid HTML document, or snippets to modify a loaded page as needed.
+The goal of this project is to find an uncomplicated mechanism that is compatible with the standard HTTP application model.
 
-No magic, or comp-sci exuberance. The purpose is to find an uncomplicated mechanism to achieve this, while staying as close as possible to the standard model of HTML over HTTP.
+### No client configuration necessary
 
-#### No client configuration necessary
-
-A JavaScript library is provided to help negotiate Treetop requests in the browser. While some component hooks are supported, this library does not require any specific configuration.
+A JS client library is provided to help mediate partial requests. Aside from optional component integration, no configuration is involved.
 
 For more information see [Treetop Client Library](https://github.com/rur/treetop-client).
 
