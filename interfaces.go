@@ -7,7 +7,7 @@ import (
 )
 
 // Response is the HandlerFunc facade for the treetop request response process.
-// It can be used to delegate handling to block and to track the resolutation of a
+// It can be used to delegate handling to block and to track the resolution of a
 // single request across multiple handlers.
 type Response interface {
 	http.ResponseWriter
@@ -18,7 +18,7 @@ type Response interface {
 	Context() context.Context
 }
 
-// TemplateExec interface is a signiture of a function which can be configured to
+// TemplateExec interface is a signature of a function which can be configured to
 // execute the templates with supplied data.
 type TemplateExec func(io.Writer, []string, interface{}) error
 
@@ -26,12 +26,10 @@ type TemplateExec func(io.Writer, []string, interface{}) error
 // partial data loading.
 type HandlerFunc func(Response, *http.Request) interface{}
 
-// View is an inteface for a hierarchical view configuartion. Named child views can be
+// View is an interface for a hierarchical view configuration. Named child views can be
 // added and a http.Handler instance can be derived.
 type View interface {
 	SubView(string, string, HandlerFunc) View
 	DefaultSubView(string, string, HandlerFunc) View
-	PageHandler() *Handler
-	PartialHandler() *Handler
-	FragmentHandler() *Handler
+	Handler() *Handler
 }

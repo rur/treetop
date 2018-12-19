@@ -60,7 +60,7 @@ func (t *viewImpl) DefaultSubView(blockName, template string, handler HandlerFun
 	return sub
 }
 
-func (t *viewImpl) PageHandler() *Handler {
+func (t *viewImpl) Handler() *Handler {
 	part := t.derivePartial(nil)
 	page := part
 	root := t
@@ -69,35 +69,12 @@ func (t *viewImpl) PageHandler() *Handler {
 		page = root.derivePartial(page)
 	}
 	handler := Handler{
+		Fragment: part,
 		Page:     page,
 		Renderer: t.renderer,
 	}
 
 	return &handler
-}
-
-func (t *viewImpl) PartialHandler() *Handler {
-	part := t.derivePartial(nil)
-	page := part
-	root := t
-	for root.extends != nil && root.extends.parent != nil {
-		root = root.extends.parent
-		page = root.derivePartial(page)
-	}
-	handler := Handler{
-		Partial:  part,
-		Page:     page,
-		Renderer: t.renderer,
-	}
-
-	return &handler
-}
-
-func (t *viewImpl) FragmentHandler() *Handler {
-	return &Handler{
-		Partial:  t.derivePartial(nil),
-		Renderer: t.renderer,
-	}
 }
 
 func (t *viewImpl) derivePartial(override *Partial) *Partial {
