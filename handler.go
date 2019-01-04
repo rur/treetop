@@ -19,6 +19,24 @@ func nextResponseID() uint32 {
 	return atomic.AddUint32(&token, 1)
 }
 
+func ViewHandler(view View, includes ...View) *Handler {
+	// Create a new handler which incorporates the templates from the supplied partial definition
+	newHandler := view.Handler()
+	for _, include := range includes {
+		iH := include.Handler()
+		if newPartial := insertPartial(newHandler.Fragment, iH.Fragment); newPartial != nil {
+			newHandler.Fragment = newPartial
+		} else {
+			// add it to postscript
+			newHandler.Postscript = append(newHandler.Postscript, *iH.Fragment)
+		}
+		if newPage := insertPartial(newHandler.Page, iH.Fragment); newPage != nil {
+			newHandler.Page = newPage
+		}
+	}
+	return newHandler
+}
+
 // Partial represents a template partial in a treetop Handler
 type Partial struct {
 	Extends     string
@@ -31,7 +49,7 @@ type Partial struct {
 // necessary for a hierarchical style treetop endpoint.
 type Handler struct {
 	// partial request template+handler dependency tree
-	Partial *Partial
+	Fragment *Partial
 	// full page request template+handler dependency tree
 	Page *Partial
 	// Handlers that will be appended to response *only* for a partial request
@@ -56,8 +74,8 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	var part *Partial
 	var contentType string
 	if IsTreetopRequest(req) {
-		part = h.Partial
-		if h.Partial == nil {
+		part = h.Fragment
+		if h.Fragment == nil {
 			// this is a page only handler, do not accept partial requests
 			http.Error(resp, http.StatusText(http.StatusNotAcceptable), http.StatusNotAcceptable)
 			return
@@ -145,24 +163,38 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 func (h *Handler) Include(views ...View) *Handler {
 	// Create a new handler which incorporates the templates from the supplied partial definition
 	newHandler := Handler{
-		h.Partial,
+		h.Fragment,
 		h.Page,
 		h.Postscript,
 		h.Renderer,
 	}
 	for _, view := range views {
-		iH := view.FragmentHandler()
-		if newPartial := insertPartial(newHandler.Partial, iH.Partial); newPartial != nil {
-			newHandler.Partial = newPartial
+		iH := view.Handler()
+		if newPartial := insertPartial(newHandler.Fragment, iH.Fragment); newPartial != nil {
+			newHandler.Fragment = newPartial
 		} else {
 			// add it to postscript
-			newHandler.Postscript = append(newHandler.Postscript, *iH.Partial)
+			newHandler.Postscript = append(newHandler.Postscript, *iH.Fragment)
 		}
-		if newPage := insertPartial(newHandler.Page, iH.Partial); newPage != nil {
+		if newPage := insertPartial(newHandler.Page, iH.Fragment); newPage != nil {
 			newHandler.Page = newPage
 		}
 	}
 	return &newHandler
+}
+
+func (h *Handler) PageOnly() *Handler {
+	return &Handler{
+		Page:     h.Page,
+		Renderer: h.Renderer,
+	}
+}
+
+func (h *Handler) FragmentOnly() *Handler {
+	return &Handler{
+		Fragment: h.Fragment,
+		Renderer: h.Renderer,
+	}
 }
 
 // TemplateList is used to obtain all partial templates dependent through block
