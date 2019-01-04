@@ -41,12 +41,9 @@ func Routes(server page.Server, m page.Mux, renderer *treetop.Renderer) {
 	nil // unknown entry type: {{ $entry.Type }}
 	{{- end }}
 	{{ end }}{{ range $index, $route := .Routes }}
-	m.Handle("{{ $route.Path }}", {{ $route.Reference }}
-	{{- if eq $route.Type "Page" }}.PageHandler()
-	{{- else if eq $route.Type "Partial" }}.PartialHandler()
-	{{- else if eq $route.Type "Fragment" }}.FragmentHandler()
-	{{- else }}
-	nil // unknown route type: {{ $route.Type }}
+	m.Handle("{{ $route.Path }}", treetop.ViewHandler({{ $route.Reference }})
+	{{- if eq $route.Type "Page" }}.PageOnly()
+	{{- else if eq $route.Type "Fragment" }}.FragmentOnly()
 	{{- end }})
 	{{- end }}
 }
