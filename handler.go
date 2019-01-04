@@ -22,6 +22,10 @@ func nextResponseID() uint32 {
 func ViewHandler(view View, includes ...View) *Handler {
 	// Create a new handler which incorporates the templates from the supplied partial definition
 	newHandler := view.Handler()
+
+	// Includes allows one or more unrelated View configurations to be combined with the primary
+	// handler instance. Unrelated parts of the page can be rendered with the same handler
+	// and existing blocks in the current Handler can be further shadowed.
 	for _, include := range includes {
 		iH := include.Handler()
 		if newPartial := insertPartial(newHandler.Fragment, iH.Fragment); newPartial != nil {
@@ -157,32 +161,6 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	buf.WriteTo(resp)
 }
 
-// Include allows one or more unrelated View configurations to be combined with the current
-// handler instance. Unrelated parts of the page can be rendered with the same handler
-// and existing blocks in the current Handler can be further shadowed.
-func (h *Handler) Include(views ...View) *Handler {
-	// Create a new handler which incorporates the templates from the supplied partial definition
-	newHandler := Handler{
-		h.Fragment,
-		h.Page,
-		h.Postscript,
-		h.Renderer,
-	}
-	for _, view := range views {
-		iH := view.Handler()
-		if newPartial := insertPartial(newHandler.Fragment, iH.Fragment); newPartial != nil {
-			newHandler.Fragment = newPartial
-		} else {
-			// add it to postscript
-			newHandler.Postscript = append(newHandler.Postscript, *iH.Fragment)
-		}
-		if newPage := insertPartial(newHandler.Page, iH.Fragment); newPage != nil {
-			newHandler.Page = newPage
-		}
-	}
-	return &newHandler
-}
-
 func (h *Handler) PageOnly() *Handler {
 	return &Handler{
 		Page:     h.Page,
@@ -192,8 +170,9 @@ func (h *Handler) PageOnly() *Handler {
 
 func (h *Handler) FragmentOnly() *Handler {
 	return &Handler{
-		Fragment: h.Fragment,
-		Renderer: h.Renderer,
+		Fragment:   h.Fragment,
+		Postscript: append([]Partial{}, h.Postscript...),
+		Renderer:   h.Renderer,
 	}
 }
 
