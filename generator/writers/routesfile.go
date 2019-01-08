@@ -10,12 +10,11 @@ import (
 )
 
 type pageBlockData struct {
-	Identifier string
-	Name       string
+	Name string
 }
 
 type pageEntryData struct {
-	Identifier      string
+	Assignment      string
 	Name            string
 	Extends         string
 	Block           string
@@ -23,16 +22,18 @@ type pageEntryData struct {
 	OverrideHandler bool
 	Type            string
 	Template        string
+	Path            string
 }
 
 type pageRouteData struct {
 	Reference string
 	Path      string
 	Type      string
+	Includes  []string
 }
 
 type pageTemplateData struct {
-	Identifier string
+	Assignment string
 	Path       string
 	Type       string
 }
@@ -48,23 +49,7 @@ type pageData struct {
 	Routes          []pageRouteData
 }
 
-func assignHandler(def *generator.PartialDef, name string) string {
-	if def.Path == "" && len(def.Blocks) == 0 {
-		return "_ ="
-	} else {
-		return name + " :="
-	}
-}
-
-func assignBlock(defs []generator.PartialDef, name string) string {
-	if len(defs) == 0 {
-		return "_ ="
-	} else {
-		return name + " :="
-	}
-}
-
-func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) (string, error) {
+func WriteRoutesFile(dir string, pageDef *generator.PartialDef, namespace string) (string, error) {
 	pageName, err := SanitizeName(pageDef.Name)
 	if err != nil {
 		return "", fmt.Errorf("Invalid page name '%s'.", err)
@@ -85,6 +70,7 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 			Reference: "pageView",
 			Path:      strings.Trim(pageDef.Path, " "),
 			Type:      "Page",
+			Includes:  append([]string{}, pageDef.Includes...),
 		})
 	}
 
@@ -104,6 +90,7 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 			blockEntries, blockRoutes, err := processEntries(
 				"pageView",
 				block.name,
+				[]string{pageDef.Name, partial.Name},
 				&partial,
 				filepath.Join("page", pageName, "templates", block.ident),
 				block.name,
@@ -124,6 +111,24 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 
 	if len(routes) == 0 {
 		return "", fmt.Errorf("Page '%s' does not have any routes!", pageName)
+	}
+
+	// process includes in routes by scanning entries for matching paths
+	pathMap := make(map[string]int)
+	for index, en := range entries {
+		if en.Path != "" {
+			pathMap[en.Path] = index
+		}
+	}
+	for _, route := range routes {
+		for i, incl := range route.Includes {
+			if j, ok := pathMap[incl]; ok {
+				route.Includes[i] = entries[j].Name
+				entries[j].Assignment = entries[j].Name + " :="
+			} else {
+				return "", fmt.Errorf("Failed to match include path '%s' to a sub view entry for route '%s'", incl, route.Path)
+			}
+		}
 	}
 
 	handler := pageDef.Handler
@@ -155,7 +160,7 @@ func WritePageFile(dir string, pageDef *generator.PartialDef, namespace string) 
 	return fileName, nil
 }
 
-func processEntries(extends, blockName string, def *generator.PartialDef, templatePath string, seen ...string) ([]pageEntryData, []pageRouteData, error) {
+func processEntries(extends, blockName string, names []string, def *generator.PartialDef, templatePath string, seen ...string) ([]pageEntryData, []pageRouteData, error) {
 	var entryType string
 	var entries []pageEntryData
 	var routes []pageRouteData
@@ -182,7 +187,6 @@ func processEntries(extends, blockName string, def *generator.PartialDef, templa
 	}
 
 	entry := pageEntryData{
-		Identifier:      assignHandler(def, entryName),
 		Name:            entryName,
 		Extends:         extends,
 		Block:           blockName,
@@ -190,12 +194,22 @@ func processEntries(extends, blockName string, def *generator.PartialDef, templa
 		OverrideHandler: def.Handler != "",
 		Type:            entryType,
 		Template:        template,
+		Path:            strings.Join(names, " > "),
+	}
+
+	// the assignment for an entry must be blanked if there are no routes or subviews
+	// assignment may be reinstated if this entry is used as an include for another route
+	if def.Path == "" && len(def.Blocks) == 0 {
+		entry.Assignment = "_ ="
+	} else {
+		entry.Assignment = entryName + " :="
 	}
 
 	if def.Path != "" {
 		route := pageRouteData{
 			Reference: entryName,
 			Path:      strings.Trim(def.Path, " "),
+			Includes:  append([]string{}, def.Includes...),
 		}
 		if def.Fragment {
 			route.Type = "Fragment"
@@ -224,6 +238,7 @@ func processEntries(extends, blockName string, def *generator.PartialDef, templa
 			blockEntries, blockRoutes, err := processEntries(
 				entry.Name,
 				block.name,
+				append(names, partial.Name),
 				&partial,
 				filepath.Join(templatePath, block.ident),
 				append(seen, block.name)...,

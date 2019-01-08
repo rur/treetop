@@ -145,9 +145,9 @@ func generate(outDir string, sitemap generator.Sitemap) ([]string, error) {
 			return created, fmt.Errorf("Error creating template dir for page '%s'. %s", def.Name, err)
 		}
 
-		file, err = writers.WritePageFile(pageDir, &def, sitemap.Namespace)
+		file, err = writers.WriteRoutesFile(pageDir, &def, sitemap.Namespace)
 		if err != nil {
-			return created, fmt.Errorf("Error creating page.go file for '%s'. %s", def.Name, err)
+			return created, fmt.Errorf("Error creating routes.go file for '%s'. %s", def.Name, err)
 		}
 		created = append(created, path.Join("page", pageName, file))
 

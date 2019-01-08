@@ -60,6 +60,8 @@ pages:
         - name: nav
           default: true
 
+        - name: nav2
+
       wrapper:
         - name: all-users
           default: true
@@ -73,24 +75,36 @@ pages:
               - default: true
                 name: roles-list
                 path: /admin/users/{user}/roles
+                includes:
+                  - user > nav
 
               - name: roles-edit
                 path: /admin/users/{user}/edit
+                includes:
+                  - user > nav2
 
               - name: assign-roles
                 path: /admin/users/{user}/assign
+                includes:
+                  - user > nav2
 
               - fragment: true
                 name: find-roles-results
                 path: /admin/users/{user}/find-role-roles
+                includes:
+                  - user > nav
 
               - fragment: true
                 name: assign-role-complete
                 path: /admin/users/{user}/assign-roles-complete
+                includes:
+                  - user > nav2
 
               - fragment: true
                 name: revoke-role-complete
                 path: /admin/users/{user}/revoke-roles-complete
+                includes:
+                  - user > nav
 
   - name: role
     doc: View and edit role membership list

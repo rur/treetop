@@ -16,7 +16,7 @@ func Routes(server page.Server, m page.Mux, renderer *treetop.Renderer) {
 	)
 	{{ range $index, $entry := .Entries -}}
 	{{ if eq $entry.Type "DefaultSubView" -}}
-	{{ $entry.Identifier }} {{ $entry.Extends }}.DefaultSubView(
+	{{ $entry.Assignment }} {{ $entry.Extends }}.DefaultSubView(
 		"{{ $entry.Block }}",
 		"{{ $entry.Template }}",
 		{{ if $entry.OverrideHandler -}}
@@ -26,7 +26,7 @@ func Routes(server page.Server, m page.Mux, renderer *treetop.Renderer) {
 		{{- end }}
 	)
 	{{- else if eq $entry.Type "SubView" -}}
-	{{ $entry.Identifier }} {{ $entry.Extends }}.SubView(
+	{{ $entry.Assignment }} {{ $entry.Extends }}.SubView(
 		"{{ $entry.Block }}",
 		"{{ $entry.Template }}",
 		{{ if $entry.OverrideHandler -}}
@@ -41,7 +41,7 @@ func Routes(server page.Server, m page.Mux, renderer *treetop.Renderer) {
 	nil // unknown entry type: {{ $entry.Type }}
 	{{- end }}
 	{{ end }}{{ range $index, $route := .Routes }}
-	m.Handle("{{ $route.Path }}", treetop.ViewHandler({{ $route.Reference }})
+	m.Handle("{{ $route.Path }}", treetop.ViewHandler({{ $route.Reference }}{{ range $index, $include := $route.Includes }}, {{ $include }}{{ end }})
 	{{- if eq $route.Type "Page" }}.PageOnly()
 	{{- else if eq $route.Type "Fragment" }}.FragmentOnly()
 	{{- end }})

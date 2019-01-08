@@ -14,6 +14,7 @@ type PartialDef struct {
 	Fragment bool                    `yaml:"fragment"`
 	Default  bool                    `yaml:"default"`
 	Path     string                  `yaml:"path"`
+	Includes []string                `yaml:"includes"`
 	Handler  string                  `yaml:"handler"`
 	Template string                  `yaml:"template"`
 	Doc      string                  `yaml:"doc"`
