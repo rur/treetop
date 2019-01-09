@@ -15,7 +15,7 @@ import (
 
 func TestHandler_ServeHTTP(t *testing.T) {
 	type fields struct {
-		Partial    *Partial
+		Fragment   *Partial
 		Page       *Partial
 		Postscript []Partial
 		Renderer   TemplateExec
@@ -67,7 +67,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		{
 			name: "Basic",
 			fields: fields{
-				Partial: &Partial{
+				Fragment: &Partial{
 					Template:    "test.templ.html",
 					HandlerFunc: Constant("somedata"),
 				},
@@ -84,7 +84,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		{
 			name: "Partial with a block",
 			fields: fields{
-				Partial: &Partial{
+				Fragment: &Partial{
 					Template: "test.templ.html",
 					HandlerFunc: func(rsp Response, req *http.Request) interface{} {
 						d := rsp.HandlePartial("testblock", req)
@@ -111,7 +111,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		{
 			name: "Partial with a nested blocks",
 			fields: fields{
-				Partial: &Partial{
+				Fragment: &Partial{
 					Template:    "test.templ.html",
 					HandlerFunc: blockDebug([]string{"testblock", "testblock2"}),
 					Blocks: []Partial{
@@ -167,7 +167,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		{
 			name: "Partial with a cycle",
 			fields: fields{
-				Partial:    &cycle,
+				Fragment:   &cycle,
 				Postscript: []Partial{},
 				Renderer:   TemplExec,
 			},
@@ -183,7 +183,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		{
 			name: "Full page load from partial endpoint",
 			fields: fields{
-				Partial:    &pagePart.Blocks[0],
+				Fragment:   &pagePart.Blocks[0],
 				Page:       &pagePart,
 				Postscript: []Partial{},
 				Renderer:   TemplExec,
@@ -201,7 +201,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		var output string
 		t.Run(tt.name, func(t *testing.T) {
 			h := &Handler{
-				Partial:    tt.fields.Partial,
+				Fragment:   tt.fields.Fragment,
 				Page:       tt.fields.Page,
 				Postscript: tt.fields.Postscript,
 				Renderer:   tt.fields.Renderer,
@@ -550,93 +550,36 @@ func Test_insertPartial(t *testing.T) {
 	}
 }
 
-func TestHandler_Include(t *testing.T) {
-	type fields struct {
-		Partial    *Partial
-		Page       *Partial
-		Postscript []Partial
-		Renderer   TemplateExec
+func TestHandler_With_Includes(t *testing.T) {
+	wantPage := []string{
+		"base.templ.html",
+		"test.templ.html",
+		"sub-impl.templ.html",
 	}
-	type args struct {
-		defs []View
+	wantFragment := []string{
+		"test.templ.html",
+		"sub-impl.templ.html",
 	}
-	tests := []struct {
-		name        string
-		fields      fields
-		args        args
-		wantPage    []string
-		wantPartial []string
-		wantError   bool
-	}{
-		{
-			name: "basic",
-			fields: fields{
-				Partial: &Partial{
-					Extends:  "test",
-					Template: "test.templ.html",
-					Blocks: []Partial{
-						Partial{
-							Extends: "sub",
-						},
-					},
-				},
-				Page: &Partial{
-					Extends:  "base",
-					Template: "base.templ.html",
-					Blocks: []Partial{
-						Partial{
-							Extends:  "test",
-							Template: "test.templ.html",
-							Blocks: []Partial{
-								Partial{
-									Extends: "sub",
-								},
-							},
-						},
-					},
-				},
-			},
-			args: args{
-				defs: []View{
-					&viewImpl{
-						extends:  &blockImpl{name: "sub"},
-						template: "sub-impl.templ.html",
-					},
-				},
-			},
-			wantPage: []string{
-				"base.templ.html",
-				"test.templ.html",
-				"sub-impl.templ.html",
-			},
-			wantPartial: []string{
-				"test.templ.html",
-				"sub-impl.templ.html",
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			h := &Handler{
-				Partial:    tt.fields.Partial,
-				Page:       tt.fields.Page,
-				Postscript: tt.fields.Postscript,
-				Renderer:   tt.fields.Renderer,
-			}
-			gotHandler := h.Include(tt.args.defs...)
 
-			gotPage, err := gotHandler.Page.TemplateList()
-			if err != nil && !tt.wantError {
-				t.Errorf("Handler.Include() Page = got unexpected error %s", err.Error())
-			} else if !reflect.DeepEqual(gotPage, tt.wantPage) {
-				t.Errorf("Handler.Include() Page = %#v, want %#v", gotPage, tt.wantPage)
-			}
-			gotPartial, err := gotHandler.Partial.TemplateList()
-			if err != nil && !tt.wantError {
-				t.Errorf("Handler.Include() Partial = got unexpected error %s", err.Error())
-			} else if !reflect.DeepEqual(gotPartial, tt.wantPartial) {
-				t.Errorf("Handler.Include() Partial = %#v, want %#v", gotPartial, tt.wantPartial)
-			}
-		})
+	page := NewView("base.templ.html", Noop)
+	testView := page.SubView("test", "test.templ.html", Noop)
+	_ = testView.DefaultSubView("sub", "not-this-sub-fragment.templ.html", Noop)
+
+	subImpl := testView.SubView("sub", "sub-impl.templ.html", Noop)
+
+	gotHandler := ViewHandler(testView, subImpl)
+
+	gotPage, err := gotHandler.Page.TemplateList()
+	if err != nil {
+		t.Errorf("Handler with includes Page = got unexpected error %s", err.Error())
+	} else if !reflect.DeepEqual(gotPage, wantPage) {
+		t.Errorf("Handler with includes Page = %#v, want %#v", gotPage, wantPage)
 	}
+	gotFragment, err := gotHandler.Fragment.TemplateList()
+	if err != nil {
+		t.Errorf("Handler with includes Fragment = got unexpected error %s", err.Error())
+	} else if !reflect.DeepEqual(gotFragment, wantFragment) {
+		t.Errorf("Handler with includes Fragment = %#v, want %#v", gotFragment, wantFragment)
+	}
+
 }

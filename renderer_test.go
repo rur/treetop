@@ -13,11 +13,11 @@ func Test_renderer_new_page(t *testing.T) {
 	page.DefaultSubView("A", "a.templ.html", Noop)
 	def := page.SubView("B", "b.templ.html", Noop)
 
-	handler := def.PartialHandler()
+	handler := def.Handler()
 
 	expects := []string{"b.templ.html"}
-	if files, err := handler.Partial.TemplateList(); err != nil {
-		t.Errorf("treetop.Define() Partial = unexpected error %s", err.Error())
+	if files, err := handler.Fragment.TemplateList(); err != nil {
+		t.Errorf("treetop.Define() Fragment = unexpected error %s", err.Error())
 	} else if !reflect.DeepEqual(files, expects) {
 		t.Errorf("treetop.Define() = %v, want %v", files, expects)
 	}
