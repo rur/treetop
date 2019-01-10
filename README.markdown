@@ -103,9 +103,9 @@ The Treetop library includes an abstraction for creating more complex networks o
         contactSubmitHandler,
     )
 
-    mux.Handler("/", landing.PartialHandler())
-    mux.Handler("/contact", contactForm.PartialHandler())
-    mux.Handler("/contact/submit", submit.FragmentHandler())
+    mux.Handler("/", treetop.ViewHandler(landing))
+    mux.Handler("/contact", treetop.ViewHandler(contactForm))
+    mux.Handler("/contact/submit", treetop.ViewHandler(submit).FragmentOnly())
 
 All handler instances implement the `http.Handler` interface so you are free to use whatever routing library you wish.
 
