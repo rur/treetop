@@ -50,8 +50,8 @@ func main() {
 	greetForm := page.SubView("message", landing, treetop.Noop)
 	greetMessage := page.SubView("message", greeting, greetingHandler)
 
-	http.Handle("/", greetForm.PartialHandler())
-	http.Handle("/greet", greetMessage.PartialHandler())
+	http.Handle("/", treetop.ViewHandler(greetForm))
+	http.Handle("/greet", treetop.ViewHandler(greetMessage))
 	fmt.Println("serving on http://0.0.0.0:3000/")
 	log.Fatal(http.ListenAndServe(":3000", nil))
 }

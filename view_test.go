@@ -56,7 +56,7 @@ func Test_extend_block_basic(t *testing.T) {
 	part := basePartial()
 	p := part.SubView("test", "test.templ.html", Noop)
 
-	got := PrintHandler(p.FragmentHandler())
+	got := PrintHandler(p.Handler().FragmentOnly())
 	expecting := `FragmentHandler("test.templ.html", github.com/rur/treetop.Noop)`
 	if !strings.Contains(got, expecting) {
 		t.Errorf("Extended template, expecting: %s, got %s", expecting, got)
@@ -68,7 +68,7 @@ func Test_fragment_with_blocks(t *testing.T) {
 	p := part.SubView("test", "test.templ.html", Noop)
 	p.DefaultSubView("sub", "sub.templ.html", Noop)
 
-	got, err := p.FragmentHandler().Partial.TemplateList()
+	got, err := p.Handler().FragmentOnly().Fragment.TemplateList()
 	if err != nil {
 		t.Errorf("Unexpected error while aggregating templates: %s", err.Error())
 	}
@@ -82,7 +82,7 @@ func Test_extend_block_partial(t *testing.T) {
 	part := basePartial()
 	p := part.SubView("test", "test.templ.html", Noop)
 
-	handler := p.PartialHandler()
+	handler := p.Handler()
 	expecting := `PartialHandler("test.templ.html", github.com/rur/treetop.Noop)`
 	got := PrintHandler(handler)
 
@@ -110,11 +110,11 @@ func Test_extend_multiple_levels(t *testing.T) {
 
 	test2_b.DefaultSubView("B_plus", "test2_B_plus.templ.html", Noop)
 
-	handler := test2_b.PartialHandler()
+	handler := test2_b.Handler()
 
 	var expectingTempl []string
 	expectingTempl = []string{"test2_B.templ.html", "test2_B_plus.templ.html"}
-	if templates, err := handler.Partial.TemplateList(); err != nil {
+	if templates, err := handler.Fragment.TemplateList(); err != nil {
 		t.Errorf("Failed to load partial template, error: %s", err.Error())
 	} else if !reflect.DeepEqual(templates, expectingTempl) {
 		t.Errorf("Failed to list templates from partial, expecting: %s got %s", expectingTempl, templates)

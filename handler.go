@@ -19,6 +19,28 @@ func nextResponseID() uint32 {
 	return atomic.AddUint32(&token, 1)
 }
 
+func ViewHandler(view View, includes ...View) *Handler {
+	// Create a new handler which incorporates the templates from the supplied partial definition
+	newHandler := view.Handler()
+
+	// Includes allows one or more unrelated View configurations to be combined with the primary
+	// handler instance. Unrelated parts of the page can be rendered with the same handler
+	// and existing blocks in the current Handler can be further shadowed.
+	for _, include := range includes {
+		iH := include.Handler()
+		if newPartial := insertPartial(newHandler.Fragment, iH.Fragment); newPartial != nil {
+			newHandler.Fragment = newPartial
+		} else {
+			// add it to postscript
+			newHandler.Postscript = append(newHandler.Postscript, *iH.Fragment)
+		}
+		if newPage := insertPartial(newHandler.Page, iH.Fragment); newPage != nil {
+			newHandler.Page = newPage
+		}
+	}
+	return newHandler
+}
+
 // Partial represents a template partial in a treetop Handler
 type Partial struct {
 	Extends     string
@@ -31,7 +53,7 @@ type Partial struct {
 // necessary for a hierarchical style treetop endpoint.
 type Handler struct {
 	// partial request template+handler dependency tree
-	Partial *Partial
+	Fragment *Partial
 	// full page request template+handler dependency tree
 	Page *Partial
 	// Handlers that will be appended to response *only* for a partial request
@@ -56,8 +78,8 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	var part *Partial
 	var contentType string
 	if IsTreetopRequest(req) {
-		part = h.Partial
-		if h.Partial == nil {
+		part = h.Fragment
+		if h.Fragment == nil {
 			// this is a page only handler, do not accept partial requests
 			http.Error(resp, http.StatusText(http.StatusNotAcceptable), http.StatusNotAcceptable)
 			return
@@ -139,30 +161,19 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	buf.WriteTo(resp)
 }
 
-// Include allows one or more unrelated View configurations to be combined with the current
-// handler instance. Unrelated parts of the page can be rendered with the same handler
-// and existing blocks in the current Handler can be further shadowed.
-func (h *Handler) Include(views ...View) *Handler {
-	// Create a new handler which incorporates the templates from the supplied partial definition
-	newHandler := Handler{
-		h.Partial,
-		h.Page,
-		h.Postscript,
-		h.Renderer,
+func (h *Handler) PageOnly() *Handler {
+	return &Handler{
+		Page:     h.Page,
+		Renderer: h.Renderer,
 	}
-	for _, view := range views {
-		iH := view.FragmentHandler()
-		if newPartial := insertPartial(newHandler.Partial, iH.Partial); newPartial != nil {
-			newHandler.Partial = newPartial
-		} else {
-			// add it to postscript
-			newHandler.Postscript = append(newHandler.Postscript, *iH.Partial)
-		}
-		if newPage := insertPartial(newHandler.Page, iH.Partial); newPage != nil {
-			newHandler.Page = newPage
-		}
+}
+
+func (h *Handler) FragmentOnly() *Handler {
+	return &Handler{
+		Fragment:   h.Fragment,
+		Postscript: append([]Partial{}, h.Postscript...),
+		Renderer:   h.Renderer,
 	}
-	return &newHandler
 }
 
 // TemplateList is used to obtain all partial templates dependent through block
