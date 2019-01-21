@@ -28,6 +28,7 @@ type partialData struct {
 	Extends  string
 	Fragment bool
 	Name     string
+	Merge    string
 	Blocks   []*htmlBlockData
 }
 
@@ -44,8 +45,8 @@ type indexData struct {
 }
 
 func WriteIndexFile(dir string, pageDef *generator.PartialDef, otherPages []generator.PartialDef) (string, error) {
-	fileName := "index.templ.html"
-	filePath := filepath.Join(dir, "index.templ.html")
+	fileName := "index.html.tmpl"
+	filePath := filepath.Join(dir, "index.html.tmpl")
 	sf, err := os.Create(filePath)
 	if err != nil {
 		return fileName, err
@@ -138,6 +139,7 @@ func writePartialTemplate(dir string, def *generator.PartialDef, extends string)
 			Extends:  extends,
 			Fragment: def.Fragment,
 			Name:     def.Name,
+			Merge:    def.Merge,
 			Blocks:   make([]*htmlBlockData, 0, len(def.Blocks)),
 		}
 		blockList, err := iterateSortedBlocks(def.Blocks)
@@ -162,7 +164,7 @@ func writePartialTemplate(dir string, def *generator.PartialDef, extends string)
 			partial.Blocks = append(partial.Blocks, &blockData)
 		}
 
-		fileName := fmt.Sprintf("%s.templ.html", name)
+		fileName := fmt.Sprintf("%s.html.tmpl", name)
 		filePath := filepath.Join(dir, fileName)
 		sf, err := os.Create(filePath)
 		if err != nil {

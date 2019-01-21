@@ -138,7 +138,7 @@ func WriteRoutesFile(dir string, pageDef *generator.PartialDef, namespace string
 
 	template := pageDef.Template
 	if template == "" {
-		template = filepath.Join("page", pageName, "templates", "index.templ.html")
+		template = filepath.Join("page", pageName, "templates", "index.html.tmpl")
 	}
 
 	page := pageData{
@@ -183,7 +183,7 @@ func processEntries(extends, blockName string, names []string, def *generator.Pa
 
 	template := def.Template
 	if template == "" {
-		template = filepath.Join(templatePath, entryName+".templ.html")
+		template = filepath.Join(templatePath, entryName+".html.tmpl")
 	}
 
 	entry := pageEntryData{

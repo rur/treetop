@@ -17,6 +17,7 @@ type PartialDef struct {
 	Includes []string                `yaml:"includes"`
 	Handler  string                  `yaml:"handler"`
 	Template string                  `yaml:"template"`
+	Merge    string                  `yaml:"merge"`
 	Doc      string                  `yaml:"doc"`
 	Blocks   map[string][]PartialDef `yaml:"blocks"`
 	URI      string                  `yaml:"uri"`

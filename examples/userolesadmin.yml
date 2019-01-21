@@ -114,6 +114,8 @@ pages:
         - name: nav
           default: true
 
+        - name: nav2
+
       wrapper:
         - name: all-roles
           doc: show summary of all roles
@@ -122,30 +124,45 @@ pages:
 
         - name: role
           path: /admin/roles/{role}
+          merge: testing-gen-merge
           blocks:
             content:
               - default: true
                 name: users-list
                 path: /admin/roles/{role}/users
+                includes:
+                  - role > nav
 
               - name: users-edit
                 path: /admin/roles/{role}/edit
+                includes:
+                  - role > nav2
 
               - name: assign-users
                 path: /admin/roles/{role}/assign
+                includes:
+                  - role > nav
 
               - fragment: true
                 name: assign-results-roles
                 path: /admin/roles/{role}/find-user-roles-results
+                includes:
+                  - role > nav2
 
               - fragment: true
                 name: assign-results-users
                 path: /admin/roles/{role}/find-users-results
+                includes:
+                  - role > nav
 
               - fragment: true
                 name: assign-role-complete
                 path: /admin/roles/{role}/assign-role-users-complete
+                includes:
+                  - role > nav2
 
               - fragment: true
                 name: revoke-users-complete
                 path: /admin/roles/{role}/assign-users-complete
+                includes:
+                  - role > nav

@@ -25,12 +25,12 @@ type genTemplate struct {
 
 func main() {
 	files := map[string]string{
-		"templates/index.templ.html":   "indexTempl",
-		"templates/partial.templ.html": "partialTempl",
-		"templates/start.go.templ":     "startTempl",
-		"templates/resources.go.templ": "resourcesTempl",
-		"templates/routes.go.templ":    "routesTempl",
-		"templates/handler.go.templ":   "handlerTempl",
+		"templates/index.html.tmpl":   "indexTempl",
+		"templates/partial.html.tmpl": "partialTempl",
+		"templates/start.go.tmpl":     "startTempl",
+		"templates/resources.go.tmpl": "resourcesTempl",
+		"templates/routes.go.tmpl":    "routesTempl",
+		"templates/handler.go.tmpl":   "handlerTempl",
 	}
 	content := make([]genTemplate, 0, 4)
 
@@ -48,7 +48,7 @@ func main() {
 			Path:    file,
 			Ident:   ident,
 			Content: string(bites),
-			IsHtml:  strings.HasSuffix(file, ".html"),
+			IsHtml:  strings.HasSuffix(file, ".html.tmpl"),
 		})
 	}
 
