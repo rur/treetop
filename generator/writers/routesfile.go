@@ -67,12 +67,18 @@ func WriteRoutesFile(dir string, pageDef *generator.PartialDef, namespace string
 	var entries []pageEntryData
 	var routes []pageRouteData
 	if pageDef.Path != "" {
-		routes = append(routes, pageRouteData{
+		route := pageRouteData{
 			Reference: "pageView",
 			Path:      strings.Trim(pageDef.Path, " "),
 			Type:      "Page",
 			Includes:  append([]string{}, pageDef.Includes...),
-		})
+		}
+		if pageDef.Method == "" {
+			route.Method = "GET"
+		} else {
+			route.Method = strings.ToUpper(pageDef.Method)
+		}
+		routes = append(routes, route)
 	}
 
 	blocks := make([]pageBlockData, 0, len(pageDef.Blocks))
