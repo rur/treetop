@@ -1,0 +1,55 @@
+package {{ .Name }}
+
+import (
+	"github.com/rur/treetop"
+	"{{ .Namespace }}/page"
+)
+
+func Routes(cxt page.Context, m page.Mux, renderer *treetop.Renderer) {
+	pageView := renderer.NewView(
+		"{{ .Template }}",
+		{{ if .OverrideHandler -}}
+		{{ .Handler }},
+		{{- else -}}
+		cxt.Bind({{ .Handler }}),
+		{{- end }}
+	)
+	{{ range $index, $entry := .Entries -}}
+	{{ if eq $entry.Type "DefaultSubView" -}}
+	{{ $entry.Assignment }} {{ $entry.Extends }}.DefaultSubView(
+		"{{ $entry.Block }}",
+		"{{ $entry.Template }}",
+		{{ if $entry.OverrideHandler -}}
+		{{ $entry.Handler }},
+		{{- else -}}
+		cxt.Bind({{ $entry.Handler }}),
+		{{- end }}
+	)
+	{{- else if eq $entry.Type "SubView" -}}
+	{{ $entry.Assignment }} {{ $entry.Extends }}.SubView(
+		"{{ $entry.Block }}",
+		"{{ $entry.Template }}",
+		{{ if $entry.OverrideHandler -}}
+		{{ $entry.Handler }},
+		{{- else -}}
+		cxt.Bind({{ $entry.Handler }}),
+		{{- end }}
+	)
+	{{- else if eq $entry.Type "Spacer" }}
+	// {{ $entry.Name }}
+	{{- else -}}
+	nil // unknown entry type: {{ $entry.Type }}
+	{{- end }}
+	{{ end }}{{ range $index, $route := .Routes }}
+	m.Handle{{ $route.Method }}("{{ $route.Path }}",
+		{{ if not $route.Includes }}treetop.ViewHandler({{ $route.Reference }})
+		{{- else }}treetop.ViewHandler(
+			{{ $route.Reference }},
+			{{ range $index, $include := $route.Includes }}{{ $include }},
+		{{end}})
+		{{- end }}
+	{{- if eq $route.Type "Page" }}.PageOnly()
+	{{- else if eq $route.Type "Fragment" }}.FragmentOnly()
+	{{- end }})
+	{{- end }}
+}

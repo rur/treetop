@@ -1,0 +1,19 @@
+{{ block "[[ .Extends ]]" . }}
+<div id="[[ .Extends ]]" class="block-extended[[ if .Fragment ]] fragment[[ end ]]"[[ if .Merge ]] treetop-merge="[[ .Merge ]]"[[ end ]]>
+    [[ if .Fragment ]]<p>Fragment view named [[.Name]]</p>
+    [[- else ]]<p>Partial view named [[.Name]]</p>[[ end ]]
+    [[- range $index, $block := .Blocks ]]
+    <h3>Block [[ $block.Name ]]</h3>
+    <ul class="nav">[[ range $partial := $block.Partials ]][[ if $partial.Path ]][[ if $partial.Fragment ]]
+        <li><button treetop-link="[[ $partial.Path ]]">[[ $partial.Name ]][[ if $partial.Default ]]*[[end]]</button></li>[[ else ]]
+        <li><a href="[[ $partial.Path ]]" treetop>[[ $partial.Name ]][[ if $partial.Default ]]*[[end]]</a></li>
+        [[- end ]][[- end ]]
+    [[ end ]]</ul>
+    {{ block "[[ $block.Name ]]" .[[ $block.FieldName ]] }}
+    <div id="[[ $block.Name  ]]" class="block-default">
+        <p>default for block named [[ $block.Name ]]</p>
+    </div>
+    {{ end }}
+    [[ end ]]
+</div>
+{{ end }}

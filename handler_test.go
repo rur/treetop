@@ -29,7 +29,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 	cycle := Partial{
 		Extends:  "root",
-		Template: "test.templ.html",
+		Template: "test.html.tmpl",
 		HandlerFunc: func(rsp Response, req *http.Request) interface{} {
 			d := rsp.HandlePartial("testblock", req)
 			return fmt.Sprintf("Loaded sub data: %s", d)
@@ -37,7 +37,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		Blocks: []Partial{
 			{
 				Extends:     "testblock",
-				Template:    "sub.templ.html",
+				Template:    "sub.html.tmpl",
 				HandlerFunc: Constant("my sub data"),
 			},
 		},
@@ -45,13 +45,13 @@ func TestHandler_ServeHTTP(t *testing.T) {
 	cycle.Blocks[0].Blocks = append(cycle.Blocks[0].Blocks, cycle)
 
 	pagePart := Partial{
-		Template:    "base.templ.html",
+		Template:    "base.html.tmpl",
 		HandlerFunc: Constant("base data"),
 		Blocks:      []Partial{},
 	}
 	pagePart.Blocks = append(pagePart.Blocks, Partial{
 		Extends:     "test",
-		Template:    "test.templ.html",
+		Template:    "test.html.tmpl",
 		HandlerFunc: Constant("partial data"),
 	})
 
@@ -68,7 +68,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			name: "Basic",
 			fields: fields{
 				Fragment: &Partial{
-					Template:    "test.templ.html",
+					Template:    "test.html.tmpl",
 					HandlerFunc: Constant("somedata"),
 				},
 				Postscript: []Partial{},
@@ -78,14 +78,14 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				resp: httptest.NewRecorder(),
 				req:  req,
 			},
-			expect: "Partials: [test.templ.html], Data: somedata",
+			expect: "Partials: [test.html.tmpl], Data: somedata",
 			status: 200,
 		},
 		{
 			name: "Partial with a block",
 			fields: fields{
 				Fragment: &Partial{
-					Template: "test.templ.html",
+					Template: "test.html.tmpl",
 					HandlerFunc: func(rsp Response, req *http.Request) interface{} {
 						d := rsp.HandlePartial("testblock", req)
 						return fmt.Sprintf("Loaded sub data: %s", d)
@@ -93,7 +93,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 					Blocks: []Partial{
 						{
 							Extends:     "testblock",
-							Template:    "sub.templ.html",
+							Template:    "sub.html.tmpl",
 							HandlerFunc: Constant("my sub data"),
 						},
 					},
@@ -105,46 +105,46 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				resp: httptest.NewRecorder(),
 				req:  req,
 			},
-			expect: "Partials: [test.templ.html sub.templ.html], Data: Loaded sub data: my sub data",
+			expect: "Partials: [test.html.tmpl sub.html.tmpl], Data: Loaded sub data: my sub data",
 			status: 200,
 		},
 		{
 			name: "Partial with a nested blocks",
 			fields: fields{
 				Fragment: &Partial{
-					Template:    "test.templ.html",
+					Template:    "test.html.tmpl",
 					HandlerFunc: blockDebug([]string{"testblock", "testblock2"}),
 					Blocks: []Partial{
 						{
 							Extends:     "testblock",
-							Template:    "sub.templ.html",
+							Template:    "sub.html.tmpl",
 							HandlerFunc: blockDebug([]string{"deepblock", "deepblockB"}),
 							Blocks: []Partial{
 								{
 									Extends:     "deepblock",
-									Template:    "sub-sub.templ.html",
+									Template:    "sub-sub.html.tmpl",
 									HandlerFunc: Constant("~~sub-subA-data~~"),
 								},
 								{
 									Extends:     "deepblockB",
-									Template:    "sub-subB.templ.html",
+									Template:    "sub-subB.html.tmpl",
 									HandlerFunc: Constant("~~sub-subB-data~~"),
 								},
 							},
 						},
 						{
 							Extends:     "testblock2",
-							Template:    "sub2.templ.html",
+							Template:    "sub2.html.tmpl",
 							HandlerFunc: blockDebug([]string{"deepblock2", "deepblock2B"}),
 							Blocks: []Partial{
 								{
 									Extends:     "deepblock2",
-									Template:    "sub2-sub.templ.html",
+									Template:    "sub2-sub.html.tmpl",
 									HandlerFunc: Constant("~~sub2-subA-data~~"),
 								},
 								{
 									Extends:     "deepblock2B",
-									Template:    "sub2-subB.templ.html",
+									Template:    "sub2-subB.html.tmpl",
 									HandlerFunc: Constant("~~sub2-subB-data~~"),
 								},
 							},
@@ -158,7 +158,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				resp: httptest.NewRecorder(),
 				req:  req,
 			},
-			expect: "Partials: [test.templ.html sub.templ.html sub2.templ.html sub-sub.templ.html sub-subB.templ.html sub2-sub.templ.html sub2-subB.templ.html], " +
+			expect: "Partials: [test.html.tmpl sub.html.tmpl sub2.html.tmpl sub-sub.html.tmpl sub-subB.html.tmpl sub2-sub.html.tmpl sub2-subB.html.tmpl], " +
 				"Data: [" +
 				"{testblock [{deepblock ~~sub-subA-data~~} {deepblockB ~~sub-subB-data~~}]} " +
 				"{testblock2 [{deepblock2 ~~sub2-subA-data~~} {deepblock2B ~~sub2-subB-data~~}]}]",
@@ -192,7 +192,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				resp: httptest.NewRecorder(),
 				req:  httptest.NewRequest("GET", "/page", nil),
 			},
-			expect:            "Partials: [base.templ.html test.templ.html], Data: base data",
+			expect:            "Partials: [base.html.tmpl test.html.tmpl], Data: base data",
 			status:            200,
 			expectContentType: "text/html",
 		},
@@ -265,12 +265,12 @@ func blockDebug(blocknames []string) HandlerFunc {
 func TestPartial_TemplateList(t *testing.T) {
 	cycle := Partial{
 		Extends:     "prev",
-		Template:    "test.templ.html",
+		Template:    "test.html.tmpl",
 		HandlerFunc: Delegate("next"),
 		Blocks: []Partial{
 			{
 				Extends:     "next",
-				Template:    "sub.templ.html",
+				Template:    "sub.html.tmpl",
 				HandlerFunc: Constant("my sub data"),
 			},
 		},
@@ -294,39 +294,39 @@ func TestPartial_TemplateList(t *testing.T) {
 			name: "Nested example",
 			fields: fields{
 				Extends:     "base",
-				Template:    "test.templ.html",
+				Template:    "test.html.tmpl",
 				HandlerFunc: blockDebug([]string{"testblock", "testblock2"}),
 				Blocks: []Partial{
 					{
 						Extends:     "testblock",
-						Template:    "sub.templ.html",
+						Template:    "sub.html.tmpl",
 						HandlerFunc: blockDebug([]string{"deepblock", "deepblockB"}),
 						Blocks: []Partial{
 							{
 								Extends:     "deepblock",
-								Template:    "sub-sub.templ.html",
+								Template:    "sub-sub.html.tmpl",
 								HandlerFunc: Constant("~~sub-subA-data~~"),
 							},
 							{
 								Extends:     "deepblockB",
-								Template:    "sub-subB.templ.html",
+								Template:    "sub-subB.html.tmpl",
 								HandlerFunc: Constant("~~sub-subB-data~~"),
 							},
 						},
 					},
 					{
 						Extends:     "testblock2",
-						Template:    "sub2.templ.html",
+						Template:    "sub2.html.tmpl",
 						HandlerFunc: blockDebug([]string{"deepblock2", "deepblock2B"}),
 						Blocks: []Partial{
 							{
 								Extends:     "deepblock2",
-								Template:    "sub2-sub.templ.html",
+								Template:    "sub2-sub.html.tmpl",
 								HandlerFunc: Constant("~~sub2-subA-data~~"),
 							},
 							{
 								Extends:     "deepblock2B",
-								Template:    "sub2-subB.templ.html",
+								Template:    "sub2-subB.html.tmpl",
 								HandlerFunc: Constant("~~sub2-subB-data~~"),
 							},
 						},
@@ -334,17 +334,17 @@ func TestPartial_TemplateList(t *testing.T) {
 				},
 			},
 			want: []string{
-				"test.templ.html",
-				"sub.templ.html", "sub2.templ.html",
-				"sub-sub.templ.html", "sub-subB.templ.html",
-				"sub2-sub.templ.html", "sub2-subB.templ.html",
+				"test.html.tmpl",
+				"sub.html.tmpl", "sub2.html.tmpl",
+				"sub-sub.html.tmpl", "sub-subB.html.tmpl",
+				"sub2-sub.html.tmpl", "sub2-subB.html.tmpl",
 			},
 		},
 		{
 			name: "Partial with a cycle",
 			fields: fields{
 				Extends:     "base",
-				Template:    "test.templ.html",
+				Template:    "test.html.tmpl",
 				HandlerFunc: blockDebug([]string{"testblock", "testblock2"}),
 				Blocks:      []Partial{cycle},
 			},
@@ -354,7 +354,7 @@ func TestPartial_TemplateList(t *testing.T) {
 			name: "Partial with cycles",
 			fields: fields{
 				Extends:     "base",
-				Template:    "test.templ.html",
+				Template:    "test.html.tmpl",
 				HandlerFunc: blockDebug([]string{"testblock", "testblock2"}),
 				Blocks: []Partial{
 					{
@@ -363,7 +363,7 @@ func TestPartial_TemplateList(t *testing.T) {
 					},
 				},
 			},
-			want: []string{"test.templ.html"},
+			want: []string{"test.html.tmpl"},
 		},
 	}
 	for _, tt := range tests {
@@ -407,7 +407,7 @@ func Test_insertPartial(t *testing.T) {
 			name: "basic",
 			fields: fields{
 				Extends:  "base",
-				Template: "base.templ.html",
+				Template: "base.html.tmpl",
 				Blocks: []Partial{
 					Partial{
 						Extends: "test",
@@ -417,16 +417,16 @@ func Test_insertPartial(t *testing.T) {
 			args: args{
 				part: &Partial{
 					Extends:  "test",
-					Template: "test-extended.templ.html",
+					Template: "test-extended.html.tmpl",
 				},
 			},
 			want: &Partial{
 				Extends:  "base",
-				Template: "base.templ.html",
+				Template: "base.html.tmpl",
 				Blocks: []Partial{
 					Partial{
 						Extends:  "test",
-						Template: "test-extended.templ.html",
+						Template: "test-extended.html.tmpl",
 					},
 				},
 			},
@@ -435,7 +435,7 @@ func Test_insertPartial(t *testing.T) {
 			name: "no match",
 			fields: fields{
 				Extends:  "base",
-				Template: "base.templ.html",
+				Template: "base.html.tmpl",
 				Blocks: []Partial{
 					Partial{
 						Extends: "test",
@@ -445,7 +445,7 @@ func Test_insertPartial(t *testing.T) {
 			args: args{
 				part: &Partial{
 					Extends:  "matches-nothing",
-					Template: "test-extended.templ.html",
+					Template: "test-extended.html.tmpl",
 				},
 			},
 			want: nil,
@@ -454,34 +454,34 @@ func Test_insertPartial(t *testing.T) {
 			name: "keep sublings",
 			fields: fields{
 				Extends:  "base",
-				Template: "base.templ.html",
+				Template: "base.html.tmpl",
 				Blocks: []Partial{
 					Partial{
 						Extends: "test",
 					},
 					Partial{
 						Extends:  "test2",
-						Template: "test2.templ.html",
+						Template: "test2.html.tmpl",
 					},
 				},
 			},
 			args: args{
 				part: &Partial{
 					Extends:  "test",
-					Template: "test-extended.templ.html",
+					Template: "test-extended.html.tmpl",
 				},
 			},
 			want: &Partial{
 				Extends:  "base",
-				Template: "base.templ.html",
+				Template: "base.html.tmpl",
 				Blocks: []Partial{
 					Partial{
 						Extends:  "test",
-						Template: "test-extended.templ.html",
+						Template: "test-extended.html.tmpl",
 					},
 					Partial{
 						Extends:  "test2",
-						Template: "test2.templ.html",
+						Template: "test2.html.tmpl",
 					},
 				},
 			},
@@ -490,46 +490,46 @@ func Test_insertPartial(t *testing.T) {
 			name: "keep depth",
 			fields: fields{
 				Extends:  "base",
-				Template: "base.templ.html",
+				Template: "base.html.tmpl",
 				Blocks: []Partial{
 					Partial{
 						Extends: "test",
 					},
 					Partial{
 						Extends:  "test2",
-						Template: "test2.templ.html",
+						Template: "test2.html.tmpl",
 					},
 				},
 			},
 			args: args{
 				part: &Partial{
 					Extends:  "test",
-					Template: "test-extended.templ.html",
+					Template: "test-extended.html.tmpl",
 					Blocks: []Partial{
 						Partial{
 							Extends:  "test-sub",
-							Template: "test-sub.templ.html",
+							Template: "test-sub.html.tmpl",
 						},
 					},
 				},
 			},
 			want: &Partial{
 				Extends:  "base",
-				Template: "base.templ.html",
+				Template: "base.html.tmpl",
 				Blocks: []Partial{
 					Partial{
 						Extends:  "test",
-						Template: "test-extended.templ.html",
+						Template: "test-extended.html.tmpl",
 						Blocks: []Partial{
 							Partial{
 								Extends:  "test-sub",
-								Template: "test-sub.templ.html",
+								Template: "test-sub.html.tmpl",
 							},
 						},
 					},
 					Partial{
 						Extends:  "test2",
-						Template: "test2.templ.html",
+						Template: "test2.html.tmpl",
 					},
 				},
 			},
@@ -552,20 +552,20 @@ func Test_insertPartial(t *testing.T) {
 
 func TestHandler_With_Includes(t *testing.T) {
 	wantPage := []string{
-		"base.templ.html",
-		"test.templ.html",
-		"sub-impl.templ.html",
+		"base.html.tmpl",
+		"test.html.tmpl",
+		"sub-impl.html.tmpl",
 	}
 	wantFragment := []string{
-		"test.templ.html",
-		"sub-impl.templ.html",
+		"test.html.tmpl",
+		"sub-impl.html.tmpl",
 	}
 
-	page := NewView("base.templ.html", Noop)
-	testView := page.SubView("test", "test.templ.html", Noop)
-	_ = testView.DefaultSubView("sub", "not-this-sub-fragment.templ.html", Noop)
+	page := NewView("base.html.tmpl", Noop)
+	testView := page.SubView("test", "test.html.tmpl", Noop)
+	_ = testView.DefaultSubView("sub", "not-this-sub-fragment.html.tmpl", Noop)
 
-	subImpl := testView.SubView("sub", "sub-impl.templ.html", Noop)
+	subImpl := testView.SubView("sub", "sub-impl.html.tmpl", Noop)
 
 	gotHandler := ViewHandler(testView, subImpl)
 

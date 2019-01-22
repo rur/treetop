@@ -1,0 +1,41 @@
+package app
+
+import (
+	"fmt"
+	"net/http"
+)
+
+// EDITME: add services, session info and configuration needed for a request.
+//
+// Note: This instance may be shared between TT handlers, please resist the templation to use it for
+///      for communication of any kind.
+type Resources struct {
+	Active bool
+}
+
+// Example of error that can occur during request initialization
+type AuthenticationError struct {
+	Method   string
+	Username string
+}
+
+func (a AuthenticationError) Error() string {
+	if a.Method == "cookie" {
+		return "Unable to verify cookie"
+	} else if a.Method == "basic" {
+		return fmt.Sprintf("Failed to login using credentials for user '%s'", a.Username)
+	} else {
+		return "Unable to authenticate request"
+	}
+}
+
+// EDITME: Initialization of request resources here
+func NewRequestResources(req *http.Request) (*Resources, error) {
+	return &Resources{true}, nil
+}
+
+// EDITME: Destructor for Resources instances, may not be necessary but useful to have
+func FreeRequestResources(rsc *Resources) error {
+	rsc.Active = false
+	return nil
+}

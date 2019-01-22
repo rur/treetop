@@ -8,7 +8,7 @@ import (
 
 func basePartial() *viewImpl {
 	return &viewImpl{
-		template: "base.templ.html",
+		template: "base.html.tmpl",
 		extends:  nil,
 		handler:  Noop,
 		blocks:   []*blockImpl{},
@@ -54,10 +54,10 @@ func Test_retrieve_an_existing_block(t *testing.T) {
 
 func Test_extend_block_basic(t *testing.T) {
 	part := basePartial()
-	p := part.SubView("test", "test.templ.html", Noop)
+	p := part.SubView("test", "test.html.tmpl", Noop)
 
 	got := PrintHandler(p.Handler().FragmentOnly())
-	expecting := `FragmentHandler("test.templ.html", github.com/rur/treetop.Noop)`
+	expecting := `FragmentHandler("test.html.tmpl", github.com/rur/treetop.Noop)`
 	if !strings.Contains(got, expecting) {
 		t.Errorf("Extended template, expecting: %s, got %s", expecting, got)
 	}
@@ -65,14 +65,14 @@ func Test_extend_block_basic(t *testing.T) {
 
 func Test_fragment_with_blocks(t *testing.T) {
 	part := basePartial()
-	p := part.SubView("test", "test.templ.html", Noop)
-	p.DefaultSubView("sub", "sub.templ.html", Noop)
+	p := part.SubView("test", "test.html.tmpl", Noop)
+	p.DefaultSubView("sub", "sub.html.tmpl", Noop)
 
 	got, err := p.Handler().FragmentOnly().Fragment.TemplateList()
 	if err != nil {
 		t.Errorf("Unexpected error while aggregating templates: %s", err.Error())
 	}
-	expecting := []string{"test.templ.html", "sub.templ.html"}
+	expecting := []string{"test.html.tmpl", "sub.html.tmpl"}
 	if !reflect.DeepEqual(got, expecting) {
 		t.Errorf("Extended template, expecting: %#v, got %#v", expecting, got)
 	}
@@ -80,17 +80,17 @@ func Test_fragment_with_blocks(t *testing.T) {
 
 func Test_extend_block_partial(t *testing.T) {
 	part := basePartial()
-	p := part.SubView("test", "test.templ.html", Noop)
+	p := part.SubView("test", "test.html.tmpl", Noop)
 
 	handler := p.Handler()
-	expecting := `PartialHandler("test.templ.html", github.com/rur/treetop.Noop)`
+	expecting := `PartialHandler("test.html.tmpl", github.com/rur/treetop.Noop)`
 	got := PrintHandler(handler)
 
 	if !strings.Contains(got, expecting) {
 		t.Errorf("Extended template, expecting: %s, got %s", expecting, got)
 	}
 
-	expectingTempl := []string{"base.templ.html", "test.templ.html"}
+	expectingTempl := []string{"base.html.tmpl", "test.html.tmpl"}
 	if templates, err := handler.Page.TemplateList(); err != nil {
 		t.Errorf("Failed to load page template, error: %s", err.Error())
 	} else if !reflect.DeepEqual(templates, expectingTempl) {
@@ -100,20 +100,20 @@ func Test_extend_block_partial(t *testing.T) {
 
 func Test_extend_multiple_levels(t *testing.T) {
 	base := basePartial()
-	_ = base.DefaultSubView("test", "test.templ.html", Noop)
+	_ = base.DefaultSubView("test", "test.html.tmpl", Noop)
 
-	test2 := base.SubView("test2", "test2.templ.html", Noop)
+	test2 := base.SubView("test2", "test2.html.tmpl", Noop)
 
-	_ = test2.DefaultSubView("A", "default_A.templ.html", Noop)
+	_ = test2.DefaultSubView("A", "default_A.html.tmpl", Noop)
 
-	test2_b := test2.SubView("B", "test2_B.templ.html", Noop)
+	test2_b := test2.SubView("B", "test2_B.html.tmpl", Noop)
 
-	test2_b.DefaultSubView("B_plus", "test2_B_plus.templ.html", Noop)
+	test2_b.DefaultSubView("B_plus", "test2_B_plus.html.tmpl", Noop)
 
 	handler := test2_b.Handler()
 
 	var expectingTempl []string
-	expectingTempl = []string{"test2_B.templ.html", "test2_B_plus.templ.html"}
+	expectingTempl = []string{"test2_B.html.tmpl", "test2_B_plus.html.tmpl"}
 	if templates, err := handler.Fragment.TemplateList(); err != nil {
 		t.Errorf("Failed to load partial template, error: %s", err.Error())
 	} else if !reflect.DeepEqual(templates, expectingTempl) {
@@ -121,12 +121,12 @@ func Test_extend_multiple_levels(t *testing.T) {
 	}
 
 	expectingTempl = []string{
-		"base.templ.html",
-		"test.templ.html",
-		"test2.templ.html",
-		"default_A.templ.html",
-		"test2_B.templ.html",
-		"test2_B_plus.templ.html",
+		"base.html.tmpl",
+		"test.html.tmpl",
+		"test2.html.tmpl",
+		"default_A.html.tmpl",
+		"test2_B.html.tmpl",
+		"test2_B_plus.html.tmpl",
 	}
 	if templates, err := handler.Page.TemplateList(); err != nil {
 		t.Errorf("Failed to load page template, error: %s", err.Error())
