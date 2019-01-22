@@ -1,0 +1,56 @@
+package app
+
+import (
+	"context"
+	"log"
+	"net/http"
+	"sync"
+)
+
+type Server interface {
+	LoadResources(uint32, context.Context, *http.Request) (*Resources, error)
+}
+
+// EDITME: Add server level resources and configuration
+type server struct {
+	sync.RWMutex
+	responses map[uint32]*Resources
+}
+
+// EDITME: Add configuration parameters required to initialize a new server instance
+func NewServer() Server {
+	return &server{
+		responses: make(map[uint32]*Resources),
+	}
+}
+
+func (s *server) LoadResources(responseID uint32, cxt context.Context, req *http.Request) (*Resources, error) {
+	s.RLock()
+	// first check if a Resource instance is cached for this responseID
+	if rsc, ok := s.responses[responseID]; ok {
+		s.RUnlock()
+		return rsc, nil
+	}
+	s.RUnlock() // dont need this lock any more
+	// EDITME: inject arguments that the resource initialization code needs from the server instance
+	rsc, err := NewRequestResources(req)
+	if err != nil {
+		return nil, err
+	}
+	s.Lock()
+	s.responses[responseID] = rsc
+	s.Unlock()
+	go func() {
+		<-cxt.Done()
+		// Assume that the request lifecycle is finished and the TCP connection is closed.
+		// Just free-up resources at this point.
+		s.Lock()
+		delete(s.responses, responseID)
+		s.Unlock()
+		if err := FreeRequestResources(rsc); err != nil {
+			// Log it and carry on
+			log.Printf("Error while freeing request resources: %s", err)
+		}
+	}()
+	return rsc, nil
+}

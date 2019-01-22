@@ -5,13 +5,13 @@ import (
 	"{{ .Namespace }}/page"
 )
 
-func Routes(server page.Server, m page.Mux, renderer *treetop.Renderer) {
+func Routes(cxt page.Context, m page.Mux, renderer *treetop.Renderer) {
 	pageView := renderer.NewView(
 		"{{ .Template }}",
 		{{ if .OverrideHandler -}}
 		{{ .Handler }},
 		{{- else -}}
-		server.Bind({{ .Handler }}),
+		cxt.Bind({{ .Handler }}),
 		{{- end }}
 	)
 	{{ range $index, $entry := .Entries -}}
@@ -22,7 +22,7 @@ func Routes(server page.Server, m page.Mux, renderer *treetop.Renderer) {
 		{{ if $entry.OverrideHandler -}}
 		{{ $entry.Handler }},
 		{{- else -}}
-		server.Bind({{ $entry.Handler }}),
+		cxt.Bind({{ $entry.Handler }}),
 		{{- end }}
 	)
 	{{- else if eq $entry.Type "SubView" -}}
@@ -32,7 +32,7 @@ func Routes(server page.Server, m page.Mux, renderer *treetop.Renderer) {
 		{{ if $entry.OverrideHandler -}}
 		{{ $entry.Handler }},
 		{{- else -}}
-		server.Bind({{ $entry.Handler }}),
+		cxt.Bind({{ $entry.Handler }}),
 		{{- end }}
 	)
 	{{- else if eq $entry.Type "Spacer" }}
@@ -41,7 +41,7 @@ func Routes(server page.Server, m page.Mux, renderer *treetop.Renderer) {
 	nil // unknown entry type: {{ $entry.Type }}
 	{{- end }}
 	{{ end }}{{ range $index, $route := .Routes }}
-	m.Handle("{{ $route.Path }}",
+	m.Handle{{ $route.Method }}("{{ $route.Path }}",
 		{{ if not $route.Includes }}treetop.ViewHandler({{ $route.Reference }})
 		{{- else }}treetop.ViewHandler(
 			{{ $route.Reference }},

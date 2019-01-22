@@ -1,0 +1,40 @@
+package page
+
+import (
+	"net/http"
+	"strings"
+)
+
+// Using an interface for router configuration
+// can help to normalize router code.
+type Mux interface {
+	HandleGET(pattern string, handler http.Handler)
+	HandlePOST(pattern string, handler http.Handler)
+}
+
+// Demonstration for the the Go standard library 'Mux'
+// EDITME: If you wish to use this approach for routing you will likely need
+//         to implement the Mux interface in your own way.
+type StandardMux struct {
+	Mux *http.ServeMux
+}
+
+func (s StandardMux) HandleGET(pattern string, handler http.Handler) {
+	s.Mux.HandleFunc(pattern, func(w http.ResponseWriter, req *http.Request) {
+		if strings.ToLower(req.Method) != "get" {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		handler.ServeHTTP(w, req)
+	})
+}
+
+func (s StandardMux) HandlePOST(pattern string, handler http.Handler) {
+	s.Mux.HandleFunc(pattern, func(w http.ResponseWriter, req *http.Request) {
+		if strings.ToLower(req.Method) != "post" {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		handler.ServeHTTP(w, req)
+	})
+}

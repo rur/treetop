@@ -1,86 +1,41 @@
-package page
+package app
 
 import (
+	"fmt"
 	"net/http"
-	"sync"
-
-	"github.com/rur/treetop"
 )
 
-// Services, session info and configuration shared between handlers servicing the same request.
-// eg: query facade, user info, roles, etc..
+// EDITME: add services, session info and configuration needed for a request.
 //
-// NB: It is very important that data handlers do not communicate directly,
-//     consider before adding a field to this type.
+// Note: This instance may be shared between TT handlers, please resist the templation to use it for
+///      for communication of any kind.
 type Resources struct {
-	Example bool
+	Active bool
 }
 
-type Mux interface {
-	Handle(pattern string, handler http.Handler)
+// Example of error that can occur during request initialization
+type AuthenticationError struct {
+	Method   string
+	Username string
 }
 
-type ResourcesHandler func(Resources, treetop.Response, *http.Request) interface{}
-
-type Server interface {
-	Bind(ResourcesHandler) treetop.HandlerFunc
-}
-
-func NewServer() Server {
-	return &server{
-		responses: make(map[uint32]*Resources),
-	}
-}
-
-// Server configuration state
-// eg: resource pools, auth provider, secrets, etc..
-type server struct {
-	sync.RWMutex
-	responses map[uint32]*Resources
-}
-
-// attempt to load Resources from the server cache
-func (s *server) get(respId uint32) *Resources {
-	s.RLock()
-	defer s.RUnlock()
-	if rsc, ok := s.responses[respId]; ok {
-		return rsc
+func (a AuthenticationError) Error() string {
+	if a.Method == "cookie" {
+		return "Unable to verify cookie"
+	} else if a.Method == "basic" {
+		return fmt.Sprintf("Failed to login using credentials for user '%s'", a.Username)
 	} else {
-		return nil
+		return "Unable to authenticate request"
 	}
 }
 
-func (s *server) set(respId uint32, rsc *Resources) {
-	s.Lock()
-	defer s.Unlock()
-	s.responses[respId] = rsc
+// EDITME: Initialization of request resources here
+func NewRequestResources(req *http.Request) (*Resources, error) {
+	return &Resources{true}, nil
 }
 
-// remove Resources from the cache for a given treetop response ID, delete is idempotent
-func (s *server) delete(respId uint32) {
-	s.Lock()
-	defer s.Unlock()
-	delete(s.responses, respId)
-}
-
-// wrap ;
-func (s *server) Bind(f ResourcesHandler) treetop.HandlerFunc {
-	return func(rsp treetop.Response, req *http.Request) interface{} {
-		// Here the Treetop response ID is being used to permit resources to be shared
-		// between data handlers, within the scope of a request.
-		respId := rsp.ResponseID()
-		rsc := s.get(respId)
-
-		if rsc == nil {
-			// potentially blocking resource initialization here
-			rsc = &Resources{true}
-			s.set(respId, rsc)
-			go func() {
-				<-rsp.Context().Done()
-				// assume that the request lifecycle is finished, just free up resources
-				s.delete(respId)
-			}()
-		}
-		return f(*rsc, rsp, req)
-	}
+// EDITME: Destructor for Resources instances, may not be necessary but useful to have
+func FreeRequestResources(rsc *Resources) error {
+	rsc.Active = false
+	return nil
 }

@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/rur/treetop"
-	"{{ .Namespace }}/page"
+	"{{ .Namespace }}/app"
 )
 
 {{ range $index, $handler := .Handlers }}
@@ -12,7 +12,7 @@ import (
 // Extends: {{ $handler.Extends }}{{ end }}{{ if $handler.Doc }}
 // Doc: {{ $handler.Doc }}
 {{- end }}{{ if len $handler.Blocks}}
-func {{ $handler.Identifier }}(rsc page.Resources, rsp treetop.Response, req *http.Request) interface{} {
+func {{ $handler.Identifier }}(rsc app.Resources, rsp treetop.Response, req *http.Request) interface{} {
 	return  struct {
 		HandlerInfo string{{ range $index, $block := .Blocks }}
 		{{ $block.FieldName }} interface{}
@@ -23,7 +23,7 @@ func {{ $handler.Identifier }}(rsc page.Resources, rsp treetop.Response, req *ht
 		{{- end }}
 	}
 }{{ else }}
-func {{ $handler.Identifier }}(rsc page.Resources, rsp treetop.Response, req *http.Request) interface{} {
+func {{ $handler.Identifier }}(rsc app.Resources, rsp treetop.Response, req *http.Request) interface{} {
 	return  "{{ $handler.Info }} template data here!"
 }{{ end }}
 {{ end }}

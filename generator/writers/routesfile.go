@@ -28,6 +28,7 @@ type pageEntryData struct {
 type pageRouteData struct {
 	Reference string
 	Path      string
+	Method    string
 	Type      string
 	Includes  []string
 }
@@ -215,6 +216,11 @@ func processEntries(extends, blockName string, names []string, def *generator.Pa
 			route.Type = "Fragment"
 		} else {
 			route.Type = "Partial"
+		}
+		if def.Method == "" {
+			route.Method = "GET"
+		} else {
+			route.Method = strings.ToUpper(def.Method)
 		}
 		routes = append(routes, route)
 	}
