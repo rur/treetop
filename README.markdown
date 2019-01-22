@@ -24,11 +24,11 @@ Runnable example projects.
 
 ## Introduction
 
-Multi-page navigation is ideal for web apps that are content heavy or have a sophisticated backend. The main drawback versus client apps is interactivity. Linking pages together doesn't always cut it in terms of user experience.
+Multi-page web apps are ideal for systems that are content heavy or have a sophisticated backend. The main drawback versus client apps is interactivity. Linking pages together doesn't always cut it in terms of user experience.
 
-Treetop aims to enhance server-side web apps by allowing them to support partial page updates, without the need for custom client-side code. A Treetop enabled request handler is capable of yielding either a normal HTML document, or a list of HTML fragments. Fragments can be applied automatically to update the loaded page.
+Treetop aims to support partial page updates without the need for custom client-side code. A Treetop endpoint is capable of yielding either a normal HTML document, or a list of HTML fragments. Fragments that can be applied to update the loaded page.
 
-The goal of this project is to find a mechanism that is as close as possible to the standard HTTP application model.
+The goal of this project is to find an uncomplicated mechanism that is as close as possible to the standard HTTP application model.
 
 ### No client configuration necessary
 
