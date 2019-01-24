@@ -18,8 +18,6 @@ Tip. Activate your network tab to observe what's going on.
 
 ### Other Examples
 
-Runnable example projects.
-
 - [Todo \*Without\* MVC](https://github.com/rur/todowithoutmvc) - Treetop implementation of [TodoMVC](http://todomvc.com) app.
 
 ## Introduction
