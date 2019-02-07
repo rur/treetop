@@ -12,6 +12,7 @@ import (
 type Response interface {
 	http.ResponseWriter
 	Status(int) int
+	DesignatePageURL(string)
 	Done() bool
 	HandlePartial(string, *http.Request) interface{}
 	ResponseID() uint32

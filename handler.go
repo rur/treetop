@@ -119,9 +119,8 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		rsp.finished = true
 	}
 
-	resp.Header().Set("Content-Type", contentType)
-
 	if contentType == PartialContentType || contentType == FragmentContentType {
+		pageURL := rsp.pageURL
 		// Execute postscript templates for partial requests only
 		// each rendered template will be appended to the content body.
 		for index := 0; index < len(h.Postscript); index++ {
@@ -143,12 +142,23 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 				// mark response instance as finished
 				postRsp.finished = true
 			}
+			if pageURL == "" {
+				pageURL = postRsp.pageURL
+			}
 		}
 
-		// this is useful for XHR requests because if a redirect occurred
-		// the final response URL is not necessarily available to the client
-		resp.Header().Set("X-Response-Url", req.URL.RequestURI())
+		if pageURL != "" {
+			// one or other of the handlers has specified a 'PartialURL'
+			// this URL should be used as the page location
+			contentType = PartialContentType
+			resp.Header().Set("X-Response-Url", pageURL)
+		} else {
+			// This is still useful for XHR requests because if a redirect occurred
+			// the final response URL is not necessarily available to the client
+			resp.Header().Set("X-Response-Url", req.URL.RequestURI())
+		}
 	}
+	resp.Header().Set("Content-Type", contentType)
 
 	// Since we are modulating the representation based upon a header value, it is
 	// necessary to inform the caches. See https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.6

@@ -13,6 +13,7 @@ type responseImpl struct {
 	finished   bool
 	status     int
 	partial    *Partial
+	pageURL    string
 }
 
 // Implement http.ResponseWriter interface by delegating to embedded instance
@@ -44,6 +45,10 @@ func (rsp *responseImpl) Status(status int) int {
 		rsp.status = status
 	}
 	return rsp.status
+}
+
+func (rsp *responseImpl) DesignatePageURL(url string) {
+	rsp.pageURL = url
 }
 
 func (rsp *responseImpl) Done() bool {
@@ -89,6 +94,7 @@ func (rsp *responseImpl) HandlePartial(name string, req *http.Request) interface
 	}
 	// 5. adopt status of sub handler (if applicable, see .Status doc)
 	rsp.Status(subResp.status)
+	rsp.DesignatePageURL(subResp.pageURL)
 	// 6. return resulting data and flag indicating if .Data(...) was called
 	return data
 }
