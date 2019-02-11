@@ -22,6 +22,7 @@ type treetopWriter struct {
 	status         int
 	responseURL    string
 	contentType    string
+	written        bool
 }
 
 func (t *treetopWriter) Status(code int) {
@@ -37,10 +38,13 @@ func (tw *treetopWriter) Write(p []byte) (n int, err error) {
 	if err != nil {
 		return n, err
 	}
-	tw.responseWriter.Header().Set("X-Response-Url", respURI.EscapedPath())
-	tw.responseWriter.Header().Set("Content-Type", tw.contentType)
-	if tw.status > 100 {
-		tw.responseWriter.WriteHeader(tw.status)
+	if !tw.written {
+		tw.responseWriter.Header().Set("X-Response-Url", respURI.EscapedPath())
+		tw.responseWriter.Header().Set("Content-Type", tw.contentType)
+		if tw.status > 100 {
+			tw.responseWriter.WriteHeader(tw.status)
+		}
+		tw.written = true
 	}
 	return tw.responseWriter.Write(p)
 }
