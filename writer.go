@@ -57,7 +57,8 @@ func Writer(w http.ResponseWriter, req *http.Request, isPartial bool) (TreetopWr
 		contentType = FragmentContentType
 	}
 	var writer *treetopWriter
-	for _, accept := range strings.Split(req.Header.Get("Accept"), ",") {
+	accept := strings.Split(req.Header.Get("Accept"), ";")[0]
+	for _, accept := range strings.Split(accept, ",") {
 		if strings.TrimSpace(accept) == contentType {
 			writer = &treetopWriter{
 				responseWriter: w,
