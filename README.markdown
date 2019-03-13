@@ -26,7 +26,7 @@ Tip. Activate your network tab to observe what's going on.
 
 There are times when application logic is best kept on the server side. Treetop was created to help improve user experience without the need for client facing APIs.
 
-Treetop supports partial page updates with a minimal extension to standard web navigation. An endpoint is enabled if it is capable of yielding either a normal HTML document, or a list of HTML fragments. Fragments that can be applied to update a loaded page.
+Treetop supports partial page updates with a straightforward extension of standard web navigation. Any application endpoint can be enabled by accepting the Treetop partial or fragment content type. HTML snippets yielded in the response body will be applied to update the loaded page.
 
 
 ### No client configuration necessary
@@ -63,7 +63,7 @@ Finally, once the `Content-Type` has been recognized in the response headers, th
 * Matched elements in the current DOM will be replaced.
 * Unmatched fragments will be discarded.
 
-_Note that aspects of the client processing can be configured and extended._
+_Note that aspects of the client processing can be configured and extended. See [client docs](https://github.com/rur/treetop-client)_
 
 
 ### Fragment vs Partial
@@ -74,7 +74,7 @@ The `Content-Type` response header denotes whether a request should be treated a
 
     application/x.treetop-html-partial+xml
 
-A 'partial' URL supports rendering either a fragment or a full HTML document. When this Content-Type is received the [treetop client](https://github.com/rur/treetop-client) will update the browser location bar with the response URL.
+A 'partial' URL supports rendering either a fragment or a full HTML document. When this Content-Type is received the client library will update the browser location bar with the response URL.
 
 #### Fragment content type
 
@@ -97,7 +97,7 @@ The Treetop Go library provides utilities for writing compatible HTTP responses.
 
 ### Hierarchical Views
 
-The Treetop library includes an abstraction for creating more complex networks of handlers. A page view API is available for building handler instances that take advantage of the template inheritance feature supported by the Go standard library<sup>(1)</sup>.
+An abstraction is included in the Treetop GO library for creating more complex networks of handlers. A page view API is available for building handler instances that take advantage of the template inheritance feature supported by the Go standard library<sup>(1)</sup>.
 
     base := treetop.NewView("base.html.tmpl", baseHandler)
     content := base.SubView(
@@ -120,15 +120,15 @@ The Treetop library includes an abstraction for creating more complex networks o
     mux.HandleGET("/contact", treetop.ViewHandler(form))
     mux.HandlePOST("/contact/submit", treetop.ViewHandler(submit).FragmentOnly())
 
-All handler instances implement the `http.Handler` interface so you are free to use whatever routing library you wish.
-
-Each template file path is paired with a data handler. This function is responsible for yielding execution data for the corresponding template. Hierarchy works by chaining handlers together to assemble tiers of template data into one data structure.
+Each template filepath is paired with a data handler which is responsible for yielding execution data for the template. Hierarchy works by chaining handlers together to assemble tiers of template data into one data structure.
 
     // top-level handler delegates to zero or more sub handler
     func baseHandler(rsp treetop.Response, req *http.Request) interface{} {
         return struct{
+            Session app.Session
             Content interface{}
         }{
+            Session: Session{"example.user"},
             Content: rsp.HandlePartial("content", req),
         }
     }
@@ -136,21 +136,22 @@ Each template file path is paired with a data handler. This function is responsi
     // "content" subview, delegates to "form"
     func contentHandler(rsp treetop.Response, req *http.Request) interface{} {
         return struct{
-            Form interface{}
+            Title string
+            Form  interface{}
         }{
+            Title: "My Contact Form",
             Form: rsp.HandlePartial("form", req),
         }
     }
 
     // "form" sub-view
     func contactHandler(_ treetop.Response, _ *http.Request) interface{} {
-        return "...Contact form config..."
+        return "...form config..."
     }
 
     // alternative "form" handler
     func submitHandler(_ treetop.Response, req *http.Request) interface{} {
         // ...handle POST data here...
-        // output for template
         return "Thanks!"
     }
 
