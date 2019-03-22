@@ -15,7 +15,7 @@ import (
 // The response body and content-type will be ignored by the treetop client handler.
 // Similar to "303 See Other" an independent GET request should result.
 func SeeOtherPage(w http.ResponseWriter, req *http.Request, location string) bool {
-	if !FragmentAccept(req) {
+	if !IsTreetopRequest(req) {
 		// not a treetop request, do nothing
 		return false
 	}
