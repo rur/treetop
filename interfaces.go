@@ -13,6 +13,7 @@ type Response interface {
 	http.ResponseWriter
 	Status(int) int
 	DesignatePageURL(string)
+	ReplacePageURL(string)
 	Done() bool
 	HandlePartial(string, *http.Request) interface{}
 	ResponseID() uint32

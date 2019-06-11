@@ -14,23 +14,31 @@ const (
 type TreetopWriter interface {
 	Write([]byte) (int, error)
 	Status(int)
-	ResponseURI(string)
+	DesignatePageURL(string)
+	ReplacePageURL(string)
 }
 
 type treetopWriter struct {
-	responseWriter http.ResponseWriter
-	status         int
-	responseURL    string
-	contentType    string
-	written        bool
+	responseWriter  http.ResponseWriter
+	status          int
+	responseURL     string
+	replaceURLState bool
+	contentType     string
+	written         bool
 }
 
 func (t *treetopWriter) Status(code int) {
 	t.status = code
 }
 
-func (t *treetopWriter) ResponseURI(uri string) {
+func (t *treetopWriter) DesignatePageURL(uri string) {
 	t.responseURL = uri
+	t.replaceURLState = false
+}
+
+func (t *treetopWriter) ReplacePageURL(uri string) {
+	t.responseURL = uri
+	t.replaceURLState = true
 }
 
 func (tw *treetopWriter) Write(p []byte) (n int, err error) {
@@ -40,6 +48,9 @@ func (tw *treetopWriter) Write(p []byte) (n int, err error) {
 	}
 	if !tw.written {
 		tw.responseWriter.Header().Set("X-Response-Url", respURI.EscapedPath())
+		if tw.replaceURLState {
+			tw.responseWriter.Header().Set("X-Response-History", "replace")
+		}
 		tw.responseWriter.Header().Set("Content-Type", tw.contentType)
 		if tw.status > 100 {
 			tw.responseWriter.WriteHeader(tw.status)

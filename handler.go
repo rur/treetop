@@ -120,7 +120,9 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	if contentType == PartialContentType || contentType == FragmentContentType {
+		specified := rsp.pageURLSpecified
 		pageURL := rsp.pageURL
+		resplaceState := rsp.replaceURL
 		// Execute postscript templates for partial requests only
 		// each rendered template will be appended to the content body.
 		for index := 0; index < len(h.Postscript); index++ {
@@ -142,16 +144,21 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 				// mark response instance as finished
 				postRsp.finished = true
 			}
-			if pageURL == "" {
+			if !specified && postRsp.pageURLSpecified {
+				specified = true
 				pageURL = postRsp.pageURL
+				resplaceState = postRsp.replaceURL
 			}
 		}
 
-		if pageURL != "" {
+		if specified {
 			// one or other of the handlers has specified a 'PartialURL'
 			// this URL should be used as the page location
 			contentType = PartialContentType
 			resp.Header().Set("X-Response-Url", pageURL)
+			if resplaceState {
+				resp.Header().Set("X-Response-History", "replace")
+			}
 		} else {
 			// This is still useful for XHR requests because if a redirect occurred
 			// the final response URL is not necessarily available to the client

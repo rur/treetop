@@ -20,9 +20,15 @@ func Test(handler HandlerFunc, render func(interface{}) []byte, req *http.Reques
 			HandlerFunc: handler,
 		},
 	}
-	rsp.execute(w.Body, func(w io.Writer, _ []string, data interface{}) error {
+	var buf bytes.Buffer
+	rsp.execute(&buf, func(w io.Writer, _ []string, data interface{}) error {
 		w.Write(render(data))
 		return nil
 	}, req)
+
+	if rsp.status > 0 {
+		w.WriteHeader(rsp.status)
+	}
+	buf.WriteTo(w)
 	return w
 }

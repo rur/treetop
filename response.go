@@ -8,12 +8,14 @@ import (
 
 type responseImpl struct {
 	http.ResponseWriter
-	responseID uint32
-	context    context.Context
-	finished   bool
-	status     int
-	partial    *Partial
-	pageURL    string
+	responseID       uint32
+	context          context.Context
+	finished         bool
+	status           int
+	partial          *Partial
+	pageURL          string
+	pageURLSpecified bool
+	replaceURL       bool
 }
 
 // Implement http.ResponseWriter interface by delegating to embedded instance
@@ -47,8 +49,16 @@ func (rsp *responseImpl) Status(status int) int {
 	return rsp.status
 }
 
+func (rsp *responseImpl) ReplacePageURL(url string) {
+	rsp.pageURL = url
+	rsp.replaceURL = true
+	rsp.pageURLSpecified = true
+}
+
 func (rsp *responseImpl) DesignatePageURL(url string) {
 	rsp.pageURL = url
+	rsp.replaceURL = false
+	rsp.pageURLSpecified = true
 }
 
 func (rsp *responseImpl) Done() bool {
@@ -77,7 +87,7 @@ func (rsp *responseImpl) HandlePartial(name string, req *http.Request) interface
 		// a template which extends block name was not found, return nothing
 		return nil
 	}
-	// 3. construct a sub responseImpl
+	// 3. construct a Response instance for the sub handler that inherits properties from the current response
 	subResp := responseImpl{
 		ResponseWriter: rsp.ResponseWriter,
 		responseID:     rsp.responseID,
@@ -92,10 +102,17 @@ func (rsp *responseImpl) HandlePartial(name string, req *http.Request) interface
 	} else {
 		subResp.finished = true
 	}
-	// 5. adopt status of sub handler (if applicable, see .Status doc)
+	// 5. adopt status and page URL of sub handler (as applicable)
 	rsp.Status(subResp.status)
-	rsp.DesignatePageURL(subResp.pageURL)
-	// 6. return resulting data and flag indicating if .Data(...) was called
+	if subResp.pageURLSpecified {
+		// adopt pageURL if the child handler specified one
+		if subResp.replaceURL {
+			rsp.ReplacePageURL(subResp.pageURL)
+		} else {
+			rsp.DesignatePageURL(subResp.pageURL)
+		}
+	}
+	// 6. return resulting data for parent handler to use
 	return data
 }
 
