@@ -12,13 +12,27 @@ import (
 
 var token uint32
 
-// Generate a token which can be used to identify treetop
+// nextResponseID generates a token which can be used to identify treetop
 // responses *locally*. The only uniqueness requirement
 // is that concurrent active requests must not possess the same value.
 func nextResponseID() uint32 {
 	return atomic.AddUint32(&token, 1)
 }
 
+// ViewHandler returns an instance implementing the http.Handler interface, given a series of treetop.View definitions.
+//
+// In addition to the primary (and mandatory) view, 'include' views can be added.
+//
+// Includes will affect request handling in the following way:
+//  	- Any subview of the primary view with the same name as the include, will be overloaded;
+//		- Otherwise, if no primary subview with the same name exists:
+// 			- includes are treated as 'siblings'
+// 			- include handlers will be executed *after* all preceding view hierarchies are resolved;
+// 			- the rendered include template will be appended to the response fragment.
+//
+// Note: it is the responsibility of the client library to decide how to handle sibling HTML nodes
+//       in the template fragment.
+//
 func ViewHandler(view View, includes ...View) *Handler {
 	// Create a new handler which incorporates the templates from the supplied partial definition
 	newHandler := view.Handler()
@@ -63,7 +77,7 @@ type Handler struct {
 	Renderer TemplateExec
 }
 
-// Implementation of http.Handler interface, see https://golang.org/pkg/net/http/?#Handler
+// ServeHTTP implements the http.Handler interface, see https://golang.org/pkg/net/http/?#Handler
 func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	select {
 	case <-req.Context().Done():
@@ -178,6 +192,9 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	buf.WriteTo(resp)
 }
 
+// PageOnly restricts the handler end-point from accepting requests for partial data. Only full page
+// requests are to be served. Put another way, the Treetop accept header is not supported by this handler.
+// Response content type will be `"text/html"`.
 func (h *Handler) PageOnly() *Handler {
 	return &Handler{
 		Page:     h.Page,
@@ -185,6 +202,9 @@ func (h *Handler) PageOnly() *Handler {
 	}
 }
 
+// FragmentOnly restricts the handler end-point from accepting full page requests. Only a
+// valid treetop partial request will be acceptable.
+// Response content type will be `treetop.FragmentContentType`
 func (h *Handler) FragmentOnly() *Handler {
 	return &Handler{
 		Fragment:   h.Fragment,
@@ -209,6 +229,8 @@ func (p *Partial) TemplateList() ([]string, error) {
 // Internal
 // ---------
 
+// aggregateTemplates traverses a list of partial hierarchies and returns the
+// template strings that were used to define the associated sub-views.
 func aggregateTemplates(partials []Partial, seen ...string) ([]string, error) {
 	var these []string
 	var next []string
@@ -231,6 +253,7 @@ func aggregateTemplates(partials []Partial, seen ...string) ([]string, error) {
 	return append(these, next...), nil
 }
 
+// contains checks if a list of values contains an element matching a query string exactly
 func contains(values []string, query string) bool {
 	for i := 0; i < len(values); i++ {
 		if values[i] == query {
@@ -240,9 +263,12 @@ func contains(values []string, query string) bool {
 	return false
 }
 
+// insertPartial creates a copy of the parent with the child partial incorporated into the template hierarchy,
+// if possible.
+//
+// If the child partial does not match any blocks in the hierarchy,
+// a nil pointer will be returned.
 func insertPartial(parent, child *Partial, seen ...string) *Partial {
-	// Create a copy of the parent with the child partial incorporated into the template hierarchy, if possible.
-	// If the child partial does not match any blocks in the hierarchy, a nil pointer will be returned.
 	copy := Partial{
 		parent.Extends,
 		parent.Template,

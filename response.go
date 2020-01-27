@@ -49,18 +49,23 @@ func (rsp *responseImpl) Status(status int) int {
 	return rsp.status
 }
 
+// ReplacePageURL forces the location bar in the web browser to be updated with the supplied
+// URL. This should be done by *replacing* the existing history entry. (not adding a new one)
 func (rsp *responseImpl) ReplacePageURL(url string) {
 	rsp.pageURL = url
 	rsp.replaceURL = true
 	rsp.pageURLSpecified = true
 }
 
+// DesignatePageURL forces the response to be handled as a full or part of a full page.
+// the web browser will have a new history entry for the supplied URL.
 func (rsp *responseImpl) DesignatePageURL(url string) {
 	rsp.pageURL = url
 	rsp.replaceURL = false
 	rsp.pageURLSpecified = true
 }
 
+// Done allows a handler to check if the request has already been satisfied.
 func (rsp *responseImpl) Done() bool {
 	return rsp.finished
 }
@@ -75,9 +80,10 @@ func (rsp *responseImpl) HandlePartial(name string, req *http.Request) interface
 		return nil
 	}
 	var part *Partial
-	// 1. loop children of the template
+
+	// 1. loop through direct subviews
 	for i := 0; i < len(rsp.partial.Blocks); i++ {
-		// 2. find a child-template which extends the named block
+		// find a subview which extends the named block
 		if rsp.partial.Blocks[i].Extends == name {
 			part = &rsp.partial.Blocks[i]
 			break
@@ -87,22 +93,31 @@ func (rsp *responseImpl) HandlePartial(name string, req *http.Request) interface
 		// a template which extends block name was not found, return nothing
 		return nil
 	}
-	// 3. construct a Response instance for the sub handler that inherits properties from the current response
+
+	// 2. Construct a Response instance for the sub handler and inherit
+	//    properties from the current response
 	subResp := responseImpl{
 		ResponseWriter: rsp.ResponseWriter,
 		responseID:     rsp.responseID,
 		context:        rsp.context,
 		partial:        part,
 	}
-	// 4. invoke handler
+
+	// 3. invoke sub handler, collecting the response
 	data := part.HandlerFunc(&subResp, req)
 	if subResp.finished {
+		// sub handler took over the writing of the response, all handlers should be halted.
+		//
+		// NOTE: It seems like this should invole the Golang 'Context' pattern in some way.
+		//       It is not obvious to me but there is probably a better way to tear the
+		//       whole process down. A simple 'finished' flag is fine for the time being.
+		//
 		rsp.finished = true
 		return nil
-	} else {
-		subResp.finished = true
 	}
-	// 5. adopt status and page URL of sub handler (as applicable)
+	subResp.finished = true
+
+	// 4. Adopt status and page URL of sub handler (as applicable)
 	rsp.Status(subResp.status)
 	if subResp.pageURLSpecified {
 		// adopt pageURL if the child handler specified one
@@ -112,22 +127,27 @@ func (rsp *responseImpl) HandlePartial(name string, req *http.Request) interface
 			rsp.DesignatePageURL(subResp.pageURL)
 		}
 	}
-	// 6. return resulting data for parent handler to use
+
+	// 5. return resulting data for parent handler to use
 	return data
 }
 
-// context which allows request to be cancelled
+// Context is getter for the treetop response context which will indicate when the request
+// has been completed as was cancelled. This is derived from the request context so
+// it can safely be used for cleanup.
 func (rsp *responseImpl) Context() context.Context {
 	return rsp.context
 }
 
-// Locally unique ID for Treetop HTTP response. This is intended to be used to keep track of
-// the request as is passes between handlers.
+// ResponseID is a getter which returns a locally unique ID for a Treetop HTTP response.
+// This is intended to be used to keep track of the request as is passes between handlers.
+// The ID will increment by one starting at zero, every time the server is restarted.
 func (rsp *responseImpl) ResponseID() uint32 {
 	return rsp.responseID
 }
 
-// Load data from handlers hierarchy and execute template. Body will be written to IO writer passed in.
+// execute loads data from handlers hierarchy and executes the aggregated template list.
+// Body will be written to IO writer passed in.
 func (rsp *responseImpl) execute(body io.Writer, exec TemplateExec, req *http.Request) error {
 	data := rsp.partial.HandlerFunc(rsp, req)
 	if rsp.finished {
@@ -135,7 +155,7 @@ func (rsp *responseImpl) execute(body io.Writer, exec TemplateExec, req *http.Re
 		return nil
 	}
 
-	// Topo-sort of templates connected via blocks. The order is important for how template inheritance is resolved.
+	// Toposort of templates connected via blocks. The order is important for how template inheritance is resolved.
 	// TODO: The result should not change between requests so cache it when the handler instance is created.
 	templates, err := rsp.partial.TemplateList()
 	if err != nil {
