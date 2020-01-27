@@ -6,7 +6,7 @@ import (
 )
 
 // Noop treetop handler helper is useful when a treetop.HandlerFunc instance is needed
-// but you dont want it to do anything. Function returns `nil`.
+// but you don't want it to do anything. Function returns `nil`.
 func Noop(_ Response, _ *http.Request) interface{} { return nil }
 
 // Constant treetop handler helper is used to generate a treetop.HandlerFunc that always

@@ -6,7 +6,7 @@ import (
 )
 
 func Test_renderer_new_page(t *testing.T) {
-	renderer := NewRenderer(DefaultTemplateExec)
+	renderer := NewPage(DefaultTemplateExec)
 
 	page := renderer.NewView("base.html.tmpl", Noop)
 

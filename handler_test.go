@@ -561,8 +561,9 @@ func TestHandler_With_Includes(t *testing.T) {
 		"sub-impl.html.tmpl",
 	}
 
-	page := NewView("base.html.tmpl", Noop)
-	testView := page.SubView("test", "test.html.tmpl", Noop)
+	page := NewPage(DefaultTemplateExec)
+	base := page.NewView("base.html.tmpl", Noop)
+	testView := base.SubView("test", "test.html.tmpl", Noop)
 	_ = testView.DefaultSubView("sub", "not-this-sub-fragment.html.tmpl", Noop)
 
 	subImpl := testView.SubView("sub", "sub-impl.html.tmpl", Noop)
