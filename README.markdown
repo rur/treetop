@@ -95,11 +95,12 @@ The Treetop Go library provides utilities for writing compatible HTTP responses.
         }
     }
 
-### Hierarchical Views
+### Page API - Hierarchical Views
 
 An abstraction is included in the Treetop GO library for creating more complex networks of handlers. A page view API is available for building handler instances that take advantage of the template inheritance feature supported by the Go standard library<sup>(1)</sup>.
 
-    base := treetop.NewView("base.html.tmpl", baseHandler)
+    page := treetop.NewPage(treetop.DefaultTemplateExec)
+    base := page.NewView("base.html.tmpl", baseHandler)
     content := base.SubView(
         "content",
         "content.html.tmpl",
