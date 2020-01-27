@@ -1,3 +1,7 @@
+// Hierarchical view handlers control the treetop response lifecycle through
+// the treetop.ResponseWriter interface, which is a superset of the html.ResponseWriter
+// interface.
+
 package treetop
 
 import (
@@ -6,6 +10,8 @@ import (
 	"net/http"
 )
 
+// responseImpl is the API that treetop request handlers interact with
+// through the treetop.ResponseWriter interface.
 type responseImpl struct {
 	http.ResponseWriter
 	responseID       uint32
@@ -82,13 +88,12 @@ func (rsp *responseImpl) HandlePartial(name string, req *http.Request) interface
 	var part *Partial
 
 	// 1. loop through direct subviews
-	for i := 0; i < len(rsp.partial.Blocks); i++ {
-		// find a subview which extends the named block
-		if rsp.partial.Blocks[i].Extends == name {
-			part = &rsp.partial.Blocks[i]
-			break
+	for _, blockPartial := range rsp.partial.Blocks {
+		if blockPartial.Extends == name {
+			part = &blockPartial
 		}
 	}
+
 	if part == nil {
 		// a template which extends block name was not found, return nothing
 		return nil

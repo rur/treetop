@@ -9,7 +9,8 @@ import (
 	"path/filepath"
 )
 
-// implements TemplateExec
+// DefaultTemplateExec implements TemplateExec as a thin wrapper around the
+// ParseFiles method in html/template package
 func DefaultTemplateExec(w io.Writer, templates []string, data interface{}) error {
 	t, err := template.New("__init__").ParseFiles(templates...)
 	if err != nil {
@@ -21,6 +22,8 @@ func DefaultTemplateExec(w io.Writer, templates []string, data interface{}) erro
 	return nil
 }
 
+// StringTemplateExec will parse template strings as the template body, not the path
+// to a template file on disk
 func StringTemplateExec(w io.Writer, templates []string, data interface{}) error {
 	var t *template.Template
 	// snippet based upon https://golang.org/pkg/html/template/#ParseFiles implementation
@@ -46,7 +49,7 @@ func StringTemplateExec(w io.Writer, templates []string, data interface{}) error
 	return nil
 }
 
-// Similar to default executor except template files will be loading using an interface
+// TemplateFileSystem is similar to default executor except template files will be loading using an interface
 // see https://golang.org/pkg/net/http/#FileSystem
 func TemplateFileSystem(fs http.FileSystem) TemplateExec {
 	return func(w io.Writer, templates []string, data interface{}) error {

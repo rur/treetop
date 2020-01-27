@@ -139,12 +139,12 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		resplaceState := rsp.replaceURL
 		// Execute postscript templates for partial requests only
 		// each rendered template will be appended to the content body.
-		for index := 0; index < len(h.Postscript); index++ {
+		for _, ps := range h.Postscript {
 			postRsp := &responseImpl{
 				ResponseWriter: resp,
 				context:        ctx,
 				responseID:     responseID,
-				partial:        &h.Postscript[index],
+				partial:        &ps,
 			}
 
 			if err := postRsp.execute(&buf, h.Renderer, req); err != nil {
@@ -221,7 +221,6 @@ func (p *Partial) TemplateList() ([]string, error) {
 		return nil, err
 	}
 	tpls = append([]string{p.Template}, tpls...)
-
 	return tpls, nil
 }
 
@@ -234,19 +233,19 @@ func (p *Partial) TemplateList() ([]string, error) {
 func aggregateTemplates(partials []Partial, seen ...string) ([]string, error) {
 	var these []string
 	var next []string
-	for i := 0; i < len(partials); i++ {
-		if contains(seen, partials[i].Extends) {
+	for _, partial := range partials {
+		if contains(seen, partial.Extends) {
 			return nil, fmt.Errorf(
 				"aggregateTemplates: Encountered naming cycle within nested blocks:\n* %s",
-				strings.Join(append(seen, partials[i].Extends), " -> "),
+				strings.Join(append(seen, partial.Extends), " -> "),
 			)
 		}
-		agg, err := aggregateTemplates(partials[i].Blocks, append(seen, partials[i].Extends)...)
+		agg, err := aggregateTemplates(partial.Blocks, append(seen, partial.Extends)...)
 		if err != nil {
 			return agg, err
 		}
-		if partials[i].Template != "" {
-			these = append(these, partials[i].Template)
+		if partial.Template != "" {
+			these = append(these, partial.Template)
 		}
 		next = append(next, agg...)
 	}
@@ -255,8 +254,8 @@ func aggregateTemplates(partials []Partial, seen ...string) ([]string, error) {
 
 // contains checks if a list of values contains an element matching a query string exactly
 func contains(values []string, query string) bool {
-	for i := 0; i < len(values); i++ {
-		if values[i] == query {
+	for _, value := range values {
+		if value == query {
 			return true
 		}
 	}
