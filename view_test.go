@@ -100,17 +100,14 @@ func Test_extend_block_partial(t *testing.T) {
 
 func Test_extend_multiple_levels(t *testing.T) {
 	base := basePartial()
+
 	_ = base.DefaultSubView("test", "test.html.tmpl", Noop)
-
 	test2 := base.SubView("test2", "test2.html.tmpl", Noop)
-
 	_ = test2.DefaultSubView("A", "default_A.html.tmpl", Noop)
+	test2B := test2.SubView("B", "test2_B.html.tmpl", Noop)
+	test2B.DefaultSubView("B_plus", "test2_B_plus.html.tmpl", Noop)
 
-	test2_b := test2.SubView("B", "test2_B.html.tmpl", Noop)
-
-	test2_b.DefaultSubView("B_plus", "test2_B_plus.html.tmpl", Noop)
-
-	handler := test2_b.Handler()
+	handler := test2B.Handler()
 
 	var expectingTempl []string
 	expectingTempl = []string{"test2_B.html.tmpl", "test2_B_plus.html.tmpl"}

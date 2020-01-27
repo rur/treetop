@@ -9,7 +9,7 @@ import (
 )
 
 // PrintHandler is a cheap and cheerful way to debug a view handlers by 'stringing'
-// a preview of the steate of a supplied handler instance
+// a preview of the state of a supplied handler instance
 func PrintHandler(h *Handler) string {
 	var handlerInfo string
 	if h.Fragment.HandlerFunc != nil {

@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/rur/treetop.svg?branch=master)](https://travis-ci.org/rur/treetop)
+[![Build Status](https://travis-ci.org/rur/treetop.svg?branch=v0.2.0)](https://travis-ci.org/rur/treetop)
 
 # Treetop
 
@@ -90,7 +90,7 @@ The Treetop Go library provides utilities for writing compatible HTTP responses.
 
     func myHandler(w http.ResponseWriter, req *http.Request) {
         // check for treetop request and construct a writer
-        if tw, ok := treetop.Writer(w, req, false); ok {
+        if tw, ok := treetop.NewFragmentWriter(w, req); ok {
             fmt.Fprintf(tw, `<h3 id="greeting">Hello, %s</h3>`, "Treetop")
         }
     }

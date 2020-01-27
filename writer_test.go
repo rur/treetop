@@ -22,7 +22,7 @@ func TestWriter(t *testing.T) {
 	tests := []struct {
 		name  string
 		args  args
-		want  *treetopWriter
+		want  *writer
 		want1 bool
 	}{
 		{
@@ -42,7 +42,7 @@ func TestWriter(t *testing.T) {
 				req:       mockRequest("/Some/path", FragmentContentType),
 				isPartial: false,
 			},
-			want: &treetopWriter{
+			want: &writer{
 				status:      0,
 				responseURL: "/Some/path",
 				contentType: FragmentContentType,
@@ -56,7 +56,7 @@ func TestWriter(t *testing.T) {
 				req:       mockRequest("/Some/path", PartialContentType),
 				isPartial: true,
 			},
-			want: &treetopWriter{
+			want: &writer{
 				status:      0,
 				responseURL: "/Some/path",
 				contentType: PartialContentType,
@@ -70,7 +70,7 @@ func TestWriter(t *testing.T) {
 				req:       mockRequest("/Some/path", PartialContentType+", "+FragmentContentType),
 				isPartial: false,
 			},
-			want: &treetopWriter{
+			want: &writer{
 				status:      0,
 				responseURL: "/Some/path",
 				contentType: FragmentContentType,
@@ -80,10 +80,18 @@ func TestWriter(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			writer, ok := Writer(tt.args.w, tt.args.req, tt.args.isPartial)
+			var (
+				ttW Writer
+				ok  bool
+			)
+			if tt.args.isPartial {
+				ttW, ok = NewPartialWriter(tt.args.w, tt.args.req)
+			} else {
+				ttW, ok = NewFragmentWriter(tt.args.w, tt.args.req)
+			}
 
 			if ok {
-				fmt.Fprint(writer, "<p>this is a test</p>")
+				fmt.Fprint(ttW, "<p>this is a test</p>")
 				status := tt.args.w.Code
 				contentType := tt.args.w.HeaderMap.Get("Content-Type")
 				responseURL := tt.args.w.HeaderMap.Get("X-Response-Url")
