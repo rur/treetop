@@ -1,4 +1,49 @@
+// Package treetop includes this view definition utility which is designed
+// for constructing hierarchies of template files paired with handler functions.
+//
+// Creating an endpoint for every dynamic part of a page can result in
+// a lot more handlers than are typically needed for a serverside web app.
+//
+// The template inheritance feature supported by the Go standard library is an
+// ideal way to reuse HTML template fragments using hierarchies. This page view utility
+// pairs each template file with a corresponding handler func, so that loading view data can
+// be similarly modularized.
+//
+// Example:
+//
+// 		page := treetop.NewPage(treetop.DefaultTemplateExec)
+// 		base := page.NewView("base.html", baseHandler)   // top level request handler
+// 		content := base.NewSubView("content", "content.html", contentHandler)   // em
+//
+// 		// Register a http.Handler that is capable of rendering a full document
+// 		// or just the a content section
+//		appMux.Handle("/", treetop.ViewHandler(content))
+//
 package treetop
+
+// Page is an API for defining a hierarchy of top level and nested views
+// each view has an associated handler and template string.
+type Page struct {
+	Execute TemplateExec
+}
+
+// NewPage will instantiate a page with the necessary configuration to
+// for defining hierarchies of views
+func NewPage(execute TemplateExec) *Page {
+	return &Page{
+		Execute: execute,
+	}
+}
+
+// NewView create a top level view definition with configuration
+// derived from the page instance.
+func (r *Page) NewView(template string, handlerFunc HandlerFunc) *View {
+	return &View{
+		Template:    template,
+		HandlerFunc: handlerFunc,
+		Renderer:    r.Execute,
+	}
+}
 
 // View is a paring of a template string with a treetop.HandlerFunc
 // each view can contain a tree of named subviews
