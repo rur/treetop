@@ -1,4 +1,6 @@
-// Package treetop includes this view definition utility which is designed
+package treetop
+
+// Treetop includes this view definition utility which is designed
 // for constructing hierarchies of template files paired with handler functions.
 //
 // Creating an endpoint for every dynamic part of a page can result in
@@ -19,7 +21,6 @@
 // 		// or just the a content section
 //		appMux.Handle("/", treetop.ViewHandler(content))
 //
-package treetop
 
 // Page is an API for defining a hierarchy of top level and nested views
 // each view has an associated handler and template string.
