@@ -1,109 +1,105 @@
 package treetop
 
-type viewImpl struct {
-	template string
-	extends  *blockImpl
-	handler  HandlerFunc
-	blocks   []*blockImpl
-	renderer TemplateExec
+// View is a paring of a template string with a treetop.HandlerFunc
+// each view can contain a tree of named subviews
+type View struct {
+	Template    string
+	Extends     *Block
+	HandlerFunc HandlerFunc
+	Blocks      []*Block
+	Renderer    TemplateExec
 }
 
-type blockImpl struct {
-	name           string
-	parent         *viewImpl
-	defaultpartial *viewImpl
+// Block represent a slot that other sub-views can inhabit
+// within an enclosing treetop.View definition
+type Block struct {
+	Name           string
+	Parent         *View
+	DefaultPartial *View
 }
 
-func (t *viewImpl) SubView(blockName, template string, handler HandlerFunc) View {
-	var block *blockImpl
-	for i := 0; i < len(t.blocks); i++ {
-		if t.blocks[i].name == blockName {
-			block = t.blocks[i]
+// SubView defines a new view (sub-view) that references to its parent via a
+// named block.
+func (v *View) SubView(blockName, template string, handler HandlerFunc) *View {
+	var block *Block
+	for i := 0; i < len(v.Blocks); i++ {
+		if v.Blocks[i].Name == blockName {
+			block = v.Blocks[i]
 		}
 	}
 	if block == nil {
-		block = &blockImpl{
-			parent: t,
-			name:   blockName,
+		block = &Block{
+			Parent: v,
+			Name:   blockName,
 		}
-		t.blocks = append(t.blocks, block)
+		v.Blocks = append(v.Blocks, block)
 	}
-	return &viewImpl{
-		extends:  block,
-		template: template,
-		handler:  handler,
-		renderer: t.renderer,
+	return &View{
+		Extends:     block,
+		Template:    template,
+		HandlerFunc: handler,
+		Renderer:    v.Renderer,
 	}
 }
 
-func (t *viewImpl) DefaultSubView(blockName, template string, handler HandlerFunc) View {
-	var block *blockImpl
-	for i := 0; i < len(t.blocks); i++ {
-		if t.blocks[i].name == blockName {
-			block = t.blocks[i]
-		}
-	}
-	if block == nil {
-		block = &blockImpl{
-			parent: t,
-			name:   blockName,
-		}
-		t.blocks = append(t.blocks, block)
-	}
-	sub := &viewImpl{
-		extends:  block,
-		template: template,
-		handler:  handler,
-		renderer: t.renderer,
-	}
-	block.defaultpartial = sub
+// DefaultSubView defines a new view (sub-view) that references it's parent via a
+// named block, equivalent to SubView method. The difference is that the parent will also
+// have a return reference this the new view, and will use it for the specified block
+// when no other 'overriding' view is involved.
+func (v *View) DefaultSubView(blockName, template string, handler HandlerFunc) *View {
+	sub := v.SubView(blockName, template, handler)
+	sub.Extends.DefaultPartial = sub
 	return sub
 }
 
-func (t *viewImpl) Handler() *Handler {
-	part := t.derivePartial(nil)
+// Handler will create a instance of a http.Handler designed to implement the
+// Treetop protocol through the page view & subview inheritance system.
+//
+// The hander will be derived from the the current state of the View definition,
+// subsequence changes to the View definition will not impact the Handler.
+func (v *View) Handler() *Handler {
+	part := v.derivePartial(nil)
 	page := part
-	root := t
-	for root.extends != nil && root.extends.parent != nil {
-		root = root.extends.parent
+	root := v
+	for root.Extends != nil && root.Extends.Parent != nil {
+		root = root.Extends.Parent
 		page = root.derivePartial(page)
 	}
-	handler := Handler{
+	return &Handler{
 		Fragment: part,
 		Page:     page,
-		Renderer: t.renderer,
+		Renderer: v.Renderer,
 	}
-
-	return &handler
 }
 
-func (t *viewImpl) derivePartial(override *Partial) *Partial {
+// derivePartial is an internal function used while constructing the HTTP
+// treetop request handler instance.
+func (v *View) derivePartial(override *Partial) *Partial {
 	var extends string
-	if t.extends != nil {
-		extends = t.extends.name
+	if v.Extends != nil {
+		extends = v.Extends.Name
 	}
 
 	p := Partial{
 		Extends:     extends,
-		Template:    t.template,
-		HandlerFunc: t.handler,
+		Template:    v.Template,
+		HandlerFunc: v.HandlerFunc,
 	}
 
 	var blP *Partial
-	for i := 0; i < len(t.blocks); i++ {
-		b := t.blocks[i]
+	for i := 0; i < len(v.Blocks); i++ {
+		b := v.Blocks[i]
 		blP = nil
-		if override != nil && override.Extends == b.name {
+		if override != nil && override.Extends == b.Name {
 			blP = override
-		} else if b.defaultpartial != nil {
-			blP = b.defaultpartial.derivePartial(override)
+		} else if b.DefaultPartial != nil {
+			blP = b.DefaultPartial.derivePartial(override)
 		} else {
 			// fallback when there is no default
-			blP = &Partial{Extends: b.name, HandlerFunc: Noop}
+			blP = &Partial{Extends: b.Name, HandlerFunc: Noop}
 		}
-
 		p.Blocks = append(p.Blocks, Partial{
-			Extends:     b.name,
+			Extends:     b.Name,
 			Template:    blP.Template,
 			HandlerFunc: blP.HandlerFunc,
 			Blocks:      blP.Blocks,

@@ -88,9 +88,10 @@ func (rsp *responseImpl) HandlePartial(name string, req *http.Request) interface
 	var part *Partial
 
 	// 1. loop through direct subviews
-	for _, blockPartial := range rsp.partial.Blocks {
-		if blockPartial.Extends == name {
-			part = &blockPartial
+	for i := range rsp.partial.Blocks {
+		if rsp.partial.Blocks[i].Extends == name {
+			part = &rsp.partial.Blocks[i]
+			break
 		}
 	}
 

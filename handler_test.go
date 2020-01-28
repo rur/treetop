@@ -216,7 +216,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			t.Errorf("Response body = %v, want %v", body, tt.expect)
 		}
 		if tt.args.resp.Code != tt.status {
-			t.Errorf("Response body = %v, want %v", tt.args.resp.Code, tt.status)
+			t.Errorf("Response code = %v, want %v", tt.args.resp.Code, tt.status)
 		}
 		if len(tt.expectLog) > 0 && !strings.Contains(output, tt.expectLog) {
 			t.Errorf("Log output = %v, want %v", output, tt.expectLog)

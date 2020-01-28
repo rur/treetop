@@ -15,11 +15,10 @@ func NewPage(execute TemplateExec) *Page {
 
 // NewView create a top level view definition with configuration
 // derived from the page instance.
-func (r *Page) NewView(template string, handlerFunc HandlerFunc) View {
-	view := &viewImpl{
-		template: template,
-		handler:  handlerFunc,
-		renderer: r.Execute,
+func (r *Page) NewView(template string, handlerFunc HandlerFunc) *View {
+	return &View{
+		Template:    template,
+		HandlerFunc: handlerFunc,
+		Renderer:    r.Execute,
 	}
-	return view
 }

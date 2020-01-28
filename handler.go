@@ -33,7 +33,7 @@ func nextResponseID() uint32 {
 // Note: it is the responsibility of the client library to decide how to handle sibling HTML nodes
 //       in the template fragment.
 //
-func ViewHandler(view View, includes ...View) *Handler {
+func ViewHandler(view *View, includes ...*View) *Handler {
 	// Create a new handler which incorporates the templates from the supplied partial definition
 	newHandler := view.Handler()
 
@@ -139,12 +139,12 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		resplaceState := rsp.replaceURL
 		// Execute postscript templates for partial requests only
 		// each rendered template will be appended to the content body.
-		for _, ps := range h.Postscript {
+		for i := range h.Postscript {
 			postRsp := &responseImpl{
 				ResponseWriter: resp,
 				context:        ctx,
 				responseID:     responseID,
-				partial:        &ps,
+				partial:        &h.Postscript[i],
 			}
 
 			if err := postRsp.execute(&buf, h.Renderer, req); err != nil {
@@ -216,12 +216,12 @@ func (h *Handler) FragmentOnly() *Handler {
 // TemplateList is used to obtain all partial templates dependent through block
 // associations, sorted topologically
 func (p *Partial) TemplateList() ([]string, error) {
-	tpls, err := aggregateTemplates(p.Blocks, p.Extends)
+	tmpl, err := aggregateTemplates(p.Blocks, p.Extends)
 	if err != nil {
 		return nil, err
 	}
-	tpls = append([]string{p.Template}, tpls...)
-	return tpls, nil
+	tmpl = append([]string{p.Template}, tmpl...)
+	return tmpl, nil
 }
 
 // ---------

@@ -27,11 +27,3 @@ type TemplateExec func(io.Writer, []string, interface{}) error
 // HandlerFunc is the interface for treetop handler functions that support hierarchical
 // partial data loading.
 type HandlerFunc func(Response, *http.Request) interface{}
-
-// View is an interface for a hierarchical view configuration. Named child views can be
-// added and a http.Handler instance can be derived.
-type View interface {
-	SubView(string, string, HandlerFunc) View
-	DefaultSubView(string, string, HandlerFunc) View
-	Handler() *Handler
-}
