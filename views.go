@@ -1,17 +1,44 @@
 package treetop
 
-// Treetop includes this view definition utility which is designed
-// for constructing hierarchies of template files paired with handler functions.
+// View is a utility for generating request handlers given a definition
+// of a template hierarchies.
 //
-// Creating an endpoint for every dynamic part of a page can result in
-// a lot more handlers than are typically needed for a serverside web app.
+// A view is a pair: a template string (usually file path) and a handler function.
+// A view can contain zero or more 'blocks', these are named sub-sections which allow
+// other views to be swapped in as needed.
 //
-// The template inheritance feature supported by the Go standard library is an
-// ideal way to reuse HTML template fragments using hierarchies. This page view utility
-// pairs each template file with a corresponding handler func, so that loading view data can
-// be similarly modularized.
+// Since multi-page web applications require an endpoint for every action.
+// The template inheritance feature supported by the Go standard library is useful
+// for reusing HTML template fragments.
 //
-// Example:
+// Example of a basic template hierarchy
+//
+//                      baseHandler(...)
+//                    / base.html ==========\
+//                    |                     |
+//                    |  / "content" ===\   |
+//                    |  |              |   |
+//                    |  |      ^       |   |
+//                    |  \______^_______/   |
+//                    \_________^___________/
+//                              ^
+//                             / \
+//     contentAHandler(...) __/   \__ contentBHandler(...)
+//     contentA.html                  contentB.html
+//
+//
+// Request/response example
+//
+//     GET /path/to/a
+//     > HTTP/1.1 200 OK
+//     > ... { base.html + contentA.html }
+//
+//     GET /path/to/b
+//     > HTTP/1.1 200 OK
+//     > ... { base.html + contentB.html }
+//
+//
+// Example of using Treetop View type to generate handers for these endpoints
 //
 // 		base := page.NewView(
 // 			treetop.DefaultTemplateExec,
@@ -19,36 +46,43 @@ package treetop
 // 			baseHandler,
 // 		)
 //
-// 		// register a block within the base template
-// 		content := base.NewSubView(
+// 		contentA := base.NewSubView(
 // 			"content",
-// 			"content.html",
-// 			contentHandler,
+// 			"contentA.html",
+// 			contentAHandler,
 // 		)
 //
-// 		// Register a http.Handler that is capable of rendering a full document
-// 		// or just the content section
-//		mymux.Handle("/", treetop.ViewHandler(content))
+// 		contentB := base.NewSubView(
+// 			"content",
+// 			"contentB.html",
+// 			contentBHandler,
+// 		)
 //
-
-// NewView create a top level view definition with configuration
-// derived from the page instance.
-func NewView(execute TemplateExec, template string, handlerFunc HandlerFunc) *View {
-	return &View{
-		Template:    template,
-		HandlerFunc: handlerFunc,
-		Renderer:    execute,
-	}
-}
-
-// View is a paring of a template string with a treetop.HandlerFunc
-// each view can contain a tree of named subviews
+//		mymux.Handle("/path/to/a", treetop.ViewHandler(contentA))
+//		mymux.Handle("/path/to/b", treetop.ViewHandler(contentB))
+//
+//
+// Notice that each template is paired with it's own handler function. As a result
+// request handling can be modularized along with the markup. In the example above,
+// the HTTP handlers created by the Treetop library are capable of rendering either
+// a full HTML document or the relevant "content" section alone.
+//
 type View struct {
 	Template    string
 	Extends     *Block
 	HandlerFunc HandlerFunc
 	Blocks      []*Block
 	Renderer    TemplateExec
+}
+
+// NewView create a top level view definition which is designed
+// for constructing hierarchies of template files paired with handler functions.
+func NewView(execute TemplateExec, template string, handlerFunc HandlerFunc) *View {
+	return &View{
+		Template:    template,
+		HandlerFunc: handlerFunc,
+		Renderer:    execute,
+	}
 }
 
 // Block represent a slot that other sub-views can inhabit
@@ -84,9 +118,9 @@ func (v *View) SubView(blockName, template string, handler HandlerFunc) *View {
 }
 
 // DefaultSubView defines a new view (sub-view) that references it's parent via a
-// named block, equivalent to SubView method. The difference is that the parent will also
-// have a return reference this the new view, and will use it for the specified block
-// when no other 'overriding' view is involved.
+// named block. It is equivalent to the SubView method except that the parent will also
+// have a return reference. The new view will become the 'default' template
+// for the specified block in the parent.
 func (v *View) DefaultSubView(blockName, template string, handler HandlerFunc) *View {
 	sub := v.SubView(blockName, template, handler)
 	sub.Extends.DefaultPartial = sub
