@@ -13,36 +13,31 @@ package treetop
 //
 // Example:
 //
-// 		page := treetop.NewPage(treetop.DefaultTemplateExec)
-// 		base := page.NewView("base.html", baseHandler)   // top level request handler
-// 		content := base.NewSubView("content", "content.html", contentHandler)   // em
+// 		base := page.NewView(
+// 			treetop.DefaultTemplateExec,
+// 			"base.html",
+// 			baseHandler,
+// 		)
+//
+// 		// register a block within the base template
+// 		content := base.NewSubView(
+// 			"content",
+// 			"content.html",
+// 			contentHandler,
+// 		)
 //
 // 		// Register a http.Handler that is capable of rendering a full document
-// 		// or just the a content section
-//		appMux.Handle("/", treetop.ViewHandler(content))
+// 		// or just the content section
+//		mymux.Handle("/", treetop.ViewHandler(content))
 //
-
-// Page is an API for defining a hierarchy of top level and nested views
-// each view has an associated handler and template string.
-type Page struct {
-	Execute TemplateExec
-}
-
-// NewPage will instantiate a page with the necessary configuration to
-// for defining hierarchies of views
-func NewPage(execute TemplateExec) *Page {
-	return &Page{
-		Execute: execute,
-	}
-}
 
 // NewView create a top level view definition with configuration
 // derived from the page instance.
-func (r *Page) NewView(template string, handlerFunc HandlerFunc) *View {
+func NewView(execute TemplateExec, template string, handlerFunc HandlerFunc) *View {
 	return &View{
 		Template:    template,
 		HandlerFunc: handlerFunc,
-		Renderer:    r.Execute,
+		Renderer:    execute,
 	}
 }
 

@@ -16,10 +16,11 @@ func basePartial() *View {
 }
 
 func Test_renderer_new_page(t *testing.T) {
-	renderer := NewPage(DefaultTemplateExec)
-
-	page := renderer.NewView("base.html.tmpl", Noop)
-
+	page := NewView(
+		DefaultTemplateExec,
+		"base.html.tmpl",
+		Noop,
+	)
 	page.DefaultSubView("A", "a.html.tmpl", Noop)
 	def := page.SubView("B", "b.html.tmpl", Noop)
 
