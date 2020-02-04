@@ -9,8 +9,8 @@ import (
 	"unicode/utf8"
 )
 
-// Instruct treetop client to immediately direct the web browser to a new location.
-// This allows the server to effectively 'break out' of in-page navigation.
+// SeeOtherPage forces a treetop client to redirect the web browser to the supplied location.
+// This allows the server to effectively 'break out' of in-page navigation, and direct the user elsewhere.
 //
 // The response body and content-type will be ignored by the treetop client handler.
 // Similar to "303 See Other" an independent GET request should result.
@@ -57,14 +57,18 @@ func SeeOtherPage(w http.ResponseWriter, req *http.Request, location string) boo
 	return true
 }
 
-// Helper that will do a treetop 'SeeOtherPage' redirect if the request is for a partial
+// Redirect is a helper that will do a treetop redirect if the request is for a partial
 // or fall back to a standard HTTP redirect otherwise using the status code supplied.
+//
+// treetop.Redirect(w, req, "/some/other/path", http.StatusSeeOther)
 func Redirect(w http.ResponseWriter, req *http.Request, location string, status int) {
 	if ok := SeeOtherPage(w, req, location); !ok {
 		http.Redirect(w, req, location, status)
 	}
 }
 
+// hexEscapeNonASCII is used to sanitize header values.
+//
 // Lifted from golang codebase,
 // see issue https://go-review.googlesource.com/c/go/+/31732
 func hexEscapeNonASCII(s string) string {

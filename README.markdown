@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/rur/treetop.svg?branch=master)](https://travis-ci.org/rur/treetop)
+[![Build Status](https://travis-ci.org/rur/treetop.svg?branch=v0.2.0)](https://travis-ci.org/rur/treetop)
 
 # Treetop
 
@@ -90,16 +90,17 @@ The Treetop Go library provides utilities for writing compatible HTTP responses.
 
     func myHandler(w http.ResponseWriter, req *http.Request) {
         // check for treetop request and construct a writer
-        if tw, ok := treetop.Writer(w, req, false); ok {
+        if tw, ok := treetop.NewFragmentWriter(w, req); ok {
             fmt.Fprintf(tw, `<h3 id="greeting">Hello, %s</h3>`, "Treetop")
         }
     }
 
-### Hierarchical Views
+### Page API - Hierarchical Views
 
 An abstraction is included in the Treetop GO library for creating more complex networks of handlers. A page view API is available for building handler instances that take advantage of the template inheritance feature supported by the Go standard library<sup>(1)</sup>.
 
-    base := treetop.NewView("base.html.tmpl", baseHandler)
+    page := treetop.NewPage(treetop.DefaultTemplateExec)
+    base := page.NewView("base.html.tmpl", baseHandler)
     content := base.SubView(
         "content",
         "content.html.tmpl",

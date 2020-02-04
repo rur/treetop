@@ -216,7 +216,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			t.Errorf("Response body = %v, want %v", body, tt.expect)
 		}
 		if tt.args.resp.Code != tt.status {
-			t.Errorf("Response body = %v, want %v", tt.args.resp.Code, tt.status)
+			t.Errorf("Response code = %v, want %v", tt.args.resp.Code, tt.status)
 		}
 		if len(tt.expectLog) > 0 && !strings.Contains(output, tt.expectLog) {
 			t.Errorf("Log output = %v, want %v", output, tt.expectLog)
@@ -561,8 +561,12 @@ func TestHandler_With_Includes(t *testing.T) {
 		"sub-impl.html.tmpl",
 	}
 
-	page := NewView("base.html.tmpl", Noop)
-	testView := page.SubView("test", "test.html.tmpl", Noop)
+	base := NewView(
+		DefaultTemplateExec,
+		"base.html.tmpl",
+		Noop,
+	)
+	testView := base.SubView("test", "test.html.tmpl", Noop)
 	_ = testView.DefaultSubView("sub", "not-this-sub-fragment.html.tmpl", Noop)
 
 	subImpl := testView.SubView("sub", "sub-impl.html.tmpl", Noop)

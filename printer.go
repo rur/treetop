@@ -8,6 +8,8 @@ import (
 	"strconv"
 )
 
+// PrintHandler is a cheap and cheerful way to debug a view handlers by 'stringing'
+// a preview of the state of a supplied handler instance
 func PrintHandler(h *Handler) string {
 	var handlerInfo string
 	if h.Fragment.HandlerFunc != nil {
@@ -27,7 +29,7 @@ func PrintHandler(h *Handler) string {
 	}
 }
 
-// Used to preview an arbitrary template string on a single line.
+// previewTemplate previews an arbitrary template string on a single line.
 // All whitespace will be stripped and it will be quoted and escaped.
 // A middle ellipsis will be inserted if the string is too long.
 func previewTemplate(str string, before, after int) string {
@@ -35,7 +37,6 @@ func previewTemplate(str string, before, after int) string {
 	str = strconv.Quote(re.ReplaceAllString(str, ""))
 	if len(str) > before+after+2 {
 		return str[:before] + "……" + str[len(str)-after:]
-	} else {
-		return str
 	}
+	return str
 }

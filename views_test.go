@@ -6,12 +6,38 @@ import (
 	"testing"
 )
 
-func basePartial() *viewImpl {
-	return &viewImpl{
-		template: "base.html.tmpl",
-		extends:  nil,
-		handler:  Noop,
-		blocks:   []*blockImpl{},
+func basePartial() *View {
+	return &View{
+		Template:    "base.html.tmpl",
+		Extends:     nil,
+		HandlerFunc: Noop,
+		Blocks:      []*Block{},
+	}
+}
+
+func Test_renderer_new_page(t *testing.T) {
+	page := NewView(
+		DefaultTemplateExec,
+		"base.html.tmpl",
+		Noop,
+	)
+	page.DefaultSubView("A", "a.html.tmpl", Noop)
+	def := page.SubView("B", "b.html.tmpl", Noop)
+
+	handler := def.Handler()
+
+	expects := []string{"b.html.tmpl"}
+	if files, err := handler.Fragment.TemplateList(); err != nil {
+		t.Errorf("treetop.Define() Fragment = unexpected error %s", err.Error())
+	} else if !reflect.DeepEqual(files, expects) {
+		t.Errorf("treetop.Define() = %v, want %v", files, expects)
+	}
+
+	expects = []string{"base.html.tmpl", "a.html.tmpl", "b.html.tmpl"}
+	if files, err := handler.Page.TemplateList(); err != nil {
+		t.Errorf("treetop.Define() Page = unexpected error %s", err.Error())
+	} else if !reflect.DeepEqual(files, expects) {
+		t.Errorf("treetop.Define() = %v, want %v", files, expects)
 	}
 }
 
@@ -20,16 +46,16 @@ func Test_define_basic_block(t *testing.T) {
 
 	_ = part.SubView("test", "test.html", Noop)
 
-	if len(part.blocks) != 1 {
+	if len(part.Blocks) != 1 {
 		t.Errorf("New block should have been added to the list of blocks")
 		return
 	}
-	impl := part.blocks[0]
-	if impl.parent.template != part.template {
-		t.Errorf("Expected new block to refer back to the partial that defined it %v", impl)
+	blk := part.Blocks[0]
+	if blk.Parent.Template != part.Template {
+		t.Errorf("Expected new block to refer back to the partial that defined it %v", blk)
 	}
-	if impl.name != "test" {
-		t.Errorf("Expected new blockname: %#v got %#v", "test", impl.name)
+	if blk.Name != "test" {
+		t.Errorf("Expected new blockname: %#v got %#v", "test", blk.Name)
 	}
 }
 func Test_retrieve_an_existing_block(t *testing.T) {
@@ -39,16 +65,16 @@ func Test_retrieve_an_existing_block(t *testing.T) {
 	_ = part.SubView("test", "test.html", Noop)
 	_ = part.SubView("test", "test.html", Noop)
 
-	if len(part.blocks) != 1 {
+	if len(part.Blocks) != 1 {
 		t.Errorf("Only one new block should have been created")
 		return
 	}
-	impl := part.blocks[0]
-	if impl.parent.template != part.template {
-		t.Errorf("Expected new block to refer back to the partial that defined it %v", impl)
+	blk := part.Blocks[0]
+	if blk.Parent.Template != part.Template {
+		t.Errorf("Expected new block to refer back to the partial that defined it %v", blk)
 	}
-	if impl.name != "test" {
-		t.Errorf("Expected new blockname: %#v got %#v", "test", impl.name)
+	if blk.Name != "test" {
+		t.Errorf("Expected new blockname: %#v got %#v", "test", blk.Name)
 	}
 }
 
@@ -100,17 +126,14 @@ func Test_extend_block_partial(t *testing.T) {
 
 func Test_extend_multiple_levels(t *testing.T) {
 	base := basePartial()
+
 	_ = base.DefaultSubView("test", "test.html.tmpl", Noop)
-
 	test2 := base.SubView("test2", "test2.html.tmpl", Noop)
-
 	_ = test2.DefaultSubView("A", "default_A.html.tmpl", Noop)
+	test2B := test2.SubView("B", "test2_B.html.tmpl", Noop)
+	test2B.DefaultSubView("B_plus", "test2_B_plus.html.tmpl", Noop)
 
-	test2_b := test2.SubView("B", "test2_B.html.tmpl", Noop)
-
-	test2_b.DefaultSubView("B_plus", "test2_B_plus.html.tmpl", Noop)
-
-	handler := test2_b.Handler()
+	handler := test2B.Handler()
 
 	var expectingTempl []string
 	expectingTempl = []string{"test2_B.html.tmpl", "test2_B_plus.html.tmpl"}
