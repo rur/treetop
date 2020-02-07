@@ -1,46 +1,47 @@
 package treetop
 
-// View is a utility for generating request handlers given a definition
-// of a template hierarchies.
+// View is a utility for defining hierarchies of nested templates
+// from which HTTP request handlers can be generated.
 //
-// A view is a pair: a template string (usually file path) and a handler function.
-// A view can contain zero or more 'blocks', these are named sub-sections which allow
-// other views to be swapped in as needed.
+// Multi-page web applications require a lot of endpoints. Template inheritance
+// is commonly used to reduce HTML boilerplate and improve reuse. Treetop views incorporate
+// request handlers into the hierarchy to gain the same benefit.
 //
-// Since multi-page web applications require an endpoint for every action.
-// The template inheritance feature supported by the Go standard library is useful
-// for reusing HTML template fragments.
+// A 'View' is a template string (usually file path) paired with a handler function.
+// In Go, templates can contain named nested blocks. Defining a 'SubView' associates
+// a request handler and a fragment template with a parent. Thus HTTP handlers can
+// be easily generated for various page configurations. Within a generated handler,
+// data is passed between parent and child in a mechanical way.
 //
 // Example of a basic template hierarchy
 //
-//                      baseHandler(...)
-//                    / base.html ==========\
-//                    |                     |
-//                    |  / "content" ===\   |
-//                    |  |              |   |
-//                    |  |      ^       |   |
-//                    |  \______^_______/   |
-//                    \_________^___________/
-//                              ^
-//                             / \
-//     contentAHandler(...) __/   \__ contentBHandler(...)
-//     contentA.html                  contentB.html
+//                  baseHandler(...)
+//                | base.html ========================|
+//                |                                   |
+//                | {{ template "content" .Content }} |
+//                |_________________^_________________|
+//                                  |
+//                           ______/ \______
+//      contentAHandler(...)               contentBHandler(...)
+//    | contentA.html ========== |        | contentB.html ========== |
+//    |                          |        |                          |
+//    | {{ define "content" }}.. |        | {{ define "content" }}.. |
+//    |__________________________|        |__________________________|
 //
-//
-// Request/response example
+// Pseudo request and response:
 //
 //     GET /path/to/a
 //     > HTTP/1.1 200 OK
-//     > ... { base.html + contentA.html }
+//     > ... base.html { Content: contentA.html }
 //
 //     GET /path/to/b
 //     > HTTP/1.1 200 OK
-//     > ... { base.html + contentB.html }
+//     > ... base.html { Content: contentB.html }
 //
 //
-// Example of using Treetop View type to generate handers for these endpoints
+// Example of using the library to bind generated handlers to a HTTP router.
 //
-// 		base := page.NewView(
+// 		base := treetop.NewView(
 // 			treetop.DefaultTemplateExec,
 // 			"base.html",
 // 			baseHandler,
@@ -62,10 +63,9 @@ package treetop
 //		mymux.Handle("/path/to/b", treetop.ViewHandler(contentB))
 //
 //
-// Notice that each template is paired with it's own handler function. As a result
-// request handling can be modularized along with the markup. In the example above,
-// the HTTP handlers created by the Treetop library are capable of rendering either
-// a full HTML document or the relevant "content" section alone.
+// This is useful for creating Treetop enabled endpoints because we wish to be able
+// to either load a full page or just a part of a page depending upon the request.
+// The generated 'ViewHandler' supports Treetop partials by default.
 //
 type View struct {
 	Template    string
