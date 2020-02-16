@@ -56,7 +56,7 @@ func (tw *writer) Write(p []byte) (n int, err error) {
 		return n, err
 	}
 	if !tw.written {
-		tw.responseWriter.Header().Set("X-Response-Url", respURI.EscapedPath())
+		tw.responseWriter.Header().Set("X-Response-Url", respURI.String())
 		if tw.replaceURLState {
 			tw.responseWriter.Header().Set("X-Response-History", "replace")
 		}
