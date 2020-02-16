@@ -1,31 +1,34 @@
 package treetop
 
-// View is a utility for defining hierarchies of nested templates
+import "net/http"
+
+// View is a utility for building hierarchies of nested templates
 // from which HTTP request handlers can be generated.
 //
 // Multi-page web applications require a lot of endpoints. Template inheritance
 // is commonly used to reduce HTML boilerplate and improve reuse. Treetop views incorporate
-// request handlers into the hierarchy to gain the same benefit.
+// nested request handlers into the hierarchy to gain the same advantage.
 //
 // A 'View' is a template string (usually file path) paired with a handler function.
 // In Go, templates can contain named nested blocks. Defining a 'SubView' associates
-// a request handler and a fragment template with a parent. Thus HTTP handlers can
-// be easily generated for various page configurations. Within a generated handler,
-// data is passed between parent and child in a mechanical way.
+// a handler function and a fragment template with a parent. Thus HTTP handlers can
+// be generated for various page configurations. Within the generated handler,
+// parent and child views are combined in a mechanical way.
 //
 // Example of a basic template hierarchy
 //
 //                  baseHandler(...)
 //                | base.html ========================|
-//                |                                   |
+//                | …                                 |
 //                | {{ template "content" .Content }} |
-//                |_________________^_________________|
+//                | …               ^                 |
+//                |_________________|_________________|
 //                                  |
 //                           ______/ \______
 //      contentAHandler(...)               contentBHandler(...)
 //    | contentA.html ========== |        | contentB.html ========== |
 //    |                          |        |                          |
-//    | {{ define "content" }}.. |        | {{ define "content" }}.. |
+//    | {{ block "content" . }}… |        | {{ block "content" . }}… |
 //    |__________________________|        |__________________________|
 //
 // Pseudo request and response:
@@ -63,21 +66,24 @@ package treetop
 //		mymux.Handle("/path/to/b", treetop.ViewHandler(contentB))
 //
 //
-// This is useful for creating Treetop enabled endpoints because we wish to be able
-// to either load a full page or just a part of a page depending upon the request.
-// The generated 'ViewHandler' supports Treetop partials by default.
+// This is useful for creating Treetop enabled endpoints because the generated handler
+// is capable of loading either a full page or just a part of a page depending upon the request.
 //
 type View struct {
 	Template    string
 	Extends     *Block
-	HandlerFunc HandlerFunc
+	HandlerFunc ViewHandlerFunc
 	Blocks      []*Block
 	Renderer    TemplateExec
 }
 
+// ViewHandlerFunc is the interface for treetop handler functions that support hierarchical
+// partial data loading.
+type ViewHandlerFunc func(Response, *http.Request) interface{}
+
 // NewView create a top level view definition which is designed
 // for constructing hierarchies of template files paired with handler functions.
-func NewView(execute TemplateExec, template string, handlerFunc HandlerFunc) *View {
+func NewView(execute TemplateExec, template string, handlerFunc ViewHandlerFunc) *View {
 	return &View{
 		Template:    template,
 		HandlerFunc: handlerFunc,
@@ -95,7 +101,7 @@ type Block struct {
 
 // SubView defines a new view (sub-view) that references to its parent via a
 // named block.
-func (v *View) SubView(blockName, template string, handler HandlerFunc) *View {
+func (v *View) SubView(blockName, template string, handler ViewHandlerFunc) *View {
 	var block *Block
 	for i := 0; i < len(v.Blocks); i++ {
 		if v.Blocks[i].Name == blockName {
@@ -121,7 +127,7 @@ func (v *View) SubView(blockName, template string, handler HandlerFunc) *View {
 // named block. It is equivalent to the SubView method except that the parent will also
 // have a return reference. The new view will become the 'default' template
 // for the specified block in the parent.
-func (v *View) DefaultSubView(blockName, template string, handler HandlerFunc) *View {
+func (v *View) DefaultSubView(blockName, template string, handler ViewHandlerFunc) *View {
 	sub := v.SubView(blockName, template, handler)
 	sub.Extends.DefaultPartial = sub
 	return sub

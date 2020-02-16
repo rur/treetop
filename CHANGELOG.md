@@ -11,6 +11,9 @@ execute on a wishlist of API changes.
 - Remove `treetop.Test`, testing recipes and resources belong elsewhere
 - Split `treetop.Writer` function into `treetop.NewPartialWriter` and `treetop.NewFragmentWriter` and remove the confusing `isPartial` flag
 - Change `treetop.View` from an interface to a struct and expose internals to make debugging easier
+- Rename `HandlePartial` method to `HandleSubView` in `treetop.Response` interface to be consistent with the view builder
+- Rename `Done` method to `Finished` in `treetop.Response` interface
+- Rename `HandlerFunc` signature type to `ViewHandlerFunc` to make a clearer association with the view builder 
 
 
 #### Defining a page with views

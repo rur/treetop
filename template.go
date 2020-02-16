@@ -9,6 +9,10 @@ import (
 	"path/filepath"
 )
 
+// TemplateExec interface is a signature of a function which can be configured to
+// execute the templates with supplied data.
+type TemplateExec func(io.Writer, []string, interface{}) error
+
 // DefaultTemplateExec implements TemplateExec as a thin wrapper around the
 // ParseFiles method in html/template package
 func DefaultTemplateExec(w io.Writer, templates []string, data interface{}) error {
