@@ -3,17 +3,16 @@ package treetop
 import "net/http"
 
 // View is a utility for building hierarchies of nested templates
-// from which HTTP request handlers can be generated.
+// from which HTTP request handlers can be constructed.
 //
-// Multi-page web applications require a lot of endpoints. Template inheritance
+// Multi-page web apps require a lot of endpoints. Template inheritance
 // is commonly used to reduce HTML boilerplate and improve reuse. Treetop views incorporate
-// nested request handlers into the hierarchy to gain the same advantage.
+// request handlers into the hierarchy to gain the same advantage.
 //
 // A 'View' is a template string (usually file path) paired with a handler function.
-// In Go, templates can contain named nested blocks. Defining a 'SubView' associates
-// a handler function and a fragment template with a parent. Thus HTTP handlers can
-// be generated for various page configurations. Within the generated handler,
-// parent and child views are combined in a mechanical way.
+// Go templates can contain named nested blocks. Defining a 'SubView' associates
+// a handler and a template with a block embedded within a parent template.
+// HTTP handlers can then be constructed for various page configurations.
 //
 // Example of a basic template hierarchy
 //
@@ -42,7 +41,7 @@ import "net/http"
 //     > ... base.html { Content: contentB.html }
 //
 //
-// Example of using the library to bind generated handlers to a HTTP router.
+// Example of using the library to bind constructed handlers to a HTTP router.
 //
 // 		base := treetop.NewView(
 // 			treetop.DefaultTemplateExec,
@@ -66,8 +65,9 @@ import "net/http"
 //		mymux.Handle("/path/to/b", treetop.ViewHandler(contentB))
 //
 //
-// This is useful for creating Treetop enabled endpoints because the generated handler
-// is capable of loading either a full page or just a part of a page depending upon the request.
+// This is useful for creating Treetop enabled endpoints because the constructed handler
+// is capable of loading either a full page or just the "content" part of the page depending
+// upon the request.
 //
 type View struct {
 	Template    string
