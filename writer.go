@@ -60,6 +60,7 @@ func (tw *writer) Write(p []byte) (n int, err error) {
 		if tw.replaceURLState {
 			tw.responseWriter.Header().Set("X-Response-History", "replace")
 		}
+		// TODO: if a response URL was specified, set content type to partial
 		tw.responseWriter.Header().Set("Content-Type", tw.contentType)
 		if tw.status > 100 {
 			tw.responseWriter.WriteHeader(tw.status)

@@ -71,7 +71,6 @@ that works with the template system to support pages, partials and fragments.
 Example
 
 	base := treetop.NewView(
-		treetop.DefaultTemplateExec,
 		"base.html.tmpl",
 		baseHandler,
 	)
@@ -82,7 +81,8 @@ Example
 		greetingHandler,
 	)
 
-	mymux.Handle("/", treetop.ViewHandler(greeting))
+	exec := treetop.DefaultExecutor{}
+	mymux.Handle("/", exec.NewViewHandler(greeting))
 
 See the documentation of the View type for details.
 

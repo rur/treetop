@@ -4,7 +4,17 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"sync/atomic"
 )
+
+var token uint32
+
+// nextResponseID generates a token which can be used to identify treetop
+// responses *locally*. The only uniqueness requirement
+// is that concurrent active requests must not possess the same value.
+func nextResponseID() uint32 {
+	return atomic.AddUint32(&token, 1)
+}
 
 // Response extends the http.ResponseWriter interface to give ViewHandelersFunc's limited
 // ability to control the hierarchical request handing.
@@ -64,86 +74,137 @@ type Response interface {
 	Context() context.Context
 }
 
-// responseImpl is the API that treetop request handlers interact with
-// through the treetop.ResponseWriter interface.
-type responseImpl struct {
+// ResponseWrapper is the concrete implementation of the response writer wrapper
+// supplied to view handler functions
+type ResponseWrapper struct {
 	http.ResponseWriter
 	responseID       uint32
 	context          context.Context
 	finished         bool
 	status           int
-	partial          *Partial
+	view             *View
 	pageURL          string
 	pageURLSpecified bool
 	replaceURL       bool
+	cancel           context.CancelFunc
+}
+
+// BeginResponse initializes the context for a treetop request response
+func BeginResponse(cxt context.Context, w http.ResponseWriter) *ResponseWrapper {
+	rsp := ResponseWrapper{
+		ResponseWriter: w,
+		responseID:     123, //     nextResponseID(),
+	}
+	rsp.context, rsp.cancel = context.WithCancel(cxt)
+	return &rsp
+}
+
+// WithView creates a derived response wrapper for a different view, inheriting
+// request
+func (rsp *ResponseWrapper) WithView(v *View) *ResponseWrapper {
+	derived := ResponseWrapper{
+		ResponseWriter: rsp.ResponseWriter,
+		responseID:     rsp.responseID,
+		context:        rsp.context,
+		view:           v,
+		cancel:         rsp.cancel,
+	}
+	return &derived
+}
+
+// TODO: Implement this
+func (rsp *ResponseWrapper) NewPartialWriter(req *http.Request) (io.Writer, bool) {
+	w, ok := NewPartialWriter(rsp.ResponseWriter, req)
+	if !ok {
+		return w, false
+	}
+	if rsp.status > 0 {
+		w.Status(rsp.status)
+	}
+	if rsp.pageURLSpecified {
+		if rsp.replaceURL {
+			w.ReplacePageURL(rsp.pageURL)
+		} else {
+			w.DesignatePageURL(rsp.pageURL)
+		}
+	}
+	return w, true
+}
+
+// TODO: Implement this
+func (rsp *ResponseWrapper) NewFragmentWriter(req *http.Request) (io.Writer, bool) {
+	w, ok := NewFragmentWriter(rsp.ResponseWriter, req)
+	if !ok {
+		return w, false
+	}
+	if rsp.status > 0 {
+		w.Status(rsp.status)
+	}
+	return w, true
+}
+
+// Cancel will teardown the treetop handing process
+func (rsp *ResponseWrapper) Cancel() {
+	rsp.cancel()
 }
 
 // Write delegates to the underlying ResponseWriter while setting finished flag to true
-func (rsp *responseImpl) Write(b []byte) (int, error) {
+func (rsp *ResponseWrapper) Write(b []byte) (int, error) {
 	rsp.finished = true
 	return rsp.ResponseWriter.Write(b)
 }
 
 // WriteHeader delegates to the underlying ResponseWriter while setting finished flag to true
-func (rsp *responseImpl) WriteHeader(statusCode int) {
+func (rsp *ResponseWrapper) WriteHeader(statusCode int) {
 	rsp.finished = true
 	rsp.ResponseWriter.WriteHeader(statusCode)
 }
 
-func (rsp *responseImpl) Status(status int) int {
+// Status will set a status for the treetop response headers
+// if a response status has been set previously, the larger
+// code value will be adopted
+func (rsp *ResponseWrapper) Status(status int) int {
 	if status > rsp.status {
 		rsp.status = status
 	}
 	return rsp.status
 }
 
-func (rsp *responseImpl) ReplacePageURL(url string) {
+//
+func (rsp *ResponseWrapper) ReplacePageURL(url string) {
 	rsp.pageURL = url
 	rsp.replaceURL = true
 	rsp.pageURLSpecified = true
 }
 
-func (rsp *responseImpl) DesignatePageURL(url string) {
+func (rsp *ResponseWrapper) DesignatePageURL(url string) {
 	rsp.pageURL = url
 	rsp.replaceURL = false
 	rsp.pageURLSpecified = true
 }
 
-func (rsp *responseImpl) Finished() bool {
+func (rsp *ResponseWrapper) Finished() bool {
 	return rsp.finished
 }
 
-func (rsp *responseImpl) HandleSubView(name string, req *http.Request) interface{} {
+// TODO: Implement this
+func (rsp *ResponseWrapper) HandleSubView(name string, req *http.Request) interface{} {
+	// NOTE: this is pseudocode
 	// don't do anything if a response has already been written
 	if rsp.finished {
 		return nil
 	}
-	var part *Partial
 
-	// 1. loop through direct subviews
-	for i := range rsp.partial.Blocks {
-		if rsp.partial.Blocks[i].Extends == name {
-			part = &rsp.partial.Blocks[i]
-			break
-		}
-	}
-
-	if part == nil {
-		// a template which extends block name was not found, return nothing
+	sub, ok := rsp.view.SubViews[name]
+	if !ok || sub == nil {
 		return nil
 	}
 
-	// 2. Construct a Response instance for the sub handler and inherit
-	//    properties from the current response
-	subResp := responseImpl{
-		ResponseWriter: rsp.ResponseWriter,
-		responseID:     rsp.responseID,
-		context:        rsp.context,
-		partial:        part,
-	}
+	subResp := rsp.WithView(sub)
 
-	// 3. invoke sub handler, collecting the response
-	data := part.HandlerFunc(&subResp, req)
+	// NOTE: this is pseudocode
+	// Invoke sub handler, collecting the response
+	data := sub.Handler(subResp, req)
 	if subResp.finished {
 		// sub handler took over the writing of the response, all handlers should be halted.
 		//
@@ -156,7 +217,8 @@ func (rsp *responseImpl) HandleSubView(name string, req *http.Request) interface
 	}
 	subResp.finished = true
 
-	// 4. Adopt status and page URL of sub handler (as applicable)
+	// NOTE: this is pseudocode
+	// Adopt status and page URL of sub handler (as applicable)
 	rsp.Status(subResp.status)
 	if subResp.pageURLSpecified {
 		// adopt pageURL if the child handler specified one
@@ -167,43 +229,20 @@ func (rsp *responseImpl) HandleSubView(name string, req *http.Request) interface
 		}
 	}
 
-	// 5. return resulting data for parent handler to use
+	// finally, return data resulting from the sub handler
 	return data
 }
 
 // Context is getter for the treetop response context which will indicate when the request
 // has been completed as was cancelled. This is derived from the request context so
 // it can safely be used for cleanup.
-func (rsp *responseImpl) Context() context.Context {
+func (rsp *ResponseWrapper) Context() context.Context {
 	return rsp.context
 }
 
 // ResponseID is a getter which returns a locally unique ID for a Treetop HTTP response.
 // This is intended to be used to keep track of the request as is passes between handlers.
 // The ID will increment by one starting at zero, every time the server is restarted.
-func (rsp *responseImpl) ResponseID() uint32 {
+func (rsp *ResponseWrapper) ResponseID() uint32 {
 	return rsp.responseID
-}
-
-// execute loads data from handlers hierarchy and executes the aggregated template list.
-// Body will be written to IO writer passed in.
-func (rsp *responseImpl) execute(body io.Writer, exec TemplateExec, req *http.Request) error {
-	data := rsp.partial.HandlerFunc(rsp, req)
-	if rsp.finished {
-		// response headers were already sent by one of the handlers, nothing left to do
-		return nil
-	}
-
-	// Toposort of templates connected via blocks. The order is important for how template inheritance is resolved.
-	// TODO: The result should not change between requests so cache it when the handler instance is created.
-	templates, err := rsp.partial.TemplateList()
-	if err != nil {
-		return err
-	}
-
-	// execute the templates with data loaded from handlers
-	if tplErr := exec(body, templates, data); tplErr != nil {
-		return tplErr
-	}
-	return nil
 }
