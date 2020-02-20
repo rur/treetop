@@ -12,8 +12,8 @@ import (
 // a preview of the state of a supplied handler instance
 func PrintTemplateHandler(h *TemplateHandler) string {
 	var handlerInfo string
-	if h.Partial.Handler != nil {
-		handlerInfo = runtime.FuncForPC(reflect.ValueOf(h.Partial.Handler).Pointer()).Name()
+	if h.Partial.HandlerFunc != nil {
+		handlerInfo = runtime.FuncForPC(reflect.ValueOf(h.Partial.HandlerFunc).Pointer()).Name()
 	} else {
 		handlerInfo = "nil"
 	}

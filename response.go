@@ -204,7 +204,7 @@ func (rsp *ResponseWrapper) HandleSubView(name string, req *http.Request) interf
 
 	// NOTE: this is pseudocode
 	// Invoke sub handler, collecting the response
-	data := sub.Handler(subResp, req)
+	data := sub.HandlerFunc(subResp, req)
 	if subResp.finished {
 		// sub handler took over the writing of the response, all handlers should be halted.
 		//

@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func Test_responseImpl_PartialHandler(t *testing.T) {
+func Test_ResponseWrapper_HandleSubView(t *testing.T) {
 	type fields struct {
 		http.ResponseWriter
 		responseID      uint32
@@ -16,7 +16,7 @@ func Test_responseImpl_PartialHandler(t *testing.T) {
 		dataCalled      bool
 		data            interface{}
 		status          int
-		partial         Partial
+		partial         *View
 	}
 	req := httptest.NewRequest("GET", "/some/path", nil)
 	type args struct {
@@ -35,7 +35,7 @@ func Test_responseImpl_PartialHandler(t *testing.T) {
 			fields: fields{
 				ResponseWriter: &httptest.ResponseRecorder{},
 				responseID:     1234,
-				partial:        Partial{},
+				partial:        &View{},
 			},
 			args: args{
 				name: "no-such-block",
@@ -48,10 +48,9 @@ func Test_responseImpl_PartialHandler(t *testing.T) {
 			fields: fields{
 				ResponseWriter: &httptest.ResponseRecorder{},
 				responseID:     1234,
-				partial: Partial{
-					Blocks: []Partial{
-						Partial{
-							Extends:     "some-block",
+				partial: &View{
+					SubViews: map[string]*View{
+						"some-block": &View{
 							HandlerFunc: Constant("This is a test"),
 						},
 					},
@@ -69,10 +68,9 @@ func Test_responseImpl_PartialHandler(t *testing.T) {
 				ResponseWriter: &httptest.ResponseRecorder{},
 				responseID:     1234,
 				status:         400,
-				partial: Partial{
-					Blocks: []Partial{
-						Partial{
-							Extends: "some-block",
+				partial: &View{
+					SubViews: map[string]*View{
+						"some-block": &View{
 							HandlerFunc: func(rsp Response, _ *http.Request) interface{} {
 								rsp.Status(501)
 								return "Not Implemented"
@@ -93,10 +91,9 @@ func Test_responseImpl_PartialHandler(t *testing.T) {
 			fields: fields{
 				ResponseWriter: &httptest.ResponseRecorder{},
 				responseID:     1234,
-				partial: Partial{
-					Blocks: []Partial{
-						Partial{
-							Extends: "some-block",
+				partial: &View{
+					SubViews: map[string]*View{
+						"some-block": &View{
 							HandlerFunc: func(rsp Response, _ *http.Request) interface{} {
 								return fmt.Sprintf("Response token %v", rsp.ResponseID())
 							},
@@ -115,10 +112,9 @@ func Test_responseImpl_PartialHandler(t *testing.T) {
 			fields: fields{
 				ResponseWriter: &httptest.ResponseRecorder{},
 				responseID:     1234,
-				partial: Partial{
-					Blocks: []Partial{
-						Partial{
-							Extends:     "some-block",
+				partial: &View{
+					SubViews: map[string]*View{
+						"some-block": &View{
 							HandlerFunc: Constant("This should not happen"),
 						},
 					},
@@ -133,19 +129,19 @@ func Test_responseImpl_PartialHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rsp := &responseImpl{
+			rsp := &ResponseWrapper{
 				ResponseWriter: tt.fields.ResponseWriter,
 				responseID:     tt.fields.responseID,
 				finished:       tt.fields.responseWritten,
 				status:         tt.fields.status,
-				partial:        &tt.fields.partial,
+				view:           tt.fields.partial,
 			}
 			got := rsp.HandleSubView(tt.args.name, tt.args.req)
 			if !reflect.DeepEqual(got, tt.data) {
-				t.Errorf("responseImpl.PartialHandler() got = %v, want %v", got, tt.data)
+				t.Errorf("ResponseWrapper.HandleSubView() got = %v, want %v", got, tt.data)
 			}
 			if rsp.status != tt.status {
-				t.Errorf("responseImpl.status = %v, want %v", rsp.status, tt.status)
+				t.Errorf("ResponseWrapper.status = %v, want %v", rsp.status, tt.status)
 			}
 		})
 	}

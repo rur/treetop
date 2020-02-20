@@ -70,11 +70,11 @@ import "net/http"
 // upon the request.
 //
 type View struct {
-	Template string
-	Handler  ViewHandlerFunc
-	SubViews map[string]*View
-	Defines  string
-	Parent   *View
+	Template    string
+	HandlerFunc ViewHandlerFunc
+	SubViews    map[string]*View
+	Defines     string
+	Parent      *View
 }
 
 // ViewHandlerFunc is the interface for treetop handler functions that support hierarchical
@@ -98,9 +98,9 @@ type ViewExecutor interface {
 // NewView creates an instance of a view given a template + handler pair
 func NewView(tmpl string, handler ViewHandlerFunc) *View {
 	return &View{
-		Template: tmpl,
-		Handler:  handler,
-		SubViews: make(map[string]*View),
+		Template:    tmpl,
+		HandlerFunc: handler,
+		SubViews:    make(map[string]*View),
 	}
 }
 
@@ -126,9 +126,9 @@ func (v *View) DefaultSubView(defines string, tmpl string, handler ViewHandlerFu
 // Copy creates a duplicate so that the original is not affected by
 // changes
 func (v *View) Copy() *View {
-	copy := NewView(v.Template, v.Handler)
+	copy := NewView(v.Template, v.HandlerFunc)
 	copy.Defines = v.Defines
-	copy.Parent = copy.Parent
+	copy.Parent = v.Parent
 	for name, sub := range v.SubViews {
 		copy.SubViews[name] = sub
 	}

@@ -1,159 +1,115 @@
 package treetop
 
 import (
-	"reflect"
-	"strings"
+	"fmt"
 	"testing"
 )
 
-func basePartial() *View {
-	return &View{
-		Template:    "base.html.tmpl",
-		Extends:     nil,
-		HandlerFunc: Noop,
-		Blocks:      []*Block{},
-	}
-}
-
-func Test_renderer_new_page(t *testing.T) {
-	page := NewView(
-		DefaultTemplateExec,
-		"base.html.tmpl",
-		Noop,
-	)
-	page.DefaultSubView("A", "a.html.tmpl", Noop)
-	def := page.SubView("B", "b.html.tmpl", Noop)
-
-	handler := def.Handler()
-
-	expects := []string{"b.html.tmpl"}
-	if files, err := handler.Fragment.TemplateList(); err != nil {
-		t.Errorf("treetop.Define() Fragment = unexpected error %s", err.Error())
-	} else if !reflect.DeepEqual(files, expects) {
-		t.Errorf("treetop.Define() = %v, want %v", files, expects)
-	}
-
-	expects = []string{"base.html.tmpl", "a.html.tmpl", "b.html.tmpl"}
-	if files, err := handler.Page.TemplateList(); err != nil {
-		t.Errorf("treetop.Define() Page = unexpected error %s", err.Error())
-	} else if !reflect.DeepEqual(files, expects) {
-		t.Errorf("treetop.Define() = %v, want %v", files, expects)
-	}
-}
-
-func Test_define_basic_block(t *testing.T) {
-	part := basePartial()
-
-	_ = part.SubView("test", "test.html", Noop)
-
-	if len(part.Blocks) != 1 {
-		t.Errorf("New block should have been added to the list of blocks")
-		return
-	}
-	blk := part.Blocks[0]
-	if blk.Parent.Template != part.Template {
-		t.Errorf("Expected new block to refer back to the partial that defined it %v", blk)
-	}
-	if blk.Name != "test" {
-		t.Errorf("Expected new blockname: %#v got %#v", "test", blk.Name)
-	}
-}
-func Test_retrieve_an_existing_block(t *testing.T) {
-	// calling block with the same name should return an instance of the same block
-	part := basePartial()
-
-	_ = part.SubView("test", "test.html", Noop)
-	_ = part.SubView("test", "test.html", Noop)
-
-	if len(part.Blocks) != 1 {
-		t.Errorf("Only one new block should have been created")
-		return
-	}
-	blk := part.Blocks[0]
-	if blk.Parent.Template != part.Template {
-		t.Errorf("Expected new block to refer back to the partial that defined it %v", blk)
-	}
-	if blk.Name != "test" {
-		t.Errorf("Expected new blockname: %#v got %#v", "test", blk.Name)
-	}
-}
-
-func Test_extend_block_basic(t *testing.T) {
-	part := basePartial()
-	p := part.SubView("test", "test.html.tmpl", Noop)
-
-	got := PrintHandler(p.Handler().FragmentOnly())
-	expecting := `FragmentHandler("test.html.tmpl", github.com/rur/treetop.Noop)`
-	if !strings.Contains(got, expecting) {
-		t.Errorf("Extended template, expecting: %s, got %s", expecting, got)
-	}
-}
-
-func Test_fragment_with_blocks(t *testing.T) {
-	part := basePartial()
-	p := part.SubView("test", "test.html.tmpl", Noop)
-	p.DefaultSubView("sub", "sub.html.tmpl", Noop)
-
-	got, err := p.Handler().FragmentOnly().Fragment.TemplateList()
+func TestNewView(t *testing.T) {
+	base := NewView("base.html", Constant("ok!"))
+	err := assertViewDetails(base, "base.html", "ok!")
 	if err != nil {
-		t.Errorf("Unexpected error while aggregating templates: %s", err.Error())
-	}
-	expecting := []string{"test.html.tmpl", "sub.html.tmpl"}
-	if !reflect.DeepEqual(got, expecting) {
-		t.Errorf("Extended template, expecting: %#v, got %#v", expecting, got)
+		t.Error(err)
 	}
 }
 
-func Test_extend_block_partial(t *testing.T) {
-	part := basePartial()
-	p := part.SubView("test", "test.html.tmpl", Noop)
+func TestSubView(t *testing.T) {
+	base := NewView("base.html", Constant("base!"))
+	sub := base.SubView("sub-block", "sub.html", Constant("sub!"))
 
-	handler := p.Handler()
-	expecting := `PartialHandler("test.html.tmpl", github.com/rur/treetop.Noop)`
-	got := PrintHandler(handler)
+	var err error
 
-	if !strings.Contains(got, expecting) {
-		t.Errorf("Extended template, expecting: %s, got %s", expecting, got)
+	err = assertViewDetails(sub, "sub.html", "sub!")
+	if err != nil {
+		t.Error(err)
 	}
-
-	expectingTempl := []string{"base.html.tmpl", "test.html.tmpl"}
-	if templates, err := handler.Page.TemplateList(); err != nil {
-		t.Errorf("Failed to load page template, error: %s", err.Error())
-	} else if !reflect.DeepEqual(templates, expectingTempl) {
-		t.Errorf("Failed to list templates from root, expecting: %s got %s", expectingTempl, templates)
+	err = assertViewDetails(sub.Parent, "base.html", "base!")
+	if err != nil {
+		t.Error(err)
 	}
 }
 
-func Test_extend_multiple_levels(t *testing.T) {
-	base := basePartial()
+func TestDefaultSubView(t *testing.T) {
+	base := NewView("base.html", Constant("base!"))
+	base.DefaultSubView("sub-block", "sub.html", Constant("sub!"))
 
-	_ = base.DefaultSubView("test", "test.html.tmpl", Noop)
-	test2 := base.SubView("test2", "test2.html.tmpl", Noop)
-	_ = test2.DefaultSubView("A", "default_A.html.tmpl", Noop)
-	test2B := test2.SubView("B", "test2_B.html.tmpl", Noop)
-	test2B.DefaultSubView("B_plus", "test2_B_plus.html.tmpl", Noop)
+	sub, ok := base.SubViews["sub-block"]
+	if !ok {
+		t.Error("Failed to register block with base")
+	}
+	err := assertViewDetails(sub, "sub.html", "sub!")
+	if err != nil {
+		t.Error(err)
+	}
+}
 
-	handler := test2B.Handler()
+func TestCopyView(t *testing.T) {
+	// create a base view then copy it and make changes
+	base := NewView("base.html", Constant("base!"))
+	base.DefaultSubView("sub-block", "sub.html", Constant("sub!"))
+	copy := base.Copy()
+	copy.Template = "copy.html"
+	copy.HandlerFunc = Constant("copy!")
+	copy.DefaultSubView("sub-block", "subCopy.html", Constant("subCopy!"))
 
-	var expectingTempl []string
-	expectingTempl = []string{"test2_B.html.tmpl", "test2_B_plus.html.tmpl"}
-	if templates, err := handler.Fragment.TemplateList(); err != nil {
-		t.Errorf("Failed to load partial template, error: %s", err.Error())
-	} else if !reflect.DeepEqual(templates, expectingTempl) {
-		t.Errorf("Failed to list templates from partial, expecting: %s got %s", expectingTempl, templates)
+	// assert that changes to the copy did not affect the original view
+	var err error
+	err = assertViewDetails(base, "base.html", "base!")
+	if err != nil {
+		t.Error(err)
+	}
+	basesub, ok := base.SubViews["sub-block"]
+	if !ok {
+		t.Error("Failed to register block with base")
+	}
+	err = assertViewDetails(basesub, "sub.html", "sub!")
+	if err != nil {
+		t.Error(err)
 	}
 
-	expectingTempl = []string{
-		"base.html.tmpl",
-		"test.html.tmpl",
-		"test2.html.tmpl",
-		"default_A.html.tmpl",
-		"test2_B.html.tmpl",
-		"test2_B_plus.html.tmpl",
+	err = assertViewDetails(copy, "copy.html", "copy!")
+	if err != nil {
+		t.Error(err)
 	}
-	if templates, err := handler.Page.TemplateList(); err != nil {
-		t.Errorf("Failed to load page template, error: %s", err.Error())
-	} else if !reflect.DeepEqual(templates, expectingTempl) {
-		t.Errorf("Failed to list templates from root, expecting: %s got %s", expectingTempl, templates)
+	copysub, ok := copy.SubViews["sub-block"]
+	if !ok {
+		t.Error("Failed to register block with copy")
+	}
+	err = assertViewDetails(copysub, "subCopy.html", "subCopy!")
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestCopySubView(t *testing.T) {
+	base := NewView("base.html", Constant("base!"))
+	sub := base.SubView("test", "sub.html", Constant("sub!"))
+	copy := sub.Copy()
+	if copy.Defines != "test" {
+		t.Errorf("Expecting copy to have defines of 'test', got %s", copy.Defines)
+	}
+	err := assertViewDetails(copy.Parent, "base.html", "base!")
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+// ---------
+// Helpers
+// ---------
+
+func assertViewDetails(v *View, t string, data string) error {
+	if v.Template != t {
+		return fmt.Errorf("expecting template %s got %s", t, v.Template)
+	}
+
+	switch got := v.HandlerFunc(&ResponseWrapper{}, nil).(type) {
+	case string:
+		if got != data {
+			return fmt.Errorf("expecting %s got %s", data, got)
+		}
+		return nil
+	default:
+		return fmt.Errorf("unexpected return value from base handler %v", got)
 	}
 }

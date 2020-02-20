@@ -39,7 +39,7 @@ func TestWriter(t *testing.T) {
 			name: "fragment",
 			args: args{
 				w:         httptest.NewRecorder(),
-				req:       mockRequest("/Some/path", FragmentContentType),
+				req:       mockRequest("/Some/path", PartialContentType+", "+FragmentContentType),
 				isPartial: false,
 			},
 			want: &writer{
@@ -53,7 +53,7 @@ func TestWriter(t *testing.T) {
 			name: "partial",
 			args: args{
 				w:         httptest.NewRecorder(),
-				req:       mockRequest("/Some/path", PartialContentType),
+				req:       mockRequest("/Some/path", PartialContentType+", "+FragmentContentType),
 				isPartial: true,
 			},
 			want: &writer{

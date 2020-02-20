@@ -53,7 +53,7 @@ func (h TemplateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 		pageResp := resp.WithView(h.Page)
-		data := h.Page.Handler(pageResp, req)
+		data := h.Page.HandlerFunc(pageResp, req)
 		if pageResp.Finished() {
 			return
 		}
@@ -72,7 +72,7 @@ func (h TemplateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	)
 
 	for i, view := range views {
-		data[i] = view.Handler(resp.WithView(view), req)
+		data[i] = view.HandlerFunc(resp.WithView(view), req)
 		if resp.Finished() {
 			return
 		}
