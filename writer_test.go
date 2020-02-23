@@ -30,6 +30,7 @@ func TestWriter(t *testing.T) {
 		wantStatus      int
 		wantBody        string
 		wantPageURL     string
+		wantError       string
 	}{
 		{
 			name: "non tt request",
@@ -70,7 +71,7 @@ func TestWriter(t *testing.T) {
 			wantPageURL:     "/Some/path",
 		},
 		{
-			name: "partial",
+			name: "partial replace history state",
 			args: args{
 				w:            httptest.NewRecorder(),
 				req:          mockRequest("/Some/path", TemplateContentType),
@@ -85,6 +86,18 @@ func TestWriter(t *testing.T) {
 			wantStatus:      201,
 			wantBody:        `<p>this is a test</p>`,
 			wantPageURL:     "/Some/other/path",
+		},
+		{
+			name: "invalid URL",
+			args: args{
+				w:       httptest.NewRecorder(),
+				req:     mockRequest("/Some/path", TemplateContentType),
+				status:  201,
+				pageURL: "$%^&*",
+			},
+
+			wantWriter: true,
+			wantError:  "parse $%^&*: invalid URL escape \"%^&\"",
 		},
 	}
 	for _, tt := range tests {
@@ -116,7 +129,15 @@ func TestWriter(t *testing.T) {
 					ttW.DesignatePageURL(tt.args.pageURL)
 				}
 			}
-			fmt.Fprint(ttW, "<p>this is a test</p>")
+			_, err := fmt.Fprint(ttW, "<p>this is a test</p>")
+			if tt.wantError != "" {
+				if err == nil {
+					t.Errorf("Writer expecting error '%s'", tt.wantError)
+					return
+				} else if tt.wantError != err.Error() {
+					t.Errorf("Writer got error %s, expecting %s", err, tt.wantError)
+				}
+			}
 			status := tt.args.w.Code
 			contentType := tt.args.w.HeaderMap.Get("Content-Type")
 			pageURL := tt.args.w.HeaderMap.Get("X-Page-Url")
