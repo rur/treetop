@@ -104,6 +104,14 @@ func NewView(tmpl string, handler ViewHandlerFunc) *View {
 	}
 }
 
+// NewSubView creates an instance of a view given a template + handler pair
+// this view is a detached subview, in that is does not reference a parent
+func NewSubView(defines, tmpl string, handler ViewHandlerFunc) *View {
+	v := NewView(tmpl, handler)
+	v.Defines = defines
+	return v
+}
+
 // NewSubView create a new view extending a named block within the current view
 func (v *View) NewSubView(defines string, tmpl string, handler ViewHandlerFunc) *View {
 	sub := NewView(tmpl, handler)
@@ -170,6 +178,9 @@ func CompileViews(view *View, includes ...*View) (page, part *View, postscript [
 		page, _ = insertView(root, view)
 	} else {
 		page = view
+	}
+	for _, incl := range includes {
+		page, _ = insertView(page, incl)
 	}
 
 	return page, part, postscript

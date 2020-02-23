@@ -105,14 +105,13 @@ func TestCompileViews(t *testing.T) {
 		expectIncludes []string
 	}
 	cases := []TestCase{
-		TestCase{
+		{
 			name:           "basic",
 			view:           NewView("base.html", Constant("github.com/rur/treetop.Constant.func1")),
 			expectPage:     `- View("base.html", github.com/rur/treetop.Constant.func1)`,
 			expectView:     `- View("base.html", github.com/rur/treetop.Constant.func1)`,
 			expectIncludes: []string{},
-		},
-		TestCase{
+		}, {
 			name: "with includes",
 			view: NewView("base.html", Constant("github.com/rur/treetop.Constant.func1")),
 			includes: []*View{
@@ -123,27 +122,63 @@ func TestCompileViews(t *testing.T) {
 			expectIncludes: []string{
 				`- View("other.html", github.com/rur/treetop.Constant.func1)`,
 			},
+		}, {
+			name: "with parent view",
+			view: func() *View {
+				base := NewView("base.html", Noop)
+				return base.NewSubView("test", "test.html", Constant("test!"))
+			}(),
+			expectPage: `
+			- View("base.html", github.com/rur/treetop.Noop)
+			  '- test: SubView("test", "test.html", github.com/rur/treetop.Constant.func1)
+			`,
+			expectView: `- SubView("test", "test.html", github.com/rur/treetop.Constant.func1)`,
+		}, {
+			name: "with parent and overrideing includes",
+			view: func() *View {
+				base := NewView("base.html", Noop)
+				base.NewSubView("other", "never_used.html", Noop)
+				return base.NewSubView("test", "test.html", Constant("test!"))
+			}(),
+			expectPage: `
+			- View("base.html", github.com/rur/treetop.Noop)
+			  |- other: SubView("other", "other.html", github.com/rur/treetop.Constant.func1)
+			  '- test: SubView("test", "test.html", github.com/rur/treetop.Constant.func1)
+			`,
+			expectView: `- SubView("test", "test.html", github.com/rur/treetop.Constant.func1)`,
+			expectIncludes: []string{
+				`- SubView("other", "other.html", github.com/rur/treetop.Constant.func1)`,
+			},
+			includes: []*View{
+				NewSubView("other", "other.html", Constant("other!")),
+			},
 		},
 	}
 	for _, tCase := range cases {
-		t.Run(tCase.name, func(tt *testing.T) {
+		t.Run(tCase.name, func(t *testing.T) {
 			page, view, incl := CompileViews(tCase.view, tCase.includes...)
 			pageStr := SprintViewTree(page)
-			if tCase.expectPage != pageStr {
-				tt.Errorf("Expecting page %s, got %s", tCase.expectPage, pageStr)
+			expectPage := sanitizeExpectedTreePrint(tCase.expectPage)
+			if expectPage != pageStr {
+				t.Errorf("Expecting Page =\n%s\nwant\n%s", pageStr, expectPage)
 				return
 			}
 			viewStr := SprintViewTree(view)
-			if tCase.expectView != viewStr {
-				tt.Errorf("Expecting view %s, got %s", tCase.expectView, viewStr)
+			expectView := sanitizeExpectedTreePrint(tCase.expectView)
+			if expectView != viewStr {
+				t.Errorf("Expecting View =\n%s\nwant\n%s", viewStr, expectView)
 				return
 			}
 			inclS := make([]string, len(incl))
 			for i, inc := range incl {
 				inclS[i] = SprintViewTree(inc)
 			}
-			if !reflect.DeepEqual(tCase.expectIncludes, inclS) {
-				tt.Errorf("Expecting includes:\n%v\nGot:\n%v", tCase.expectIncludes, inclS)
+			expectIncl := make([]string, len(tCase.expectIncludes))
+			for i, inc := range tCase.expectIncludes {
+				expectIncl[i] = sanitizeExpectedTreePrint(inc)
+			}
+			if !reflect.DeepEqual(expectIncl, inclS) {
+				t.Errorf("Expecting Include =\n%v\nwant\n%v", inclS, expectIncl)
 				return
 			}
 		})

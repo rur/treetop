@@ -170,19 +170,24 @@ func (rsp *ResponseWrapper) Status(status int) int {
 	return rsp.status
 }
 
-//
+// ReplacePageURL will instruct the client to replace the current
+// history entry with the supplied URL
 func (rsp *ResponseWrapper) ReplacePageURL(url string) {
 	rsp.pageURL = url
 	rsp.replaceURL = true
 	rsp.pageURLSpecified = true
 }
 
+// DesignatePageURL will result in a header being added to the response
+// that will create a new history entry for the supplied URL
 func (rsp *ResponseWrapper) DesignatePageURL(url string) {
 	rsp.pageURL = url
 	rsp.replaceURL = false
 	rsp.pageURLSpecified = true
 }
 
+// Finished will return true if the response headers have been written to the
+// client, effectively cancelling the treetop view handler lifecycle
 func (rsp *ResponseWrapper) Finished() bool {
 	return rsp.finished
 }
