@@ -3,6 +3,7 @@ package treetop
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -152,6 +153,32 @@ func TestCompileViews(t *testing.T) {
 			includes: []*View{
 				NewSubView("other", "other.html", Constant("other!")),
 			},
+		}, {
+			name: "include that overrides block in view",
+			view: func() *View {
+				base := NewView("base.html", Noop)
+				base.NewSubView("other", "never_used.html", Noop)
+				t := base.NewSubView("test", "test.html", Constant("test!"))
+				t.NewSubView("subother", "never_used.html", Noop)
+				return t
+			}(),
+			expectPage: `
+			- View("base.html", github.com/rur/treetop.Noop)
+			  |- other: SubView("other", "other.html", github.com/rur/treetop.Constant.func1)
+			  '- test: SubView("test", "test.html", github.com/rur/treetop.Constant.func1)
+			     '- subother: SubView("subother", "subother.html", github.com/rur/treetop.Constant.func1)
+			`,
+			expectView: `
+			- SubView("test", "test.html", github.com/rur/treetop.Constant.func1)
+			  '- subother: SubView("subother", "subother.html", github.com/rur/treetop.Constant.func1)
+			`,
+			expectIncludes: []string{
+				`- SubView("other", "other.html", github.com/rur/treetop.Constant.func1)`,
+			},
+			includes: []*View{
+				NewSubView("other", "other.html", Constant("other!")),
+				NewSubView("subother", "subother.html", Constant("subother!")),
+			},
 		},
 	}
 	for _, tCase := range cases {
@@ -204,5 +231,112 @@ func assertViewDetails(v *View, t string, data string) error {
 		return nil
 	default:
 		return fmt.Errorf("unexpected return value from base handler %v", got)
+	}
+}
+
+func Test_insertView(t *testing.T) {
+	tests := []struct {
+		name      string
+		view      *View
+		child     *View
+		want      string
+		wantFound bool
+	}{
+		{
+			name:      "basic",
+			view:      NewView("test.html", Noop),
+			child:     nil,
+			want:      `- View("test.html", github.com/rur/treetop.Noop)`,
+			wantFound: false,
+		},
+		{
+			name: "found",
+			view: func() *View {
+				v := NewView("base.html", Noop)
+				v.NewDefaultSubView("test", "gone.html", Noop)
+				return v
+			}(),
+			child: NewSubView("test", "inserted.html", Noop),
+			want: `
+			- View("base.html", github.com/rur/treetop.Noop)
+			  '- test: SubView("test", "inserted.html", github.com/rur/treetop.Noop)
+			`,
+			wantFound: true,
+		},
+		{
+			name: "found, without interferring with other views",
+			view: func() *View {
+				v := NewView("base.html", Noop)
+				v.NewDefaultSubView("test", "gone.html", Noop)
+				v.NewDefaultSubView("test_other", "unaffected.html", Noop)
+				return v
+			}(),
+			child: func() *View {
+				b := NewView("different_base.html", Noop)
+				incl := b.NewDefaultSubView("test", "included.html", Noop)
+				incl.NewDefaultSubView("test_sub", "inclSub.html", Noop)
+				return incl
+			}(),
+			want: `
+			- View("base.html", github.com/rur/treetop.Noop)
+			  |- test: SubView("test", "included.html", github.com/rur/treetop.Noop)
+			  |  '- test_sub: SubView("test_sub", "inclSub.html", github.com/rur/treetop.Noop)
+			  |
+			  '- test_other: SubView("test_other", "unaffected.html", github.com/rur/treetop.Noop)
+			`,
+			wantFound: true,
+		},
+		{
+			name: "keep nil",
+			view: func() *View {
+				v := NewView("base.html", Noop)
+				v.NewDefaultSubView("test", "gone.html", Noop)
+				v.NewSubView("another", "gone.html", Noop)
+				return v
+			}(),
+			child: NewSubView("test", "inserted.html", Noop),
+			want: `
+			- View("base.html", github.com/rur/treetop.Noop)
+			  |- another: nil
+			  '- test: SubView("test", "inserted.html", github.com/rur/treetop.Noop)
+			`,
+			wantFound: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			view, found := insertView(tt.view, tt.child)
+			if found != tt.wantFound {
+				t.Errorf("insetView() got found %v, want %v", found, tt.wantFound)
+			}
+			expect := sanitizeExpectedTreePrint(tt.want)
+			got := SprintViewTree(view)
+			if expect != got {
+				t.Errorf("insertView() got \n%s\nexpecting\n%s", got, expect)
+			}
+		})
+	}
+}
+
+func TestViewBaseCopied(t *testing.T) {
+	// test that views altered by compiling have been made immutable
+	base := NewView("base.html", Noop)
+	firstChild := base.NewSubView("test", "firstChild.html", Noop)
+	p, _, _ := CompileViews(firstChild)
+	base.NewDefaultSubView("test2", "secondChild.html", Noop)
+	if strings.Contains(SprintViewTree(p), "test2") {
+		t.Errorf("Changing base cause compiled view to change: got\n%s", SprintViewTree(p))
+	}
+}
+
+func TestViewUnchangedUntilAfterCompile(t *testing.T) {
+	// have a child of the base which is mutated AFTER compiling the views
+	base := NewView("base.html", Noop)
+	test2 := base.NewDefaultSubView("test2", "secondChild.html", Noop)
+	firstChild := base.NewSubView("test", "firstChild.html", Noop)
+	p, _, _ := CompileViews(firstChild)
+	test2.NewDefaultSubView("test2_sub", "shouldNotBeInFirstChild.html", Noop)
+	if strings.Contains(SprintViewTree(p), "test2_sub") {
+		t.Errorf("Changing sibling view cause compiled view page to change: got\n%s", SprintViewTree(p))
 	}
 }

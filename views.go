@@ -132,13 +132,16 @@ func (v *View) NewDefaultSubView(defines string, tmpl string, handler ViewHandle
 }
 
 // Copy creates a duplicate so that the original is not affected by
-// changes
+// changes. This will propegate as a 'deep copy' to all default subviews
 func (v *View) Copy() *View {
+	if v == nil {
+		return nil
+	}
 	copy := NewView(v.Template, v.HandlerFunc)
 	copy.Defines = v.Defines
 	copy.Parent = v.Parent
 	for name, sub := range v.SubViews {
-		copy.SubViews[name] = sub
+		copy.SubViews[name] = sub.Copy()
 	}
 	return copy
 }
@@ -151,16 +154,32 @@ func (v *View) Copy() *View {
 //   - a partial page view instance, and
 //   - any disconnect fragment views that should be appended to partial requests.
 //
-// TODO: Implementation needed
 func CompileViews(view *View, includes ...*View) (page, part *View, postscript []*View) {
 	// Merge the includes and the view where possible.
 	// Views to the left 'consume' those to the right when a match is found.
 	// 'Postscripts' are includes that could not be merged.
-	// TODO: implementation here
 	part = view.Copy()
-
-	for _, incl := range includes {
-		postscript = append(postscript, incl.Copy())
+	{
+		consumed := make([]bool, len(includes))
+		var found bool
+		for i, incl := range includes {
+			part, found = insertView(part, incl)
+			consumed[i] = found
+		}
+		for i := range includes {
+			if i >= len(includes)-1 {
+				break
+			}
+			for j := range includes[i+1:] {
+				includes[i], found = insertView(includes[i], includes[i+j+1])
+				consumed[i] = found || consumed[i]
+			}
+		}
+		for i := range includes {
+			if !consumed[i] {
+				postscript = append(postscript, includes[i])
+			}
+		}
 	}
 
 	// NOTE: this is pseudocode
@@ -190,9 +209,13 @@ func CompileViews(view *View, includes ...*View) (page, part *View, postscript [
 // If a match is found for the definition name, views will be copied & modified as necessary and
 // a flag is returned to indicate whether a match was found.
 //
-// TODO: Implementation needed
 func insertView(view, child *View) (*View, bool) {
-	// NOTE: this is pseudocode
+	if view == nil {
+		return nil, false
+	}
+	if child == nil || child.Defines == "" || len(view.SubViews) == 0 {
+		return view, false
+	}
 	if _, found := view.SubViews[child.Defines]; found {
 		copy := view.Copy()
 		copy.SubViews[child.Defines] = child
@@ -202,9 +225,8 @@ func insertView(view, child *View) (*View, bool) {
 	// At this point a match was not found directly in this view,
 	// Attempt to apply the child to reachable subviews
 	//
-	// NOTE: this is pseudocode
 	for _, sub := range view.SubViews {
-		copiedSub, found := insertView(sub, view)
+		copiedSub, found := insertView(sub, child)
 		if found {
 			copy := view.Copy()
 			copy.SubViews[copiedSub.Defines] = copiedSub
