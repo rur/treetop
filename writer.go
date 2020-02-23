@@ -81,8 +81,6 @@ func (tw *writer) Write(p []byte) (n int, err error) {
 	tw.responseWriter.Header().Set("Content-Type", TemplateContentType)
 	if tw.status > 100 {
 		tw.responseWriter.WriteHeader(tw.status)
-	} else {
-		tw.responseWriter.WriteHeader(tw.status)
 	}
 	tw.written = true
 	return tw.responseWriter.Write(p)

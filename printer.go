@@ -13,6 +13,8 @@ import (
 
 // PrintTemplateHandler is a cheap and cheerful way to debug a view handlers by 'stringing'
 // a preview of the state of a supplied handler instance
+//
+// TODO: implement a pretty print for template handlers
 func PrintTemplateHandler(h *TemplateHandler) string {
 	var handlerInfo string
 	if h.Partial.HandlerFunc != nil {
