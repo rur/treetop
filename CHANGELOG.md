@@ -24,6 +24,13 @@ This will make the intention of the protocol more obvious for developers already
 familiar with the use of HTML5 templates and avoid some issues with non-rooted
 markup in a response body.
 
+### Change Redirect Header
+
+Treetop redirects use the Location header for the destination URL. The only difference
+from a normal HTTP redirect is the status code of 200. The `X-Treetop-Redirect` 
+header will have a value of "SeeOther" to signal to the XHR client that a new location
+should be forced.
+
 ### Views and Executors
 
 Implementation of the `View` type has been greatly simplified.
