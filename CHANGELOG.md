@@ -8,10 +8,11 @@ Treetop is a 'HTML template' protocol with exactly one content-type value.
 
     application/x.treetop-html-template+xml
 
-Use of the terms 'fragment' and 'partial' have been done away with. When a response corresponds of a part of a full page, the following header will be included in the
-response.
+Use of the terms 'fragment' and 'partial' have been done away with. The following
+headers can be included (optional) in the response to control navigation history.
 
     X-Page-URL: /some/path
+    X-Response-History: replace
 
 All HTML content in the response body should be wrapped in a single HTMLTemplateElement (this is implicit if not present).
 
@@ -26,7 +27,7 @@ markup in a response body.
 
 ### Change Redirect Header
 
-Treetop redirects use the Location header for the destination URL. The only difference
+Treetop now redirects use the Location header value as the destination URL. The only difference
 from a normal HTTP redirect is the status code of 200. The `X-Treetop-Redirect` 
 header will have a value of "SeeOther" to signal to the XHR client that a new location
 should be forced.
@@ -44,7 +45,7 @@ The following implementations are supplied with the treetop package:
 3. `StringTemplateExecutor` - treats view.Template string as a literal template string
 4. `DevelopmentFSExecutor` - FileSystemExecutor without caching the parsed templates
 
-Example 
+Example usage
 
     base := NewView("base.html.tmpl", MyHandler)
     content := base.NewSubView(
@@ -53,6 +54,22 @@ Example
     exec := treetop.DefaultExecutor{}
     mux.Handle("/some/path", exec.NewViewHandler(content))
 
+
+### View Debugging
+
+`SprintViewTree` is a to-string function that is helpful for showing how a given view
+hierarchy is configured.
+
+Example output
+
+    - View("base.html", ...Constant.func1)
+      |- A: SubView("A", "A.html", ...Constant.func1)
+      |  |- A1: SubView("A1", "A1.html", ...Constant.func1)
+      |  '- A2: SubView("A2", "A2.html", ...Constant.func1)
+      |
+      '- B: SubView("B", "B.html", ...Constant.func1)
+          |- B1: SubView("B1", "B1.html", ...Constant.func1)
+          '- B2: SubView("B2", "B2.html", ...Constant.func1)
 
 ## [0.2.0] - 2020-02-16
 
