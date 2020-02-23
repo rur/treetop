@@ -1,12 +1,40 @@
 package treetop
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+	"time"
 )
+
+func TestBeginResponse(t *testing.T) {
+	rsp := BeginResponse(context.Background(), httptest.NewRecorder())
+	if rsp.ResponseID() == 0 {
+		t.Error("Expecting a non-zero treetop response ID to be assigned")
+	}
+	rsp.Cancel()
+	select {
+	case <-rsp.Context().Done():
+	case <-time.After(1 * time.Millisecond):
+		t.Error("Expecting cancel to resolve the treetop context")
+	}
+}
+
+func TestResponse_WithView(t *testing.T) {
+	rsp := BeginResponse(context.Background(), httptest.NewRecorder())
+
+	view := NewView("view.html", Noop)
+	view.NewDefaultSubView("test", "test.html", Constant("test!!"))
+
+	rsp = rsp.WithView(view)
+	d := rsp.HandleSubView("test", nil)
+	if d != "test!!" {
+		t.Errorf("Expecting subview data to be 'test!!' got %v", d)
+	}
+}
 
 func Test_ResponseWrapper_HandleSubView(t *testing.T) {
 	type fields struct {
@@ -16,7 +44,7 @@ func Test_ResponseWrapper_HandleSubView(t *testing.T) {
 		dataCalled      bool
 		data            interface{}
 		status          int
-		partial         *View
+		subViews        map[string]*View
 	}
 	req := httptest.NewRequest("GET", "/some/path", nil)
 	type args struct {
@@ -35,7 +63,6 @@ func Test_ResponseWrapper_HandleSubView(t *testing.T) {
 			fields: fields{
 				ResponseWriter: &httptest.ResponseRecorder{},
 				responseID:     1234,
-				partial:        &View{},
 			},
 			args: args{
 				name: "no-such-block",
@@ -48,11 +75,9 @@ func Test_ResponseWrapper_HandleSubView(t *testing.T) {
 			fields: fields{
 				ResponseWriter: &httptest.ResponseRecorder{},
 				responseID:     1234,
-				partial: &View{
-					SubViews: map[string]*View{
-						"some-block": &View{
-							HandlerFunc: Constant("This is a test"),
-						},
+				subViews: map[string]*View{
+					"some-block": &View{
+						HandlerFunc: Constant("This is a test"),
 					},
 				},
 			},
@@ -68,13 +93,11 @@ func Test_ResponseWrapper_HandleSubView(t *testing.T) {
 				ResponseWriter: &httptest.ResponseRecorder{},
 				responseID:     1234,
 				status:         400,
-				partial: &View{
-					SubViews: map[string]*View{
-						"some-block": &View{
-							HandlerFunc: func(rsp Response, _ *http.Request) interface{} {
-								rsp.Status(501)
-								return "Not Implemented"
-							},
+				subViews: map[string]*View{
+					"some-block": &View{
+						HandlerFunc: func(rsp Response, _ *http.Request) interface{} {
+							rsp.Status(501)
+							return "Not Implemented"
 						},
 					},
 				},
@@ -91,12 +114,10 @@ func Test_ResponseWrapper_HandleSubView(t *testing.T) {
 			fields: fields{
 				ResponseWriter: &httptest.ResponseRecorder{},
 				responseID:     1234,
-				partial: &View{
-					SubViews: map[string]*View{
-						"some-block": &View{
-							HandlerFunc: func(rsp Response, _ *http.Request) interface{} {
-								return fmt.Sprintf("Response token %v", rsp.ResponseID())
-							},
+				subViews: map[string]*View{
+					"some-block": &View{
+						HandlerFunc: func(rsp Response, _ *http.Request) interface{} {
+							return fmt.Sprintf("Response token %v", rsp.ResponseID())
 						},
 					},
 				},
@@ -112,11 +133,9 @@ func Test_ResponseWrapper_HandleSubView(t *testing.T) {
 			fields: fields{
 				ResponseWriter: &httptest.ResponseRecorder{},
 				responseID:     1234,
-				partial: &View{
-					SubViews: map[string]*View{
-						"some-block": &View{
-							HandlerFunc: Constant("This should not happen"),
-						},
+				subViews: map[string]*View{
+					"some-block": &View{
+						HandlerFunc: Constant("This should not happen"),
 					},
 				},
 			},
@@ -134,7 +153,7 @@ func Test_ResponseWrapper_HandleSubView(t *testing.T) {
 				responseID:     tt.fields.responseID,
 				finished:       tt.fields.responseWritten,
 				status:         tt.fields.status,
-				view:           tt.fields.partial,
+				subViews:       tt.fields.subViews,
 			}
 			got := rsp.HandleSubView(tt.args.name, tt.args.req)
 			if !reflect.DeepEqual(got, tt.data) {

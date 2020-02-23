@@ -82,7 +82,7 @@ type ResponseWrapper struct {
 	context          context.Context
 	finished         bool
 	status           int
-	view             *View
+	subViews         map[string]*View
 	pageURL          string
 	pageURLSpecified bool
 	replaceURL       bool
@@ -93,7 +93,7 @@ type ResponseWrapper struct {
 func BeginResponse(cxt context.Context, w http.ResponseWriter) *ResponseWrapper {
 	rsp := ResponseWrapper{
 		ResponseWriter: w,
-		responseID:     123, //     nextResponseID(),
+		responseID:     nextResponseID(),
 	}
 	rsp.context, rsp.cancel = context.WithCancel(cxt)
 	return &rsp
@@ -105,9 +105,14 @@ func (rsp *ResponseWrapper) WithView(v *View) *ResponseWrapper {
 	derived := ResponseWrapper{
 		ResponseWriter: rsp.ResponseWriter,
 		responseID:     rsp.responseID,
+		subViews:       make(map[string]*View),
 		context:        rsp.context,
-		view:           v,
 		cancel:         rsp.cancel,
+	}
+	if v != nil {
+		for k, v := range v.SubViews {
+			derived.subViews[k] = v
+		}
 	}
 	return &derived
 }
@@ -196,11 +201,11 @@ func (rsp *ResponseWrapper) Finished() bool {
 func (rsp *ResponseWrapper) HandleSubView(name string, req *http.Request) interface{} {
 	// NOTE: this is pseudocode
 	// don't do anything if a response has already been written
-	if rsp.finished {
+	if rsp.finished || len(rsp.subViews) == 0 {
 		return nil
 	}
 
-	sub, ok := rsp.view.SubViews[name]
+	sub, ok := rsp.subViews[name]
 	if !ok || sub == nil {
 		return nil
 	}
