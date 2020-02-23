@@ -43,10 +43,10 @@ func SetupGreeter(mux *http.ServeMux) {
 		shared.BaseTemplate,
 		treetop.Delegate("content"), // adopt "content" handler as own template data
 	)
-	content := page.SubView("content", content, contentHandler)
+	content := page.NewSubView("content", content, contentHandler)
 
-	greetForm := content.SubView("message", landing, treetop.Noop)
-	greetMessage := content.SubView("message", greeting, greetingHandler)
+	greetForm := content.NewSubView("message", landing, treetop.Noop)
+	greetMessage := content.NewSubView("message", greeting, greetingHandler)
 
 	mux.Handle("/view", treetop.ViewHandler(greetForm))
 	mux.Handle("/view/greet", treetop.ViewHandler(greetMessage))

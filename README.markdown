@@ -101,17 +101,17 @@ An abstraction is included in the Treetop GO library for creating more complex n
 
     page := treetop.NewPage(treetop.DefaultTemplateExec)
     base := page.NewView("base.html.tmpl", baseHandler)
-    content := base.SubView(
+    content := base.NewSubView(
         "content",
         "content.html.tmpl",
         contentHandler,
     )
-    form := content.SubView(
+    form := content.NewSubView(
         "form",
         "contact.html.tmpl",
         contactHandler,
     )
-    submit := content.SubView(
+    submit := content.NewSubView(
         "form",
         "contactSubmit.html.tmpl",
         submitHandler,

@@ -59,8 +59,8 @@ func TestSprintViewTree(t *testing.T) {
 			name: "view with sub views",
 			v: func() *View {
 				v := NewView("base.html", Constant("base!"))
-				v.DefaultSubView("A", "A.html", Constant("A!"))
-				v.DefaultSubView("B", "B.html", Constant("B!"))
+				v.NewDefaultSubView("A", "A.html", Constant("A!"))
+				v.NewDefaultSubView("B", "B.html", Constant("B!"))
 				return v
 			}(),
 			want: `
@@ -73,12 +73,12 @@ func TestSprintViewTree(t *testing.T) {
 			name: "view with sub sub views",
 			v: func() *View {
 				v := NewView("base.html", Constant("base!"))
-				a := v.DefaultSubView("A", "A.html", Constant("A!"))
-				a.DefaultSubView("A1", "A1.html", Constant("A1!"))
-				a.DefaultSubView("A2", "A2.html", Constant("A2!"))
-				b := v.DefaultSubView("B", "B.html", Constant("B!"))
-				b.DefaultSubView("B1", "B1.html", Constant("B1!"))
-				b.DefaultSubView("B2", "B2.html", Constant("B2!"))
+				a := v.NewDefaultSubView("A", "A.html", Constant("A!"))
+				a.NewDefaultSubView("A1", "A1.html", Constant("A1!"))
+				a.NewDefaultSubView("A2", "A2.html", Constant("A2!"))
+				b := v.NewDefaultSubView("B", "B.html", Constant("B!"))
+				b.NewDefaultSubView("B1", "B1.html", Constant("B1!"))
+				b.NewDefaultSubView("B2", "B2.html", Constant("B2!"))
 				return v
 			}(),
 			want: `
@@ -96,18 +96,18 @@ func TestSprintViewTree(t *testing.T) {
 			name: "view with sub sub sub views",
 			v: func() *View {
 				v := NewView("base.html", Constant("base!"))
-				a := v.DefaultSubView("A", "A.html", Constant("A!"))
-				a1 := a.DefaultSubView("A1", "A1.html", Constant("A1!"))
-				a2 := a.DefaultSubView("A2", "A2.html", Constant("A2!"))
-				a1.DefaultSubView("A11", "A11.html", Constant("A11!"))
-				a2.DefaultSubView("A21", "A21.html", Constant("A21!"))
-				b := v.DefaultSubView("B", "B.html", Constant("B!"))
-				b1 := b.DefaultSubView("B1", "B1.html", Constant("B1!"))
-				b1.DefaultSubView("B11", "B11.html", Constant("B11!"))
-				b1.DefaultSubView("B12", "B12.html", Constant("B12!"))
-				b2 := b.DefaultSubView("B2", "B2.html", Constant("B2!"))
-				b2.DefaultSubView("B21", "B21.html", Constant("B21!"))
-				b2.DefaultSubView("B22", "B22.html", Constant("B22!"))
+				a := v.NewDefaultSubView("A", "A.html", Constant("A!"))
+				a1 := a.NewDefaultSubView("A1", "A1.html", Constant("A1!"))
+				a2 := a.NewDefaultSubView("A2", "A2.html", Constant("A2!"))
+				a1.NewDefaultSubView("A11", "A11.html", Constant("A11!"))
+				a2.NewDefaultSubView("A21", "A21.html", Constant("A21!"))
+				b := v.NewDefaultSubView("B", "B.html", Constant("B!"))
+				b1 := b.NewDefaultSubView("B1", "B1.html", Constant("B1!"))
+				b1.NewDefaultSubView("B11", "B11.html", Constant("B11!"))
+				b1.NewDefaultSubView("B12", "B12.html", Constant("B12!"))
+				b2 := b.NewDefaultSubView("B2", "B2.html", Constant("B2!"))
+				b2.NewDefaultSubView("B21", "B21.html", Constant("B21!"))
+				b2.NewDefaultSubView("B22", "B22.html", Constant("B22!"))
 				return v
 			}(),
 			want: `
@@ -133,11 +133,11 @@ func TestSprintViewTree(t *testing.T) {
 			name: "view with nil sub views",
 			v: func() *View {
 				v := NewView("base.html", Constant("base!"))
-				a := v.DefaultSubView("A", "A.html", Constant("A!"))
-				a.SubView("A1", "a1.html", Noop)
-				a.DefaultSubView("A2", "A2.html", Constant("A2!"))
-				b := v.DefaultSubView("B", "B.html", Constant("B!"))
-				b.SubView("B1", "b1.html", Noop)
+				a := v.NewDefaultSubView("A", "A.html", Constant("A!"))
+				a.NewSubView("A1", "a1.html", Noop)
+				a.NewDefaultSubView("A2", "A2.html", Constant("A2!"))
+				b := v.NewDefaultSubView("B", "B.html", Constant("B!"))
+				b.NewSubView("B1", "b1.html", Noop)
 				return v
 			}(),
 			want: `

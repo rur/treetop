@@ -44,7 +44,6 @@ import "net/http"
 // Example of using the library to bind constructed handlers to a HTTP router.
 //
 // 		base := treetop.NewView(
-// 			treetop.DefaultTemplateExec,
 // 			"base.html",
 // 			baseHandler,
 // 		)
@@ -61,8 +60,9 @@ import "net/http"
 // 			contentBHandler,
 // 		)
 //
-//		mymux.Handle("/path/to/a", treetop.ViewHandler(contentA))
-//		mymux.Handle("/path/to/b", treetop.ViewHandler(contentB))
+//		exec := treetop.DefaultExecutor{}
+//		mymux.Handle("/path/to/a", exec.ViewHandler(contentA))
+//		mymux.Handle("/path/to/b", exec.ViewHandler(contentB))
 //
 //
 // This is useful for creating Treetop enabled endpoints because the constructed handler
@@ -104,8 +104,8 @@ func NewView(tmpl string, handler ViewHandlerFunc) *View {
 	}
 }
 
-// SubView create a new view extending a named block within the current view
-func (v *View) SubView(defines string, tmpl string, handler ViewHandlerFunc) *View {
+// NewSubView create a new view extending a named block within the current view
+func (v *View) NewSubView(defines string, tmpl string, handler ViewHandlerFunc) *View {
 	sub := NewView(tmpl, handler)
 	sub.Defines = defines
 	sub.Parent = v
@@ -115,10 +115,10 @@ func (v *View) SubView(defines string, tmpl string, handler ViewHandlerFunc) *Vi
 	return sub
 }
 
-// DefaultSubView create a new view extending a named block within the current view
+// NewDefaultSubView create a new view extending a named block within the current view
 // and updates the parent to use this view by default
-func (v *View) DefaultSubView(defines string, tmpl string, handler ViewHandlerFunc) *View {
-	sub := v.SubView(defines, tmpl, handler)
+func (v *View) NewDefaultSubView(defines string, tmpl string, handler ViewHandlerFunc) *View {
+	sub := v.NewSubView(defines, tmpl, handler)
 	v.SubViews[defines] = sub
 	return sub
 }

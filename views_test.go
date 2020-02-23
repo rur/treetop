@@ -16,7 +16,7 @@ func TestNewView(t *testing.T) {
 
 func TestSubView(t *testing.T) {
 	base := NewView("base.html", Constant("base!"))
-	sub := base.SubView("sub-block", "sub.html", Constant("sub!"))
+	sub := base.NewSubView("sub-block", "sub.html", Constant("sub!"))
 
 	var err error
 
@@ -32,7 +32,7 @@ func TestSubView(t *testing.T) {
 
 func TestDefaultSubView(t *testing.T) {
 	base := NewView("base.html", Constant("base!"))
-	base.DefaultSubView("sub-block", "sub.html", Constant("sub!"))
+	base.NewDefaultSubView("sub-block", "sub.html", Constant("sub!"))
 
 	sub, ok := base.SubViews["sub-block"]
 	if !ok {
@@ -47,11 +47,11 @@ func TestDefaultSubView(t *testing.T) {
 func TestCopyView(t *testing.T) {
 	// create a base view then copy it and make changes
 	base := NewView("base.html", Constant("base!"))
-	base.DefaultSubView("sub-block", "sub.html", Constant("sub!"))
+	base.NewDefaultSubView("sub-block", "sub.html", Constant("sub!"))
 	copy := base.Copy()
 	copy.Template = "copy.html"
 	copy.HandlerFunc = Constant("copy!")
-	copy.DefaultSubView("sub-block", "subCopy.html", Constant("subCopy!"))
+	copy.NewDefaultSubView("sub-block", "subCopy.html", Constant("subCopy!"))
 
 	// assert that changes to the copy did not affect the original view
 	var err error
@@ -84,7 +84,7 @@ func TestCopyView(t *testing.T) {
 
 func TestCopySubView(t *testing.T) {
 	base := NewView("base.html", Constant("github.com/rur/treetop.Constant.func1"))
-	sub := base.SubView("test", "sub.html", Constant("sub!"))
+	sub := base.NewSubView("test", "sub.html", Constant("sub!"))
 	copy := sub.Copy()
 	if copy.Defines != "test" {
 		t.Errorf("Expecting copy to have defines of 'test', got %s", copy.Defines)
