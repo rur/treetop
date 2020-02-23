@@ -1,6 +1,9 @@
 package treetop
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func Test_previewTemplate(t *testing.T) {
 	type args struct {
@@ -20,7 +23,7 @@ func Test_previewTemplate(t *testing.T) {
 				before: 10,
 				after:  10,
 			},
-			want: "\"some/path/on/fs.html\"",
+			want: `"some/path/on/fs.html"`,
 		},
 		{
 			name: "realistic html",
@@ -29,7 +32,7 @@ func Test_previewTemplate(t *testing.T) {
 				before: 10,
 				after:  10,
 			},
-			want: "\"<!doctype……y></html>\"",
+			want: `"<!doctype……y></html>"`,
 		},
 	}
 	for _, tt := range tests {
@@ -41,6 +44,156 @@ func Test_previewTemplate(t *testing.T) {
 	}
 }
 
+func TestSprintViewTree(t *testing.T) {
+	tests := []struct {
+		name string
+		v    *View
+		want string
+	}{
+		{
+			name: "single view usage",
+			v:    NewView("test.html", Constant("test!")),
+			want: `- View("test.html", github.com/rur/treetop.Constant.func1)`,
+		},
+		{
+			name: "view with sub views",
+			v: func() *View {
+				v := NewView("base.html", Constant("base!"))
+				v.DefaultSubView("A", "A.html", Constant("A!"))
+				v.DefaultSubView("B", "B.html", Constant("B!"))
+				return v
+			}(),
+			want: `
+			- View("base.html", github.com/rur/treetop.Constant.func1)
+			  |- A: SubView("A", "A.html", github.com/rur/treetop.Constant.func1)
+			  '- B: SubView("B", "B.html", github.com/rur/treetop.Constant.func1)
+			`,
+		},
+		{
+			name: "view with sub sub views",
+			v: func() *View {
+				v := NewView("base.html", Constant("base!"))
+				a := v.DefaultSubView("A", "A.html", Constant("A!"))
+				a.DefaultSubView("A1", "A1.html", Constant("A1!"))
+				a.DefaultSubView("A2", "A2.html", Constant("A2!"))
+				b := v.DefaultSubView("B", "B.html", Constant("B!"))
+				b.DefaultSubView("B1", "B1.html", Constant("B1!"))
+				b.DefaultSubView("B2", "B2.html", Constant("B2!"))
+				return v
+			}(),
+			want: `
+				- View("base.html", github.com/rur/treetop.Constant.func1)
+				  |- A: SubView("A", "A.html", github.com/rur/treetop.Constant.func1)
+				  |  |- A1: SubView("A1", "A1.html", github.com/rur/treetop.Constant.func1)
+				  |  '- A2: SubView("A2", "A2.html", github.com/rur/treetop.Constant.func1)
+				  |
+				  '- B: SubView("B", "B.html", github.com/rur/treetop.Constant.func1)
+				     |- B1: SubView("B1", "B1.html", github.com/rur/treetop.Constant.func1)
+				     '- B2: SubView("B2", "B2.html", github.com/rur/treetop.Constant.func1)
+			`,
+		},
+		{
+			name: "view with sub sub sub views",
+			v: func() *View {
+				v := NewView("base.html", Constant("base!"))
+				a := v.DefaultSubView("A", "A.html", Constant("A!"))
+				a1 := a.DefaultSubView("A1", "A1.html", Constant("A1!"))
+				a2 := a.DefaultSubView("A2", "A2.html", Constant("A2!"))
+				a1.DefaultSubView("A11", "A11.html", Constant("A11!"))
+				a2.DefaultSubView("A21", "A21.html", Constant("A21!"))
+				b := v.DefaultSubView("B", "B.html", Constant("B!"))
+				b1 := b.DefaultSubView("B1", "B1.html", Constant("B1!"))
+				b1.DefaultSubView("B11", "B11.html", Constant("B11!"))
+				b1.DefaultSubView("B12", "B12.html", Constant("B12!"))
+				b2 := b.DefaultSubView("B2", "B2.html", Constant("B2!"))
+				b2.DefaultSubView("B21", "B21.html", Constant("B21!"))
+				b2.DefaultSubView("B22", "B22.html", Constant("B22!"))
+				return v
+			}(),
+			want: `
+            - View("base.html", github.com/rur/treetop.Constant.func1)
+              |- A: SubView("A", "A.html", github.com/rur/treetop.Constant.func1)
+              |  |- A1: SubView("A1", "A1.html", github.com/rur/treetop.Constant.func1)
+              |  |  '- A11: SubView("A11", "A11.html", github.com/rur/treetop.Constant.func1)
+              |  |
+              |  '- A2: SubView("A2", "A2.html", github.com/rur/treetop.Constant.func1)
+              |     '- A21: SubView("A21", "A21.html", github.com/rur/treetop.Constant.func1)
+              |
+              '- B: SubView("B", "B.html", github.com/rur/treetop.Constant.func1)
+                 |- B1: SubView("B1", "B1.html", github.com/rur/treetop.Constant.func1)
+                 |  |- B11: SubView("B11", "B11.html", github.com/rur/treetop.Constant.func1)
+                 |  '- B12: SubView("B12", "B12.html", github.com/rur/treetop.Constant.func1)
+                 |
+                 '- B2: SubView("B2", "B2.html", github.com/rur/treetop.Constant.func1)
+                    |- B21: SubView("B21", "B21.html", github.com/rur/treetop.Constant.func1)
+                    '- B22: SubView("B22", "B22.html", github.com/rur/treetop.Constant.func1)
+			`,
+		},
+		{
+			name: "view with nil sub views",
+			v: func() *View {
+				v := NewView("base.html", Constant("base!"))
+				a := v.DefaultSubView("A", "A.html", Constant("A!"))
+				a.SubView("A1", "a1.html", Noop)
+				a.DefaultSubView("A2", "A2.html", Constant("A2!"))
+				b := v.DefaultSubView("B", "B.html", Constant("B!"))
+				b.SubView("B1", "b1.html", Noop)
+				return v
+			}(),
+			want: `
+            - View("base.html", github.com/rur/treetop.Constant.func1)
+              |- A: SubView("A", "A.html", github.com/rur/treetop.Constant.func1)
+              |  |- A1: nil
+              |  '- A2: SubView("A2", "A2.html", github.com/rur/treetop.Constant.func1)
+              |
+              '- B: SubView("B", "B.html", github.com/rur/treetop.Constant.func1)
+                 '- B1: nil
+			`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			expecting := sanitizeExpectedTreePrint(tt.want)
+			if got := SprintViewTree(tt.v); got != expecting {
+				t.Errorf("SprintViewTree() =\n%s\nwant\n%s", got, expecting)
+			}
+		})
+	}
+}
+
+// -----------
+// helpers
+// -----------
+
+// sanitizeExpectedTreePrint will trim whitespace from test assertions
+// and account for indentation in multiline raw strings.
+func sanitizeExpectedTreePrint(s string) string {
+	lines := strings.Split(s, "\n")
+	out := make([]string, 0, len(lines))
+	var trimLeader int
+FirstLineScan:
+	for i, line := range lines {
+		for j := range line {
+			if line[j] != ' ' && line[j] != '\t' {
+				// this is the first line
+				// leading whitespace on first line should be
+				// removed from all subsequent lines
+				trimLeader = j
+				lines = lines[i:]
+				break FirstLineScan
+			}
+		}
+	}
+	for _, line := range lines {
+		if len(line) <= trimLeader {
+			continue
+		}
+		out = append(out, line[trimLeader:])
+	}
+	return strings.Join(out, "\n")
+}
+
+// fromExampleDotCom is used for testing template abbreviation
 var fromExampleDotCom = `
 <!doctype html>
 <html>
