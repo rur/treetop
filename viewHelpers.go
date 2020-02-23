@@ -35,15 +35,10 @@ func RequestHandler(f func(*http.Request) interface{}) ViewHandlerFunc {
 }
 
 // IsTreetopRequest is a predicate function which will check the headers of a given request
-// and return true if a partial (or fragment) response is supported by the client.
+// and return true if a template response is supported by the client.
 func IsTreetopRequest(req *http.Request) bool {
-	accept := strings.Split(req.Header.Get("Accept"), ";")[0]
-	for _, accept := range strings.Split(accept, ",") {
-		accept = strings.ToLower(strings.TrimSpace(accept))
-		if accept == FragmentContentType {
-			return true
-		}
-		if accept == PartialContentType {
+	for _, accept := range strings.Split(req.Header.Get("Accept"), ";") {
+		if strings.ToLower(strings.TrimSpace(accept)) == TemplateContentType {
 			return true
 		}
 	}

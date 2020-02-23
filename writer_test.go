@@ -15,15 +15,21 @@ func mockRequest(path string, accept string) *http.Request {
 
 func TestWriter(t *testing.T) {
 	type args struct {
-		w         *httptest.ResponseRecorder
-		req       *http.Request
-		isPartial bool
+		w            *httptest.ResponseRecorder
+		req          *http.Request
+		status       int
+		isPartial    bool
+		pageURL      string
+		replaceState bool
 	}
 	tests := []struct {
-		name  string
-		args  args
-		want  *writer
-		want1 bool
+		name            string
+		args            args
+		wantWriter      bool
+		wantContentType string
+		wantStatus      int
+		wantBody        string
+		wantPageURL     string
 	}{
 		{
 			name: "non tt request",
@@ -32,50 +38,53 @@ func TestWriter(t *testing.T) {
 				req:       mockRequest("/Some/path", "text/html"),
 				isPartial: true,
 			},
-			want:  nil,
-			want1: false,
+			wantWriter: false,
 		},
 		{
 			name: "fragment",
 			args: args{
 				w:         httptest.NewRecorder(),
-				req:       mockRequest("/Some/path", PartialContentType+", "+FragmentContentType),
+				req:       mockRequest("/Some/path", TemplateContentType),
+				status:    201,
 				isPartial: false,
 			},
-			want: &writer{
-				status:      0,
-				responseURL: "/Some/path",
-				contentType: FragmentContentType,
-			},
-			want1: true,
+			wantWriter: true,
+
+			wantContentType: TemplateContentType,
+			wantStatus:      201,
+			wantBody:        `<p>this is a test</p>`,
 		},
 		{
 			name: "partial",
 			args: args{
 				w:         httptest.NewRecorder(),
-				req:       mockRequest("/Some/path", PartialContentType+", "+FragmentContentType),
+				req:       mockRequest("/Some/path", TemplateContentType),
+				status:    201,
 				isPartial: true,
 			},
-			want: &writer{
-				status:      0,
-				responseURL: "/Some/path",
-				contentType: PartialContentType,
-			},
-			want1: true,
+			wantWriter: true,
+
+			wantContentType: TemplateContentType,
+			wantStatus:      201,
+			wantBody:        `<p>this is a test</p>`,
+			wantPageURL:     "/Some/path",
 		},
 		{
 			name: "partial",
 			args: args{
-				w:         httptest.NewRecorder(),
-				req:       mockRequest("/Some/path", PartialContentType+", "+FragmentContentType),
-				isPartial: false,
+				w:            httptest.NewRecorder(),
+				req:          mockRequest("/Some/path", TemplateContentType),
+				status:       201,
+				isPartial:    true,
+				pageURL:      "/Some/other/path",
+				replaceState: true,
 			},
-			want: &writer{
-				status:      0,
-				responseURL: "/Some/path",
-				contentType: FragmentContentType,
-			},
-			want1: true,
+
+			wantWriter:      true,
+			wantContentType: TemplateContentType,
+			wantStatus:      201,
+			wantBody:        `<p>this is a test</p>`,
+			wantPageURL:     "/Some/other/path",
 		},
 	}
 	for _, tt := range tests {
@@ -90,25 +99,44 @@ func TestWriter(t *testing.T) {
 				ttW, ok = NewFragmentWriter(tt.args.w, tt.args.req)
 			}
 
-			if ok {
-				fmt.Fprint(ttW, "<p>this is a test</p>")
-				status := tt.args.w.Code
-				contentType := tt.args.w.HeaderMap.Get("Content-Type")
-				responseURL := tt.args.w.HeaderMap.Get("X-Response-Url")
-
-				if tt.want.status > 0 && status != tt.want.status {
-					t.Errorf("Writer() status writer = %v, want %v", status, tt.want.status)
-				}
-				if contentType != tt.want.contentType {
-					t.Errorf("Writer() contentType writer = %v, want %v", contentType, tt.want.contentType)
-				}
-				if responseURL != tt.want.responseURL {
-					t.Errorf("Writer() responseURL writer = %v, want %v", responseURL, tt.want.responseURL)
-				}
+			if ok != tt.wantWriter {
+				t.Errorf("Writer() ok = %v, want %v", ok, tt.wantWriter)
 			}
 
-			if ok != tt.want1 {
-				t.Errorf("Writer() ok = %v, want %v", ok, tt.want1)
+			if !ok {
+				return
+			}
+			if tt.args.status > 0 {
+				ttW.Status(tt.args.status)
+			}
+			if tt.args.pageURL != "" {
+				if tt.args.replaceState {
+					ttW.ReplacePageURL(tt.args.pageURL)
+				} else {
+					ttW.DesignatePageURL(tt.args.pageURL)
+				}
+			}
+			fmt.Fprint(ttW, "<p>this is a test</p>")
+			status := tt.args.w.Code
+			contentType := tt.args.w.HeaderMap.Get("Content-Type")
+			pageURL := tt.args.w.HeaderMap.Get("X-Page-Url")
+			responseHistory := tt.args.w.HeaderMap.Get("X-Response-History")
+			var wantHistory string
+			if tt.args.replaceState {
+				wantHistory = "replace"
+			}
+
+			if tt.wantStatus > 0 && status != tt.wantStatus {
+				t.Errorf("Writer() status writer = %v, want %v", status, tt.wantStatus)
+			}
+			if contentType != tt.wantContentType {
+				t.Errorf("Writer() contentType writer = %v, want %v", contentType, tt.wantContentType)
+			}
+			if pageURL != tt.wantPageURL {
+				t.Errorf("Writer() page url header = %v, want %v", pageURL, tt.wantPageURL)
+			}
+			if responseHistory != wantHistory {
+				t.Errorf("Writer() response history header = %v, want %v", responseHistory, wantHistory)
 			}
 		})
 	}

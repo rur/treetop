@@ -82,7 +82,7 @@ func SprintViewTree(v *View) string {
 }
 
 // fprintViewTree delves recursively into view and sub views and writes
-// a tree prepresentation of the subplied view
+// a tree prepresentation of the supplied view
 func fprintViewTree(w io.Writer, prefix []byte, views map[string]*View) {
 	subCount := len(views)
 	keys := make([]string, subCount)

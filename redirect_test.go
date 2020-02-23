@@ -14,7 +14,7 @@ func TestSeeOtherPage(t *testing.T) {
 	}
 
 	req := httptest.NewRequest("GET", "/some/path", nil)
-	req.Header.Set("Accept", FragmentContentType)
+	req.Header.Set("Accept", TemplateContentType)
 
 	tests := []struct {
 		name string
@@ -59,7 +59,7 @@ func TestRedirect(t *testing.T) {
 		status   int
 	}
 	req := httptest.NewRequest("GET", "/some/path", nil)
-	req.Header.Set("Accept", FragmentContentType)
+	req.Header.Set("Accept", TemplateContentType)
 	tests := []struct {
 		name         string
 		args         args

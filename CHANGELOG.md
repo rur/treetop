@@ -13,7 +13,7 @@ response.
 
     X-Page-URL: /some/path
 
-All HTML content in the response body must be wrapped in a single HTMLTemplateElement.
+All HTML content in the response body should be wrapped in a single HTMLTemplateElement (this is implicit if not present).
 
     <template>
         <p id="first">this is the first fragment</p>
@@ -26,10 +26,9 @@ markup in a response body.
 
 ### Views and Executors
 
-Implementation of the `View` type has been greatly simplified. There is now no
-rendering logic involved.
+Implementation of the `View` type has been greatly simplified.
 
-The `Executor` interface was created to separate responsibility for converting a view
+The `Executor` interface was created to encapsulate responsibility for converting a view
 to a HTTP handler. Custom view executor implementations have been made easier to create.
 The following implementations are supplied with the treetop package:
 
