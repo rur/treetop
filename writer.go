@@ -73,7 +73,7 @@ func (tw *writer) Write(p []byte) (n int, err error) {
 		if err != nil {
 			return 0, err
 		}
-		tw.responseWriter.Header().Set("X-Page-URL", respURI.String())
+		tw.responseWriter.Header().Set("X-Page-URL", respURI.RequestURI())
 		if tw.replaceURLState {
 			tw.responseWriter.Header().Set("X-Response-History", "replace")
 		}

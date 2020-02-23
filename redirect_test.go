@@ -6,51 +6,6 @@ import (
 	"testing"
 )
 
-func TestSeeOtherPage(t *testing.T) {
-	type args struct {
-		w        *httptest.ResponseRecorder
-		req      *http.Request
-		location string
-	}
-
-	req := httptest.NewRequest("GET", "/some/path", nil)
-	req.Header.Set("Accept", TemplateContentType)
-
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{
-			name: "basic",
-			args: args{
-				w:        httptest.NewRecorder(),
-				req:      req,
-				location: "test/",
-			},
-			want: "/some/test/",
-		},
-		{
-			name: "non-treetop request",
-			args: args{
-				w:        httptest.NewRecorder(),
-				req:      httptest.NewRequest("GET", "/some/path", nil),
-				location: "test/",
-			},
-			want: "",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			SeeOtherPage(tt.args.w, tt.args.req, tt.args.location)
-			got := tt.args.w.Result().Header.Get("X-Treetop-See-Other")
-			if got != tt.want {
-				t.Errorf("SeeOtherPage() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestRedirect(t *testing.T) {
 	type args struct {
 		w        *httptest.ResponseRecorder
@@ -63,7 +18,7 @@ func TestRedirect(t *testing.T) {
 	tests := []struct {
 		name         string
 		args         args
-		ttWant       string
+		wantHeader   bool
 		locationWant string
 		status       int
 	}{
@@ -71,23 +26,23 @@ func TestRedirect(t *testing.T) {
 			name: "basic",
 			args: args{
 				w:        httptest.NewRecorder(),
-				req:      req,
+				req:      mockRequest("/some/path", TemplateContentType),
 				location: "test/",
 				status:   http.StatusSeeOther,
 			},
-			ttWant:       "/some/test/",
-			locationWant: "",
-			status:       http.StatusNoContent,
+			wantHeader:   true,
+			locationWant: "/some/test/",
+			status:       http.StatusOK,
 		},
 		{
 			name: "non-treetop request",
 			args: args{
 				w:        httptest.NewRecorder(),
-				req:      httptest.NewRequest("GET", "/some/path", nil),
+				req:      mockRequest("/some/path", "*/*"),
 				location: "test/",
 				status:   http.StatusFound,
 			},
-			ttWant:       "",
+			wantHeader:   false,
 			locationWant: "/some/test/",
 			status:       http.StatusFound,
 		},
@@ -95,17 +50,17 @@ func TestRedirect(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Redirect(tt.args.w, tt.args.req, tt.args.location, tt.args.status)
-			ttGot := tt.args.w.Result().Header.Get("X-Treetop-See-Other")
-			if ttGot != tt.ttWant {
-				t.Errorf("SeeOtherPage() = %v, want %v", ttGot, tt.ttWant)
+			ttGot := tt.args.w.Result().Header.Get("X-Treetop-Redirect")
+			if tt.wantHeader && ttGot == "" {
+				t.Errorf("Redirect() expecting X-Treetop-Redirect header to be set")
 			}
 			locGot := tt.args.w.Result().Header.Get("Location")
 			if locGot != tt.locationWant {
-				t.Errorf("http.Redirect() = %v, want %v", locGot, tt.locationWant)
+				t.Errorf("Redirect() = %v, want %v", locGot, tt.locationWant)
 			}
 			status := tt.args.w.Result().StatusCode
 			if status != tt.status {
-				t.Errorf("http.Redirect() = %v, want %v", status, tt.status)
+				t.Errorf("Redirect() = %v, want %v", status, tt.status)
 			}
 		})
 	}
