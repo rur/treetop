@@ -1,6 +1,7 @@
 package treetop
 
 import (
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -13,7 +14,7 @@ const (
 
 // Writer is an interface for writing HTTP responses that conform to the Treetop protocol
 type Writer interface {
-	Write([]byte) (int, error)
+	io.Writer
 	Status(int)
 	DesignatePageURL(string)
 	ReplacePageURL(string)
@@ -79,7 +80,7 @@ func (tw *writer) Write(p []byte) (n int, err error) {
 		}
 	}
 	tw.responseWriter.Header().Set("Content-Type", TemplateContentType)
-	if tw.status > 100 {
+	if tw.status > 0 {
 		tw.responseWriter.WriteHeader(tw.status)
 	}
 	tw.written = true

@@ -34,9 +34,9 @@ func RequestHandler(f func(*http.Request) interface{}) ViewHandlerFunc {
 	}
 }
 
-// IsTreetopRequest is a predicate function which will check the headers of a given request
+// IsTemplateRequest is a predicate function which will check the headers of a given request
 // and return true if a template response is supported by the client.
-func IsTreetopRequest(req *http.Request) bool {
+func IsTemplateRequest(req *http.Request) bool {
 	for _, accept := range strings.Split(req.Header.Get("Accept"), ";") {
 		if strings.ToLower(strings.TrimSpace(accept)) == TemplateContentType {
 			return true
@@ -55,7 +55,7 @@ func IsTreetopRequest(req *http.Request) bool {
 // 		treetop.Redirect(w, req, "/some/other/path", http.StatusSeeOther)
 //
 func Redirect(w http.ResponseWriter, req *http.Request, location string, status int) {
-	if IsTreetopRequest(req) {
+	if IsTemplateRequest(req) {
 		w.Header().Add("X-Treetop-Redirect", "SeeOther")
 		http.Redirect(w, req, location, 200) // must be 200 because XHR cannot intercept a 3xx redirect
 	} else {

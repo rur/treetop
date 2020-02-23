@@ -71,6 +71,14 @@ Example output
           |- B1: SubView("B1", "B1.html", ...Constant.func1)
           '- B2: SubView("B2", "B2.html", ...Constant.func1)
 
+### View Helpers
+
+Removed `SeeOtherPage` function, the `Redirect` helper is the only redirect function.
+
+Renamed `IsTreetopRequest` predicate to a `IsTemplateRequest`, this is more consistent with
+changes in protocol terminology.
+
+
 ## [0.2.0] - 2020-02-16
 
 Add clarifications to the prototype library API and improve code docs.

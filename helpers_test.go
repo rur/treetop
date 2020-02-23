@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestIsTreetopRequest(t *testing.T) {
+func TestIsTemplateRequest(t *testing.T) {
 	tests := []struct {
 		name string
 		req  *http.Request
@@ -30,8 +30,8 @@ func TestIsTreetopRequest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IsTreetopRequest(tt.req); got != tt.want {
-				t.Errorf("IsTreetopRequest() = %v, want %v", got, tt.want)
+			if got := IsTemplateRequest(tt.req); got != tt.want {
+				t.Errorf("IsTemplateRequest() = %v, want %v", got, tt.want)
 			}
 		})
 	}

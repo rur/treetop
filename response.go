@@ -2,7 +2,6 @@ package treetop
 
 import (
 	"context"
-	"io"
 	"net/http"
 	"sync/atomic"
 )
@@ -110,6 +109,7 @@ func (rsp *ResponseWrapper) WithView(v *View) *ResponseWrapper {
 		cancel:         rsp.cancel,
 	}
 	if v != nil {
+		// some defensive copying here
 		for k, v := range v.SubViews {
 			derived.subViews[k] = v
 		}
@@ -117,35 +117,25 @@ func (rsp *ResponseWrapper) WithView(v *View) *ResponseWrapper {
 	return &derived
 }
 
-// TODO: Implement this
-func (rsp *ResponseWrapper) NewPartialWriter(req *http.Request) (io.Writer, bool) {
-	w, ok := NewPartialWriter(rsp.ResponseWriter, req)
+// NewTemplateWriter will return a template Writer configured to add Treetop headers
+// based up on the state of the response. If the request is not a template request
+// the writer will be nil and the ok flag will be false
+func (rsp *ResponseWrapper) NewTemplateWriter(req *http.Request) (Writer, bool) {
+	ttW, ok := NewFragmentWriter(rsp.ResponseWriter, req)
 	if !ok {
-		return w, false
-	}
-	if rsp.status > 0 {
-		w.Status(rsp.status)
+		return nil, false
 	}
 	if rsp.pageURLSpecified {
 		if rsp.replaceURL {
-			w.ReplacePageURL(rsp.pageURL)
+			ttW.ReplacePageURL(rsp.pageURL)
 		} else {
-			w.DesignatePageURL(rsp.pageURL)
+			ttW.DesignatePageURL(rsp.pageURL)
 		}
 	}
-	return w, true
-}
-
-// TODO: Implement this
-func (rsp *ResponseWrapper) NewFragmentWriter(req *http.Request) (io.Writer, bool) {
-	w, ok := NewFragmentWriter(rsp.ResponseWriter, req)
-	if !ok {
-		return w, false
-	}
 	if rsp.status > 0 {
-		w.Status(rsp.status)
+		ttW.Status(rsp.status)
 	}
-	return w, true
+	return ttW, true
 }
 
 // Cancel will teardown the treetop handing process
@@ -197,7 +187,8 @@ func (rsp *ResponseWrapper) Finished() bool {
 	return rsp.finished
 }
 
-// TODO: Implement this
+// HandleSubView will execute the handler for a specified sub view of the current view
+// if there is no match for the name, nil will be returned.
 func (rsp *ResponseWrapper) HandleSubView(name string, req *http.Request) interface{} {
 	// NOTE: this is pseudocode
 	// don't do anything if a response has already been written
