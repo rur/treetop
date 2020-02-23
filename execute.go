@@ -17,7 +17,7 @@ type DefaultExecutor struct{}
 // for the supplied view configuration
 // TODO: Implement this
 func (de *DefaultExecutor) NewViewHandler(view *View, includes ...*View) ViewHandler {
-	page, part, incls := CombineViews(view, includes...)
+	page, part, incls := CompileViews(view, includes...)
 	handler := TemplateHandler{
 		Page:            page,
 		PageTemplate:    de.MustParseTemplateFiles(page),

@@ -2,6 +2,7 @@ package treetop
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -82,15 +83,70 @@ func TestCopyView(t *testing.T) {
 }
 
 func TestCopySubView(t *testing.T) {
-	base := NewView("base.html", Constant("base!"))
+	base := NewView("base.html", Constant("github.com/rur/treetop.Constant.func1"))
 	sub := base.SubView("test", "sub.html", Constant("sub!"))
 	copy := sub.Copy()
 	if copy.Defines != "test" {
 		t.Errorf("Expecting copy to have defines of 'test', got %s", copy.Defines)
 	}
-	err := assertViewDetails(copy.Parent, "base.html", "base!")
+	err := assertViewDetails(copy.Parent, "base.html", "github.com/rur/treetop.Constant.func1")
 	if err != nil {
 		t.Error(err)
+	}
+}
+
+func TestCompileViews(t *testing.T) {
+	type TestCase struct {
+		name           string
+		view           *View
+		includes       []*View
+		expectPage     string
+		expectView     string
+		expectIncludes []string
+	}
+	cases := []TestCase{
+		TestCase{
+			name:           "basic",
+			view:           NewView("base.html", Constant("github.com/rur/treetop.Constant.func1")),
+			expectPage:     `- View("base.html", github.com/rur/treetop.Constant.func1)`,
+			expectView:     `- View("base.html", github.com/rur/treetop.Constant.func1)`,
+			expectIncludes: []string{},
+		},
+		TestCase{
+			name: "with includes",
+			view: NewView("base.html", Constant("github.com/rur/treetop.Constant.func1")),
+			includes: []*View{
+				NewView("other.html", Constant("other!")),
+			},
+			expectPage: `- View("base.html", github.com/rur/treetop.Constant.func1)`,
+			expectView: `- View("base.html", github.com/rur/treetop.Constant.func1)`,
+			expectIncludes: []string{
+				`- View("other.html", github.com/rur/treetop.Constant.func1)`,
+			},
+		},
+	}
+	for _, tCase := range cases {
+		t.Run(tCase.name, func(tt *testing.T) {
+			page, view, incl := CompileViews(tCase.view, tCase.includes...)
+			pageStr := SprintViewTree(page)
+			if tCase.expectPage != pageStr {
+				tt.Errorf("Expecting page %s, got %s", tCase.expectPage, pageStr)
+				return
+			}
+			viewStr := SprintViewTree(view)
+			if tCase.expectView != viewStr {
+				tt.Errorf("Expecting view %s, got %s", tCase.expectView, viewStr)
+				return
+			}
+			inclS := make([]string, len(incl))
+			for i, inc := range incl {
+				inclS[i] = SprintViewTree(inc)
+			}
+			if !reflect.DeepEqual(tCase.expectIncludes, inclS) {
+				tt.Errorf("Expecting includes:\n%v\nGot:\n%v", tCase.expectIncludes, inclS)
+				return
+			}
+		})
 	}
 }
 
@@ -98,11 +154,13 @@ func TestCopySubView(t *testing.T) {
 // Helpers
 // ---------
 
+// assertViewDetails is used for asserting that a view matches an expected template and
+// data handler return value. This is for tests because it is expecting that the view handler
+// will return string and not require use a the request object to do so.
 func assertViewDetails(v *View, t string, data string) error {
 	if v.Template != t {
 		return fmt.Errorf("expecting template %s got %s", t, v.Template)
 	}
-
 	switch got := v.HandlerFunc(&ResponseWrapper{}, nil).(type) {
 	case string:
 		if got != data {

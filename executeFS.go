@@ -20,7 +20,7 @@ type FileSystemExecutor struct {
 //
 // TODO: Implement this
 func (ft *FileSystemExecutor) NewViewHandler(view *View, includes ...*View) ViewHandler {
-	page, part, incls := CombineViews(view, includes...)
+	page, part, incls := CompileViews(view, includes...)
 	handler := TemplateHandler{
 		Page:            page,
 		PageTemplate:    ft.MustParseTemplateFiles(page),

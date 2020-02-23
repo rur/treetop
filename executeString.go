@@ -13,7 +13,7 @@ type StringExecutor struct{}
 //
 // TODO: Implement this
 func (se *StringExecutor) NewViewHandler(view *View, includes ...*View) ViewHandler {
-	page, part, incls := CombineViews(view, includes...)
+	page, part, incls := CompileViews(view, includes...)
 	handler := TemplateHandler{
 		Page:            page,
 		PageTemplate:    se.MustParseTemplateFiles(page),

@@ -135,7 +135,7 @@ func (v *View) Copy() *View {
 	return copy
 }
 
-// CombineViews is used to create an endpoint configuration combining supplied view
+// CompileViews is used to create an endpoint configuration combining supplied view
 // definitions based upon the template names they define.
 //
 // This returns:
@@ -144,11 +144,16 @@ func (v *View) Copy() *View {
 //   - any disconnect fragment views that should be appended to partial requests.
 //
 // TODO: Implementation needed
-func CombineViews(view *View, includes ...*View) (page, part *View, postscript []*View) {
+func CompileViews(view *View, includes ...*View) (page, part *View, postscript []*View) {
 	// Merge the includes and the view where possible.
 	// Views to the left 'consume' those to the right when a match is found.
 	// 'Postscripts' are includes that could not be merged.
 	// TODO: implementation here
+	part = view.Copy()
+
+	for _, incl := range includes {
+		postscript = append(postscript, incl.Copy())
+	}
 
 	// NOTE: this is pseudocode
 	// constructing the 'page' involes modifying the series of parents
