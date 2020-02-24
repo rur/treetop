@@ -59,7 +59,7 @@ func ViewHandler(view *View, includes ...*View) *Handler {
 type Partial struct {
 	Extends     string
 	Template    string
-	HandlerFunc HandlerFunc
+	HandlerFunc ViewHandlerFunc
 	Blocks      []Partial
 }
 

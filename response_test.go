@@ -140,7 +140,7 @@ func Test_responseImpl_PartialHandler(t *testing.T) {
 				status:         tt.fields.status,
 				partial:        &tt.fields.partial,
 			}
-			got := rsp.HandlePartial(tt.args.name, tt.args.req)
+			got := rsp.HandleSubView(tt.args.name, tt.args.req)
 			if !reflect.DeepEqual(got, tt.data) {
 				t.Errorf("responseImpl.PartialHandler() got = %v, want %v", got, tt.data)
 			}

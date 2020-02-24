@@ -130,7 +130,7 @@ Each template filepath is paired with a data handler which is responsible for yi
             Content interface{}
         }{
             Session: Session{"example.user"},
-            Content: rsp.HandlePartial("content", req),
+            Content: rsp.HandleSubView("content", req),
         }
     }
 
@@ -141,7 +141,7 @@ Each template filepath is paired with a data handler which is responsible for yi
             Form  interface{}
         }{
             Title: "My Contact Form",
-            Form: rsp.HandlePartial("form", req),
+            Form: rsp.HandleSubView("form", req),
         }
     }
 

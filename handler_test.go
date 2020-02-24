@@ -31,7 +31,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		Extends:  "root",
 		Template: "test.html.tmpl",
 		HandlerFunc: func(rsp Response, req *http.Request) interface{} {
-			d := rsp.HandlePartial("testblock", req)
+			d := rsp.HandleSubView("testblock", req)
 			return fmt.Sprintf("Loaded sub data: %s", d)
 		},
 		Blocks: []Partial{
@@ -87,7 +87,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				Fragment: &Partial{
 					Template: "test.html.tmpl",
 					HandlerFunc: func(rsp Response, req *http.Request) interface{} {
-						d := rsp.HandlePartial("testblock", req)
+						d := rsp.HandleSubView("testblock", req)
 						return fmt.Sprintf("Loaded sub data: %s", d)
 					},
 					Blocks: []Partial{
@@ -240,14 +240,14 @@ func captureOutput(f func()) string {
 	return buf.String()
 }
 
-func blockDebug(blocknames []string) HandlerFunc {
+func blockDebug(blocknames []string) ViewHandlerFunc {
 	return func(rsp Response, req *http.Request) interface{} {
 		var d []struct {
 			Block string
 			Data  interface{}
 		}
 		for _, n := range blocknames {
-			data := rsp.HandlePartial(n, req)
+			data := rsp.HandleSubView(n, req)
 			if data != nil {
 				d = append(
 					d,
@@ -280,7 +280,7 @@ func TestPartial_TemplateList(t *testing.T) {
 	type fields struct {
 		Extends     string
 		Template    string
-		HandlerFunc HandlerFunc
+		HandlerFunc ViewHandlerFunc
 		Root        *Partial
 		Blocks      []Partial
 	}
@@ -390,7 +390,7 @@ func Test_insertPartial(t *testing.T) {
 	type fields struct {
 		Extends     string
 		Template    string
-		HandlerFunc HandlerFunc
+		HandlerFunc ViewHandlerFunc
 		Blocks      []Partial
 	}
 	type args struct {

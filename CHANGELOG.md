@@ -1,9 +1,12 @@
-## [0.2.0] - 2020-01-26
+## [0.2.0] - 2020-02-16
+
+Add clarifications to the prototype library API and improve code docs.
+
+### Bugfix
+
+- Writer implementation was not including query in response URL header
 
 ### Breaking API Changes
-
-Taking Treetop from POC to Alpha gives me an opportunity to
-execute on a wishlist of API changes.
 
 - Remove `treetop.Renderer` type, unnecessary since it only wraps `TemplateExec`
 - Add TemplateExec parameter to `treetop.NewView..` API method for creating base views
@@ -11,6 +14,9 @@ execute on a wishlist of API changes.
 - Remove `treetop.Test`, testing recipes and resources belong elsewhere
 - Split `treetop.Writer` function into `treetop.NewPartialWriter` and `treetop.NewFragmentWriter` and remove the confusing `isPartial` flag
 - Change `treetop.View` from an interface to a struct and expose internals to make debugging easier
+- Rename `HandlePartial` method to `HandleSubView` in `treetop.Response` interface to be consistent with the view builder
+- Rename `Done` method to `Finished` in `treetop.Response` interface
+- Rename `HandlerFunc` signature type to `ViewHandlerFunc` to make a clearer association with the view builder 
 
 
 #### Defining a page with views

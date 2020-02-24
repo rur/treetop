@@ -11,7 +11,7 @@ func Noop(_ Response, _ *http.Request) interface{} { return nil }
 
 // Constant treetop handler helper is used to generate a treetop.HandlerFunc that always
 // returns the same value.
-func Constant(data interface{}) HandlerFunc {
+func Constant(data interface{}) ViewHandlerFunc {
 	return func(rsp Response, _ *http.Request) interface{} {
 		return data
 	}
@@ -20,15 +20,15 @@ func Constant(data interface{}) HandlerFunc {
 // Delegate handler helper will delegate partial handling to a named block of that
 // partial. The designated block data will be adopted as the partial template data
 // and no other block handler will be executed.
-func Delegate(blockname string) HandlerFunc {
+func Delegate(blockname string) ViewHandlerFunc {
 	return func(rsp Response, req *http.Request) interface{} {
-		return rsp.HandlePartial(blockname, req)
+		return rsp.HandleSubView(blockname, req)
 	}
 }
 
 // RequestHandler handler helper is used where only the http.Request instance is needed
 // to resolve the template data so the treetop.Response isnt part of the actual handler function.
-func RequestHandler(f func(*http.Request) interface{}) HandlerFunc {
+func RequestHandler(f func(*http.Request) interface{}) ViewHandlerFunc {
 	return func(_ Response, req *http.Request) interface{} {
 		return f(req)
 	}

@@ -57,10 +57,15 @@ func SeeOtherPage(w http.ResponseWriter, req *http.Request, location string) boo
 	return true
 }
 
-// Redirect is a helper that will do a treetop redirect if the request is for a partial
-// or fall back to a standard HTTP redirect otherwise using the status code supplied.
+// Redirect is a helper that will instruct the Treetop client library to direct the web browser
+// to a new URL. If the request is not from a Treetop client, the 3xx redirect method is used.
 //
-// treetop.Redirect(w, req, "/some/other/path", http.StatusSeeOther)
+// This is necessary because 3xx HTTP redirects are opaque to XHR, when a full browser redirect
+// is needed a 'X-Treetop-See-Other' header is used.
+//
+// Example:
+// 		treetop.Redirect(w, req, "/some/other/path", http.StatusSeeOther)
+//
 func Redirect(w http.ResponseWriter, req *http.Request, location string, status int) {
 	if ok := SeeOtherPage(w, req, location); !ok {
 		http.Redirect(w, req, location, status)
