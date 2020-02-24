@@ -1,6 +1,7 @@
 package treetop
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net/http"
@@ -163,5 +164,77 @@ func Test_ResponseWrapper_HandleSubView(t *testing.T) {
 				t.Errorf("ResponseWrapper.status = %v, want %v", rsp.status, tt.status)
 			}
 		})
+	}
+}
+
+// Apply updates to the ResponseWrapper instance which should
+// affect the headers added by the template writer.
+func TestResponseWrapper_NewTemplateWriter(t *testing.T) {
+	rec := httptest.NewRecorder()
+	rsp := BeginResponse(context.Background(), rec)
+	rsp.Status(http.StatusTeapot)
+	rsp.ReplacePageURL("/some/url")
+	req := mockRequest("/some/url", TemplateContentType)
+	w, ok := rsp.NewTemplateWriter(req)
+	if !ok {
+		t.Error("Expecting a template writer to have been created, but it was not okay :(")
+		return
+	}
+	fmt.Fprint(w, `<p id="test">hello world!</p>`)
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(rec.Body)
+	got := buf.String()
+	expect := `<p id="test">hello world!</p>`
+	if expect != got {
+		t.Errorf("Expecting body to be\n%s\ngot\n%s", expect, got)
+	}
+
+	if pageURL := rec.Header().Get("X-Page-URL"); pageURL != "/some/url" {
+		t.Errorf("Expecting X-Page-URL header of %s got %s", pageURL, "/some/url")
+	}
+
+	if val := rec.Header().Get("X-Response-History"); val != "replace" {
+		t.Errorf("Expecting X-Response-History header of %s got %s", val, "replace")
+	}
+
+	if rec.Code != http.StatusTeapot {
+		t.Errorf("Expecting response status code of %d, got %d", http.StatusTeapot, rec.Code)
+	}
+}
+
+// ResponseWrapper should not create a template writer for a non-template request
+func TestResponseWrapper_NewTemplateWriter_NonTemplateRequest(t *testing.T) {
+	rec := httptest.NewRecorder()
+	rsp := BeginResponse(context.Background(), rec)
+	rsp.Status(http.StatusTeapot)
+	rsp.ReplacePageURL("/some/url")
+	req := mockRequest("/some/url", "*/*")
+	_, ok := rsp.NewTemplateWriter(req)
+	if ok {
+		t.Error("Expecting a template writer not to have been created, but it was :(")
+		return
+	}
+}
+
+// ResponseWrapper should not create a template writer if the underlying response has
+// already been written
+func TestResponseWrapper_NewTemplateWriter_WritingHijacked(t *testing.T) {
+	rec := httptest.NewRecorder()
+	rsp := BeginResponse(context.Background(), rec)
+
+	// emulate handler writing directly to the response object
+	fmt.Fprint(rsp, `<p id="test">hello world!</p>`)
+
+	if !rsp.Finished() {
+		t.Error("Expecting the response wrapper to have flagged header write. Finished() return true")
+		return
+	}
+
+	req := mockRequest("/some/url", TemplateContentType)
+	_, ok := rsp.NewTemplateWriter(req)
+	if ok {
+		t.Error("Expecting a template writer not to have been created, but it was :(")
+		return
 	}
 }

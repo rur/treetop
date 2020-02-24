@@ -121,6 +121,9 @@ func (rsp *ResponseWrapper) WithView(v *View) *ResponseWrapper {
 // based up on the state of the response. If the request is not a template request
 // the writer will be nil and the ok flag will be false
 func (rsp *ResponseWrapper) NewTemplateWriter(req *http.Request) (Writer, bool) {
+	if rsp.finished {
+		return nil, false
+	}
 	ttW, ok := NewFragmentWriter(rsp.ResponseWriter, req)
 	if !ok {
 		return nil, false
