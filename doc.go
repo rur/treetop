@@ -1,9 +1,16 @@
 /*
-Package treetop is a library for incorporating HTML fragment requests into Go
-web applications.
+Package treetop provides tools for handlers to support a HTML template request protocol	.
 
-Fragments requests are specified by a protocol with the goal of removing some of the common
-causes of JavaScript boilerplate in modern web applications. Reliance on data APIs can also be greatly reduced.
+So your webpage does IO; and you need to show updates without clobbering the interface.
+The common approach is to expose a data API and dispatch JavaScript to micromanage the client.
+That will work, but it is pretty heavy duty for what seems like a simple problem.
+
+Conventional HTTP works very well for navigation and web forms alike, no micromanagement required.
+Perhaps it could be extended to solve our dynamic update problem. That is the starting point for Treetop,
+to see how far we can get with a simple protocol.
+
+Treetop is unique because it puts the server-side hander in complete control of how the page will be updated
+following a request.
 
 For documentation and examples see https://github.com/rur/treetop and https://github.com/rur/treetop-recipes
 

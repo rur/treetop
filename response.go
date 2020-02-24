@@ -7,7 +7,7 @@ import (
 )
 
 // Response extends the http.ResponseWriter interface to give ViewHandelersFunc's limited
-// ability to control the hierarchical request handing.
+// ability to control the hierarchical request handling.
 //
 // Note that writing directly to the underlying ResponseWriter in the handler will cancel the
 // treetop handling process. Taking control of response writing in this way is a very common and
