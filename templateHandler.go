@@ -156,6 +156,9 @@ func (h TemplateHandler) serveTemplateRequest(resp *ResponseWrapper, req *http.R
 
 	// execute partial and postscript templates with data collected from handler funcs
 	for i, tmpl := range tmpls {
+		if i > 0 {
+			buf.WriteByte('\n')
+		}
 		err := tmpl.Execute(buf, data[i])
 		if err != nil {
 			if h.ServeTemplateError != nil {
