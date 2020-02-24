@@ -27,10 +27,9 @@ func TestBeginResponse(t *testing.T) {
 func TestResponse_WithView(t *testing.T) {
 	rsp := BeginResponse(context.Background(), httptest.NewRecorder())
 
-	view := NewView("view.html", Noop)
-	view.NewDefaultSubView("test", "test.html", Constant("test!!"))
-
-	rsp = rsp.WithView(view)
+	rsp = rsp.WithSubViews(map[string]*View{
+		"test": NewSubView("test", "test.html", Constant("test!!")),
+	})
 	d := rsp.HandleSubView("test", nil)
 	if d != "test!!" {
 		t.Errorf("Expecting subview data to be 'test!!' got %v", d)
@@ -236,5 +235,71 @@ func TestResponseWrapper_NewTemplateWriter_WritingHijacked(t *testing.T) {
 	if ok {
 		t.Error("Expecting a template writer not to have been created, but it was :(")
 		return
+	}
+}
+
+func TestResponseWriter_HandleSubView_Hijacking(t *testing.T) {
+	rec := httptest.NewRecorder()
+	rsp := BeginResponse(context.Background(), rec)
+	rsp = rsp.WithSubViews(map[string]*View{
+		"testing": NewSubView("testing", "testing.html", func(resp Response, _ *http.Request) interface{} {
+			// hijack writing of the response body
+			fmt.Fprint(resp, `<p id="test">hello world!</p>`)
+			return nil
+		}),
+	})
+
+	rsp.HandleSubView("testing", nil)
+	if !rsp.Finished() {
+		t.Error("Expecting testing handler to hijack the response but Finished() return true")
+	}
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(rec.Body)
+	expecting := `<p id="test">hello world!</p>`
+	got := buf.String()
+	if expecting != got {
+		t.Errorf("Expecting hijacked body to be %s got %s", expecting, got)
+	}
+}
+
+func TestResponseWriter_HandleSubView_DesignatePageURL(t *testing.T) {
+	rec := httptest.NewRecorder()
+	rsp := BeginResponse(context.Background(), rec)
+	rsp = rsp.WithSubViews(map[string]*View{
+		"testing": NewSubView("testing", "testing.html", func(resp Response, _ *http.Request) interface{} {
+			resp.DesignatePageURL("/some/path")
+			return nil
+		}),
+	})
+
+	rsp.HandleSubView("testing", nil)
+	if rsp.pageURL != "/some/path" {
+		t.Errorf(
+			"Expecting page url to have been designated as  '/some/path' got %s",
+			rsp.pageURL)
+	}
+	if rsp.replaceURL {
+		t.Error("Expecting replace url flag to be false")
+	}
+}
+
+func TestResponseWriter_HandleSubView_ReplacePageURL(t *testing.T) {
+	rec := httptest.NewRecorder()
+	rsp := BeginResponse(context.Background(), rec)
+	rsp = rsp.WithSubViews(map[string]*View{
+		"testing": NewSubView("testing", "testing.html", func(resp Response, _ *http.Request) interface{} {
+			resp.ReplacePageURL("/some/path")
+			return nil
+		}),
+	})
+
+	rsp.HandleSubView("testing", nil)
+	if rsp.pageURL != "/some/path" {
+		t.Errorf(
+			"Expecting page url to have been designated as  '/some/path' got %s",
+			rsp.pageURL)
+	}
+	if !rsp.replaceURL {
+		t.Error("Expecting replace url flag to be true")
 	}
 }

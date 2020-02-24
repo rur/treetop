@@ -83,7 +83,7 @@ func (h TemplateHandler) servePageRequest(resp *ResponseWrapper, req *http.Reque
 		errlog(ErrNotAcceptable)
 		return
 	}
-	pageResp := resp.WithView(h.Page)
+	pageResp := resp.WithSubViews(h.Page.SubViews)
 	data := h.Page.HandlerFunc(pageResp, req)
 	if pageResp.Finished() {
 		return
@@ -143,7 +143,10 @@ func (h TemplateHandler) serveTemplateRequest(resp *ResponseWrapper, req *http.R
 
 	// call handler for partial and each postscript view. Collect template data.
 	for i, view := range views {
-		data[i] = view.HandlerFunc(resp.WithView(view), req)
+		if view == nil {
+			continue
+		}
+		data[i] = view.HandlerFunc(resp.WithSubViews(view.SubViews), req)
 		if resp.Finished() {
 			return
 		}

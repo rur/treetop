@@ -98,9 +98,9 @@ func BeginResponse(cxt context.Context, w http.ResponseWriter) *ResponseWrapper 
 	return &rsp
 }
 
-// WithView creates a derived response wrapper for a different view, inheriting
+// WithSubViews creates a derived response wrapper for a different view, inheriting
 // request
-func (rsp *ResponseWrapper) WithView(v *View) *ResponseWrapper {
+func (rsp *ResponseWrapper) WithSubViews(subViews map[string]*View) *ResponseWrapper {
 	derived := ResponseWrapper{
 		ResponseWriter: rsp.ResponseWriter,
 		responseID:     rsp.responseID,
@@ -108,9 +108,9 @@ func (rsp *ResponseWrapper) WithView(v *View) *ResponseWrapper {
 		context:        rsp.context,
 		cancel:         rsp.cancel,
 	}
-	if v != nil {
+	if subViews != nil {
 		// some defensive copying here
-		for k, v := range v.SubViews {
+		for k, v := range subViews {
 			derived.subViews[k] = v
 		}
 	}
@@ -204,7 +204,7 @@ func (rsp *ResponseWrapper) HandleSubView(name string, req *http.Request) interf
 		return nil
 	}
 
-	subResp := rsp.WithView(sub)
+	subResp := rsp.WithSubViews(sub.SubViews)
 
 	// NOTE: this is pseudocode
 	// Invoke sub handler, collecting the response
