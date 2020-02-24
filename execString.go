@@ -6,6 +6,7 @@ import (
 )
 
 // StringExecutor loads view templates as an inline template string.
+// TODO: Implement this
 type StringExecutor struct{}
 
 // NewViewHandler will create a Handler instance capable of serving treetop requests

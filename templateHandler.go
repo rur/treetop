@@ -48,8 +48,9 @@ func (h TemplateHandler) PageOnly() ViewHandler {
 	}
 }
 
-//
-// TODO: Implementation needed
+// ServeHTTP is responsible for directing the handing of an incoming request.
+// Implements the procedure through which views functions and templates
+// are to be executed.
 func (h TemplateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// NOTE: this is pseudocode
 	resp := BeginResponse(req.Context(), w)
@@ -88,7 +89,7 @@ func (h TemplateHandler) servePageRequest(resp *ResponseWrapper, req *http.Reque
 	if pageResp.Finished() {
 		return
 	}
-	err := h.PageTemplate.Execute(buf, data)
+	err := h.PageTemplate.ExecuteTemplate(buf, h.Page.Defines, data)
 	if err != nil {
 		errlog(err)
 		return
@@ -159,7 +160,7 @@ func (h TemplateHandler) serveTemplateRequest(resp *ResponseWrapper, req *http.R
 		if i > 0 {
 			buf.WriteByte('\n')
 		}
-		err := tmpl.Execute(buf, data[i])
+		err := tmpl.ExecuteTemplate(buf, views[i].Defines, data[i])
 		if err != nil {
 			if h.ServeTemplateError != nil {
 				h.ServeTemplateError(err, resp, req)

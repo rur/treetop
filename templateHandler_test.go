@@ -2,38 +2,42 @@ package treetop
 
 import (
 	"bytes"
-	"html/template"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 )
 
-func setupTemplateHandler() *TemplateHandler {
-	baseTpl := strings.Join([]string{
-		`<!DOCTYPE html>`,
-		`<html>`,
-		`<head>`,
-		`	<title>base</title>`,
-		`</head>`,
-		`<body>`,
-		`	<div class="top">	`,
-		`		{{ block "nav" .Nav }}fallback block nav{{ end }}`,
-		`	</div>`,
-		`	<div class="content">	`,
-		`		{{ block "content" .Content }}fallback block content{{ end }}`,
-		`	</div>`,
-		`</body>`,
-		`</html>`,
-	}, "\n")
-	contentTpl := strings.Join([]string{
-		`<div id="content">`,
-		`    <p>hello {{ .Message }}</p>`,
-		`    {{ block "sub-content" .SubContent }}fallback{{ end }}`,
-		`</div>`,
-	}, "\n")
-	navTpl := `<div id="nav">hello {{ . }}</div>`
-	subContentTpl := `<div id="sub-content">hello {{ . }}</div>`
+func setupTemplateHandler() ViewHandler {
+	exec, err := NewKeyedStringExecutor(map[string]string{
+		"base.html": strings.Join([]string{
+			`<!DOCTYPE html>`,
+			`<html>`,
+			`<head>`,
+			`	<title>base</title>`,
+			`</head>`,
+			`<body>`,
+			`	<div class="top">	`,
+			`		{{ block "nav" .Nav }}fallback block nav{{ end }}`,
+			`	</div>`,
+			`	<div class="content">	`,
+			`		{{ block "content" .Content }}fallback block content{{ end }}`,
+			`	</div>`,
+			`</body>`,
+			`</html>`,
+		}, "\n"),
+		"content.html": strings.Join([]string{
+			`<div id="content">`,
+			`    <p>hello {{ .Message }}</p>`,
+			`    {{ block "sub-content" .SubContent }}fallback{{ end }}`,
+			`</div>`,
+		}, "\n"),
+		"override-nav.html": `<div id="nav">hello {{ . }}</div>`,
+		"sub-content.html":  `<div id="sub-content">hello {{ . }}</div>`,
+	})
+	if err != nil {
+		panic(err)
+	}
 
 	base := NewView("base.html", func(resp Response, req *http.Request) interface{} {
 		return struct {
@@ -56,29 +60,12 @@ func setupTemplateHandler() *TemplateHandler {
 	})
 	content.NewDefaultSubView("sub-content", "sub-content.html", Constant("sub content!!"))
 
-	page, part, ps := CompileViews(content, NewSubView("nav", "override-nav.html", Constant("override nav handler!!")))
-	// parse HTML templates
-	pageTemplate, _ := template.New("base").Parse(baseTpl)
-	partTemplate, _ := template.New("content").Parse(contentTpl)
-	subCTemplate, _ := template.New("sub-content").Parse(subContentTpl)
-	navTemplate, _ := template.New("nav").Parse(navTpl)
-
-	pageTemplate.AddParseTree("content", partTemplate.Tree)
-	pageTemplate.AddParseTree("sub-content", subCTemplate.Tree)
-	pageTemplate.AddParseTree("nav", navTemplate.Tree)
-
-	partTemplate.AddParseTree("sub-content", subCTemplate.Tree)
-	// create handler
-	return &TemplateHandler{
-		Page:            page,
-		Partial:         part,
-		Includes:        ps,
-		PageTemplate:    pageTemplate,
-		PartialTemplate: partTemplate,
-		IncludeTemplates: []*template.Template{
-			navTemplate,
-		},
+	handler := exec.NewViewHandler(content, NewSubView("nav", "override-nav.html", Constant("override nav handler!!")))
+	errs := exec.FlushErrors()
+	if len(errs) > 0 {
+		panic(errs)
 	}
+	return handler
 }
 
 func TestTemplateHandler_PartialRequest(t *testing.T) {
