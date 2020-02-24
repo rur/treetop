@@ -78,7 +78,7 @@ func (kse *KeyedStringExecutor) NewViewHandler(view *View, includes ...*View) Vi
 			View: part,
 			Err:  err,
 		})
-		// error has been captured, disable page handling
+		// error has been captured, disable partial handling
 		handler.Partial = nil
 	} else {
 		handler.PartialTemplate = t
@@ -122,7 +122,7 @@ func (kse *KeyedStringExecutor) FlushErrors() []*ExecutorTemplateError {
 
 var errEmptyViewQueue = errors.New("empty view queue")
 
-// viewQueue simple queue implementation for breath first traversal
+// viewQueue simple queue implementation used for breath first traversal
 type viewQueue struct {
 	offset int
 	items  []*View

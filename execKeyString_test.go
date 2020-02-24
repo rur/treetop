@@ -51,6 +51,26 @@ func TestKeyedStringExecutor_constructTemplate(t *testing.T) {
 			want:    `<div> base, content: <p id="content">hello world!</p> </div>`,
 			wantErr: "",
 		},
+		{
+			name: "key not found",
+			exec: func() *KeyedStringExecutor {
+				exec, err := NewKeyedStringExecutor(map[string]string{
+					"base.html":    `<div> base, content: {{ block "content" . }} default here {{ end }} </div>`,
+					"content.html": `<p id="content">hello {{ . }}!</p>`,
+				})
+				if err != nil {
+					panic(err)
+				}
+				return exec
+			}(),
+			view: func() *View {
+				b := NewView("base.html", Noop)
+				b.NewDefaultSubView("content", "content-other.html", Noop)
+				return b
+			}(),
+			data:    "world",
+			wantErr: "KeyedStringExecutor: no template found for key 'content-other.html'",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
