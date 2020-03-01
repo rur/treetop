@@ -27,7 +27,7 @@ func (te *ExecutorTemplateError) Error() string {
 	if te == nil {
 		return "nil"
 	}
-	return fmt.Sprintln(SprintViewInfo(te.View), ":", te.Err)
+	return fmt.Sprintf("KeyedStringExecutor: %s", te.Err)
 }
 
 // NewKeyedStringExecutor will parse the templates supplied and
@@ -161,7 +161,7 @@ func (kse *KeyedStringExecutor) constructTemplate(view *View) (*template.Templat
 		tree, ok := kse.parsed[v.Template]
 		if !ok {
 			return nil, fmt.Errorf(
-				"KeyedStringExecutor: no template found for key '%s'",
+				"no template found for key '%s'",
 				v.Template)
 		}
 		_, err := out.AddParseTree(v.Defines, tree)
