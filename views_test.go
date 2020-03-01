@@ -107,6 +107,12 @@ func TestCompileViews(t *testing.T) {
 	}
 	cases := []TestCase{
 		{
+			name:       "nil case",
+			view:       nil,
+			expectPage: "- nil",
+			expectView: "- nil",
+		},
+		{
 			name:           "basic",
 			view:           NewView("base.html", Constant("github.com/rur/treetop.Constant.func1")),
 			expectPage:     `- View("base.html", github.com/rur/treetop.Constant.func1)`,

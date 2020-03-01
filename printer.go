@@ -53,6 +53,9 @@ func previewTemplate(str string, before, after int) string {
 
 // SprintViewTree create a string with a tree representation of a a view hierarchy
 func SprintViewTree(v *View) string {
+	if v == nil {
+		return "- nil"
+	}
 	str := strings.Builder{}
 	str.WriteString("- ")
 	str.WriteString(SprintViewInfo(v))

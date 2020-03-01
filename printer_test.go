@@ -51,6 +51,11 @@ func TestSprintViewTree(t *testing.T) {
 		want string
 	}{
 		{
+			name: "nil case",
+			v:    nil,
+			want: `- nil`,
+		},
+		{
 			name: "single view usage",
 			v:    NewView("test.html", Constant("test!")),
 			want: `- View("test.html", github.com/rur/treetop.Constant.func1)`,

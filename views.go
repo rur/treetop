@@ -155,6 +155,9 @@ func (v *View) Copy() *View {
 //   - any disconnect fragment views that should be appended to partial requests.
 //
 func CompileViews(view *View, includes ...*View) (page, part *View, postscript []*View) {
+	if view == nil {
+		return nil, nil, nil
+	}
 	// Merge the includes and the view where possible.
 	// Views to the left 'consume' those to the right when a match is found.
 	// 'Postscripts' are includes that could not be merged.
@@ -182,9 +185,9 @@ func CompileViews(view *View, includes ...*View) (page, part *View, postscript [
 		}
 	}
 
-	// NOTE: this is pseudocode
 	// constructing the 'page' involes modifying the series of parents
-	// to ensure that this view is reachable from the root. The modified root is our page
+	// to ensure that this view is reachable from the root (hence the copying).
+	// The modified root is our page
 	root := view
 	for root.Parent != nil {
 		// make a copy of the parent and ensure that it points to

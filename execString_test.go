@@ -199,6 +199,14 @@ func TestStringExecutor_NewViewHandler(t *testing.T) {
 			</template>`),
 			templateOnly: true,
 		},
+		{
+			name: "nil view",
+			getHandler: func(exec ViewExecutor) ViewHandler {
+				return exec.NewViewHandler(nil)
+			},
+			expectPage:     "Not Acceptable\n",
+			expectTemplate: "Not Acceptable\n",
+		},
 	}
 
 	for _, tt := range tests {
@@ -224,7 +232,7 @@ func TestStringExecutor_NewViewHandler(t *testing.T) {
 			gotTemplate := stripIndent(sDumpBody(rec))
 
 			if gotTemplate != tt.expectTemplate {
-				t.Errorf("Expecting partial body\n%s\nGot\n%s", tt.expectTemplate, gotTemplate)
+				t.Errorf("Expecting template body\n%s\nGot\n%s", tt.expectTemplate, gotTemplate)
 			}
 
 			gotErrors := exec.FlushErrors()
