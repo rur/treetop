@@ -188,6 +188,38 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 	}
 }
 
+func TestKeyedStringExecutor_NewViewHandler_NilView(t *testing.T) {
+	exec, err := NewKeyedStringExecutor(nil)
+	if err != nil {
+		t.Error("Error creating nil keyed executor:", err)
+		return
+	}
+	handler := exec.NewViewHandler(nil)
+
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, mockRequest("/some/path", "*/*"))
+	gotPage := stripIndent(sDumpBody(rec))
+
+	expected := "Not Acceptable\n"
+
+	if gotPage != expected {
+		t.Errorf("Expecting page body\n%s\nGot\n%s", expected, gotPage)
+	}
+
+	rec = httptest.NewRecorder()
+	handler.ServeHTTP(rec, mockRequest("/some/path", TemplateContentType))
+	gotTemplate := stripIndent(sDumpBody(rec))
+
+	if gotTemplate != expected {
+		t.Errorf("Expecting partial body\n%s\nGot\n%s", expected, gotTemplate)
+	}
+
+	tErs := exec.FlushErrors()
+	if len(tErs) != 0 {
+		t.Errorf("Unexpected errors: %v", tErs)
+	}
+}
+
 func sDumpBody(rec *httptest.ResponseRecorder) string {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(rec.Body)
@@ -389,7 +421,7 @@ func Test_stripIndent(t *testing.T) {
 			`,
 			want: "test\n\ntest\n",
 		},
-		{ // "Hello 世界"
+		{
 			name: "multiline with mixed spaces and tabs",
 			s: strings.Join([]string{
 				"\t\t \ttest",

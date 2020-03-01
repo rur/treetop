@@ -45,4 +45,7 @@ func Test_viewQueue(t *testing.T) {
 			t.Errorf("Expecting template %s, got %s", expect[i], got[i])
 		}
 	}
+	if _, err := queue.next(); err != errEmptyViewQueue {
+		t.Errorf("Expecting error '%s', got '%s'", errEmptyViewQueue, err)
+	}
 }
