@@ -1,6 +1,7 @@
 package treetop
 
 import (
+	"errors"
 	"html/template"
 )
 
@@ -98,4 +99,34 @@ func (ex *Executor) NewViewHandler(view *View, includes ...*View) ViewHandler {
 		viewHandler = handler.FragmentOnly()
 	}
 	return viewHandler
+}
+
+// utilities ---
+
+var errEmptyViewQueue = errors.New("empty view queue")
+
+// viewQueue simple queue implementation used for breath first traversal
+//
+// NB: this is only suitable for localized short-lived queues since the underlying
+// array will not deallocate pointers
+type viewQueue struct {
+	offset int
+	items  []*View
+}
+
+func (q *viewQueue) add(v *View) {
+	q.items = append(q.items, v)
+}
+
+func (q *viewQueue) next() (*View, error) {
+	if q.empty() {
+		return nil, errEmptyViewQueue
+	}
+	next := q.items[q.offset]
+	q.offset++
+	return next, nil
+}
+
+func (q *viewQueue) empty() bool {
+	return q.offset >= len(q.items)
 }

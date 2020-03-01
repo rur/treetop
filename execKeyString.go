@@ -1,7 +1,6 @@
 package treetop
 
 import (
-	"errors"
 	"fmt"
 	"html/template"
 	"text/template/parse"
@@ -37,43 +36,18 @@ func NewKeyedStringExecutor(templates map[string]string) (*KeyedStringExecutor, 
 
 // NewViewHandler creates a ViewHandler from a View endpoint definition treating
 // view template strings as keys into the string template dictionary.
-func (ex *KeyedStringExecutor) NewViewHandler(view *View, includes ...*View) ViewHandler {
-	ex.exec.NewTemplate = ex.constructTemplate
-	return ex.exec.NewViewHandler(view, includes...)
+func (kse *KeyedStringExecutor) NewViewHandler(view *View, includes ...*View) ViewHandler {
+	kse.exec.NewTemplate = kse.constructTemplate
+	return kse.exec.NewViewHandler(view, includes...)
 }
 
 // FlushErrors will return a list of all template generation errors that occurred
 // while ViewHandlers were being created by this executor
-func (ex *KeyedStringExecutor) FlushErrors() []*ExecutorError {
-	return ex.exec.FlushErrors()
+func (kse *KeyedStringExecutor) FlushErrors() []*ExecutorError {
+	return kse.exec.FlushErrors()
 }
 
-var errEmptyViewQueue = errors.New("empty view queue")
-
-// viewQueue simple queue implementation used for breath first traversal
-type viewQueue struct {
-	offset int
-	items  []*View
-}
-
-func (q *viewQueue) join(v *View) {
-	q.items = append(q.items, v)
-}
-
-func (q *viewQueue) next() (*View, error) {
-	if q.empty() {
-		return nil, errEmptyViewQueue
-	}
-	next := q.items[q.offset]
-	q.offset++
-	return next, nil
-}
-
-func (q *viewQueue) empty() bool {
-	return q.offset >= len(q.items)
-}
-
-// constructTemplates will traverse the supplied view hierarchy in breath first order and
+// constructTemplate will traverse the supplied view hierarchy in breath first order and
 // use items from the parse tree reference to construct a template namespace
 func (kse *KeyedStringExecutor) constructTemplate(view *View) (*template.Template, error) {
 	if view == nil {
@@ -82,7 +56,7 @@ func (kse *KeyedStringExecutor) constructTemplate(view *View) (*template.Templat
 	out := template.New(view.Defines)
 
 	queue := viewQueue{}
-	queue.join(view)
+	queue.add(view)
 
 	for !queue.empty() {
 		v, _ := queue.next()
@@ -97,7 +71,7 @@ func (kse *KeyedStringExecutor) constructTemplate(view *View) (*template.Templat
 			return nil, err
 		}
 		for _, sub := range v.SubViews {
-			queue.join(sub)
+			queue.add(sub)
 		}
 	}
 	return out, nil
