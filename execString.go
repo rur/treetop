@@ -1,54 +1,53 @@
 package treetop
 
 import (
-	"fmt"
 	"html/template"
 )
 
 // StringExecutor loads view templates as an inline template string.
-// TODO: Implement this
-type StringExecutor struct{}
-
-// NewViewHandler will create a Handler instance capable of serving treetop requests
-// for the supplied view configuration
-//
-// TODO: Implement this
-func (se *StringExecutor) NewViewHandler(view *View, includes ...*View) ViewHandler {
-	page, part, incls := CompileViews(view, includes...)
-	handler := TemplateHandler{
-		Page:            page,
-		PageTemplate:    se.MustParseTemplateFiles(page),
-		Partial:         part,
-		PartialTemplate: se.MustParseTemplateFiles(part),
-		Includes:        incls,
-	}
-	for _, inc := range incls {
-		handler.IncludeTemplates = append(handler.IncludeTemplates, se.MustParseTemplateFiles(inc))
-	}
-	return handler
+type StringExecutor struct {
+	exec Executor
 }
 
-// MustParseTemplateFiles will load template files and parse contents into a HTML template instance
-// it will use the supplied http.FileSystem for loading the template files
-//
-// TODO: Implement this
-func (se *StringExecutor) MustParseTemplateFiles(view *View) *template.Template {
+// NewViewHandler creates a ViewHandler from a View endpoint definition treating
+// view template strings as keys into the string template dictionary.
+func (se *StringExecutor) NewViewHandler(view *View, includes ...*View) ViewHandler {
+	se.exec.NewTemplate = se.constructTemplate
+	return se.exec.NewViewHandler(view, includes...)
+}
+
+// FlushErrors will return a list of all template generation errors that occurred
+// while ViewHandlers were being created by this executor
+func (se *StringExecutor) FlushErrors() []*ExecutorError {
+	return se.exec.FlushErrors()
+}
+
+// constructTempalate for StringExecutor will treat the template string of each view
+// as a template in of itself.
+func (se *StringExecutor) constructTemplate(view *View) (*template.Template, error) {
+	if view == nil {
+		return nil, nil
+	}
 	var out *template.Template
-	// snippet based upon https://golang.org/pkg/html/template/#ParseFiles implementation
-	for i, s := range GetTemplateList(view) {
-		name := fmt.Sprintf("Template[%v]", i)
+
+	queue := viewQueue{}
+	queue.add(view)
+
+	for !queue.empty() {
+		v, _ := queue.next()
 		var t *template.Template
 		if out == nil {
-			// first file in the list is used as the root template
-			out = template.New(name)
+			out = template.New(v.Defines)
 			t = out
 		} else {
-			t = out.New(name)
+			t = out.New(v.Defines)
 		}
-		_, err := t.Parse(s)
-		if err != nil {
-			panic(fmt.Sprintf("Error parsing template %s, error %s", name, err.Error()))
+		if _, err := t.Parse(v.Template); err != nil {
+			return nil, err
+		}
+		for _, sub := range v.SubViews {
+			queue.add(sub)
 		}
 	}
-	return out
+	return out, nil
 }
