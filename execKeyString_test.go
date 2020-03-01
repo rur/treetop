@@ -2,6 +2,7 @@ package treetop
 
 import (
 	"bytes"
+	"html/template"
 	"testing"
 )
 
@@ -89,6 +90,64 @@ func TestKeyedStringExecutor_constructTemplate(t *testing.T) {
 			gotString := buf.String()
 			if gotString != tt.want {
 				t.Errorf("KeyedStringExecutor.constructTemplate() got %v, want %v", gotString, tt.want)
+			}
+		})
+	}
+}
+
+func TestNewKeyedStringExecutor(t *testing.T) {
+	type args struct {
+	}
+	tests := []struct {
+		name      string
+		templates map[string]string
+		key       string
+		want      string
+		wantErr   string
+	}{
+		{
+			name: "",
+			templates: map[string]string{
+				"test.html": `<p>{{ . }}</p>`,
+			},
+			want: `<p>some data here</p>`,
+		},
+		{
+			name: "",
+			templates: map[string]string{
+				"err.html": `<p>{{ .$TEST }}</p>`,
+			},
+			wantErr: `template: err.html:1: unexpected bad character U+0024 '$' in command`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := NewKeyedStringExecutor(tt.templates)
+			if err != nil {
+				if tt.wantErr == "" {
+					t.Errorf("Unexpected error: %s", err)
+				} else if tt.wantErr != err.Error() {
+					t.Errorf("NewKeyedStringExecutor() error = %v, wantErr %v", err, tt.wantErr)
+				}
+				return
+			}
+			if tt.key == "" {
+				return
+			}
+			buf := new(bytes.Buffer)
+			tpl, err := template.New("test").AddParseTree("test", got.parsed[tt.key])
+			if err != nil {
+				t.Error(err)
+			}
+
+			err = tpl.Execute(buf, "some data here")
+			if err != nil {
+				t.Error(err)
+			}
+
+			gotStr := buf.String()
+			if gotStr != tt.want {
+				t.Errorf("NewKeyedStringExecutor() = %v, want %v", gotStr, tt.want)
 			}
 		})
 	}

@@ -40,7 +40,7 @@ func NewKeyedStringExecutor(templates map[string]string) (*KeyedStringExecutor, 
 	}
 
 	for key, str := range templates {
-		t, err := template.New("temp").Parse(str)
+		t, err := template.New(key).Parse(str)
 		if err != nil {
 			return nil, err
 		}
