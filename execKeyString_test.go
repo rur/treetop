@@ -258,7 +258,7 @@ func TestKeyedStringExecutor_constructTemplate(t *testing.T) {
 				return b
 			}(),
 			data:    "world",
-			wantErr: "no template found for key 'content-other.html'",
+			wantErr: "KeyedStringExecutor: no template found for key 'content-other.html'",
 		},
 	}
 	for _, tt := range tests {

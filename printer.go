@@ -11,29 +11,6 @@ import (
 	"strings"
 )
 
-// PrintTemplateHandler is a cheap and cheerful way to debug a view handlers by 'stringing'
-// a preview of the state of a supplied handler instance
-//
-// TODO: implement a pretty print for template handlers
-func PrintTemplateHandler(h *TemplateHandler) string {
-	var handlerInfo string
-	if h.Partial.HandlerFunc != nil {
-		handlerInfo = runtime.FuncForPC(reflect.ValueOf(h.Partial.HandlerFunc).Pointer()).Name()
-	} else {
-		handlerInfo = "nil"
-	}
-	if h.Page == nil {
-		// only fragment requests can be handled
-		return fmt.Sprintf("PartialHandler(%s, %s)", previewTemplate(h.Partial.Template, 10, 10), handlerInfo)
-	} else if h.Partial == nil {
-		// only full page requests can be handled
-		return fmt.Sprintf("PageHandler(%s, %s)", previewTemplate(h.Partial.Template, 10, 10), handlerInfo)
-	} else {
-		// both full page and partial page requests can be handled
-		return fmt.Sprintf("PartialHandler(%s, %s)", previewTemplate(h.Partial.Template, 10, 10), handlerInfo)
-	}
-}
-
 // SprintViewInfo will create a string preview of view
 func SprintViewInfo(v *View) string {
 	if v == nil {

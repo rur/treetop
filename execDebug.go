@@ -8,15 +8,15 @@ import (
 	"path/filepath"
 )
 
-// DefaultExecutor loads view templates as a path from a Go HTML template file.
+// DebugExecutor loads view templates as a path from a Go HTML template file.
 // The underlying file system is abstracted through the http.FileSystem interface to allow for
 // in-memory use.
-type DefaultExecutor struct{}
+type DebugExecutor struct{}
 
 // NewViewHandler will create a Handler instance capable of serving treetop requests
 // for the supplied view configuration
 // TODO: Implement this
-func (de *DefaultExecutor) NewViewHandler(view *View, includes ...*View) ViewHandler {
+func (de *DebugExecutor) NewViewHandler(view *View, includes ...*View) ViewHandler {
 	page, part, incls := CompileViews(view, includes...)
 	handler := TemplateHandler{
 		Page:            page,
@@ -34,7 +34,7 @@ func (de *DefaultExecutor) NewViewHandler(view *View, includes ...*View) ViewHan
 // MustParseTemplateFiles will load template files and parse contents into a HTML template instance
 // this is similar to html/template ParseFiles function
 // TODO: Implement this
-func (de *DefaultExecutor) MustParseTemplateFiles(view *View) *template.Template {
+func (de *DebugExecutor) MustParseTemplateFiles(view *View) *template.Template {
 	var t *template.Template
 	// snippet based upon https://golang.org/pkg/html/template/#ParseFiles implementation
 	for _, filename := range GetTemplateList(view) {
