@@ -5,8 +5,14 @@ import (
 	"net/http"
 )
 
-// DeveloperExecutor wraps another executor, it will re-generate a new view handler for
+// DeveloperExecutor wraps another executor, it will re-generate the view handler for
 // every request. This can be used to live-reload templates during development.
+//
+// Example:
+//
+// 		exec := DeveloperExecutor{FileExecutor{}}
+// 		mux.Handle("/hello", exec.NewViewHandler(v))
+//
 //
 // Note: this is for development use only, it is not suitable for production systems
 type DeveloperExecutor struct {

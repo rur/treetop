@@ -37,7 +37,7 @@ func (de *FilesExecutor) NewViewHandler(view *View, includes ...*View) ViewHandl
 func (de *FilesExecutor) MustParseTemplateFiles(view *View) *template.Template {
 	var t *template.Template
 	// snippet based upon https://golang.org/pkg/html/template/#ParseFiles implementation
-	for _, filename := range GetTemplateList(view) {
+	for _, filename := range []string{} {
 		buffer := new(bytes.Buffer)
 		file, err := os.Open(filename)
 		if err != nil {
@@ -63,10 +63,4 @@ func (de *FilesExecutor) MustParseTemplateFiles(view *View) *template.Template {
 		}
 	}
 	return t
-}
-
-// GetTemplateList returns all templates in view hierarchy in a BFS order list
-// TODO: Implement this
-func GetTemplateList(view *View) []string {
-	return []string{view.Template}
 }

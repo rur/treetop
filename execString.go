@@ -5,6 +5,13 @@ import (
 )
 
 // StringExecutor loads view templates as an inline template string.
+//
+// Example:
+//
+// 		exec := StringExecutor{}
+// 		v := treetop.NewView("<p>Hello {{ . }}!</p>", Constant("world"))
+// 		mux.Handle("/hello", exec.NewViewHandler(v))
+//
 type StringExecutor struct {
 	exec Executor
 }
