@@ -12,27 +12,6 @@ type ViewExecutor interface {
 	FlushErrors() ExecutorErrors
 }
 
-// Executor implements a procedure for converting a view endpoint definition
-// into a request handler using HTML templates.
-//
-// It is designed to extended with different means for constructing template instances
-// given a View hierarchy.
-//
-// Example:
-//
-// 		exec := Executor{
-//			NewTemplate: func(v *View) (*template.Template, error){
-//				// always hello
-//				return template.Must(template.New(v.Defines).Parse("Hello!"))
-// 			},
-// 		}
-// 		mux.Handle("/hello", exec.NewViewHandler(v))
-//
-type Executor struct {
-	NewTemplate func(*View) (*template.Template, error)
-	Errors      ExecutorErrors
-}
-
 // ExecutorErrors is a list zero or more template errors created when parsing
 // templates
 type ExecutorErrors []*ExecutorError
@@ -59,6 +38,27 @@ func (te *ExecutorError) Error() string {
 		return "nil"
 	}
 	return te.Err.Error()
+}
+
+// Executor implements a procedure for converting a view endpoint definition
+// into a request handler using HTML templates.
+//
+// It is designed to extended with different means for constructing template instances
+// given a View hierarchy.
+//
+// Example:
+//
+// 		exec := Executor{
+//			NewTemplate: func(v *View) (*template.Template, error){
+//				// always hello
+//				return template.Must(template.New(v.Defines).Parse("Hello!"))
+// 			},
+// 		}
+// 		mux.Handle("/hello", exec.NewViewHandler(v))
+//
+type Executor struct {
+	NewTemplate func(*View) (*template.Template, error)
+	Errors      ExecutorErrors
 }
 
 // FlushErrors will return the list of template creation errors that occurred
