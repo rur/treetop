@@ -1,9 +1,16 @@
 /*
-Package treetop is a library for incorporating HTML fragment requests into Go
-web applications.
+Package treetop provides tools for building HTML template handlers.
 
-Fragments requests are specified by a protocol with the goal of removing some of the common
-causes of JavaScript boilerplate in modern web applications. Reliance on data APIs can also be greatly reduced.
+So your webpage does IO; and you need to show updates without clobbering the interface.
+The common approach is to expose a data API and dispatch JavaScript to micromanage the client.
+That will work, but it is pretty heavy duty for what seems like a simple problem.
+
+Conventional HTTP works very well for navigation and web forms alike, no micromanagement required.
+Perhaps it could be extended to solve our dynamic update problem. That is the starting point for Treetop,
+to see how far we can get with a simple protocol.
+
+Treetop is unique because it puts the server-side hander in complete control of how the page will be updated
+following a request.
 
 For documentation and examples see https://github.com/rur/treetop and https://github.com/rur/treetop-recipes
 
@@ -15,7 +22,7 @@ ad-hoc fragments in an existing application. The view builder abstraction is
 the second, it is designed for constructing a UI with many
 cooperating endpoints.
 
-Example of ad-hoc partial writer
+Example of ad-hoc template writer
 
   import (
 	  "fmt"
@@ -81,18 +88,20 @@ Example
 		greetingHandler,
 	)
 
-	exec := treetop.DefaultExecutor{}
+	exec := treetop.FileExecutor{}
 	mymux.Handle("/", exec.NewViewHandler(greeting))
 
 See the documentation of the View type for details.
 
-Browser History - Partials vs Fragments
+Browser History - PartialWriter vs FragmentWriter
 
 This can cause confussion, but it is a very useful distinction. A partial is a
 _part_ of an HTML document, a fragment is a general purpose HTML
 snippet. Both have a URL, but only the former should be considered 'navigation'
 by the user agent. This allows browser history to be handled correctly so that back,
 forward and refresh behavior work as expected.
+
+The ViewHandler interface has the FragmentOnly and PageOnly qualifiers for this purpose.
 
 Note: The client relies upon the HTML 5 history API to support Treetop partials.
 

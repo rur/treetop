@@ -5,62 +5,79 @@ import (
 	"fmt"
 	"html/template"
 	"os"
-	"path/filepath"
+	"text/template/parse"
 )
 
-// FilesExecutor loads view templates as a path from a template file.
-type FilesExecutor struct {
+// FileExecutor loads view templates as a path from a template file.
+type FileExecutor struct {
 	exec Executor
 }
 
-// NewViewHandler will create a Handler instance capable of serving treetop requests
-// for the supplied view configuration
-// TODO: Implement this
-func (de *FilesExecutor) NewViewHandler(view *View, includes ...*View) ViewHandler {
-	page, part, incls := CompileViews(view, includes...)
-	handler := &TemplateHandler{
-		Page:            page,
-		PageTemplate:    de.MustParseTemplateFiles(page),
-		Partial:         part,
-		PartialTemplate: de.MustParseTemplateFiles(part),
-		Includes:        incls,
-	}
-	for _, inc := range incls {
-		handler.IncludeTemplates = append(handler.IncludeTemplates, de.MustParseTemplateFiles(inc))
-	}
-	return handler
+// NewViewHandler creates a ViewHandler from a View endpoint definition treating
+// view template strings as keys into the string template dictionary.
+func (fe *FileExecutor) NewViewHandler(view *View, includes ...*View) ViewHandler {
+	fe.exec.NewTemplate = fe.constructTemplate
+	return fe.exec.NewViewHandler(view, includes...)
 }
 
-// MustParseTemplateFiles will load template files and parse contents into a HTML template instance
-// this is similar to html/template ParseFiles function
-// TODO: Implement this
-func (de *FilesExecutor) MustParseTemplateFiles(view *View) *template.Template {
-	var t *template.Template
-	// snippet based upon https://golang.org/pkg/html/template/#ParseFiles implementation
-	for _, filename := range []string{} {
-		buffer := new(bytes.Buffer)
-		file, err := os.Open(filename)
-		if err != nil {
-			panic(fmt.Sprintf("Failed to open template file '%s', error %s", filename, err.Error()))
-		}
-		_, err = buffer.ReadFrom(file)
-		if err != nil {
-			panic(fmt.Sprintf("Failed to read contents of template file '%s', error %s", filename, err.Error()))
-		}
-		s := buffer.String()
-		name := filepath.Base(filename)
-		var tmpl *template.Template
-		if t == nil {
-			// first file in the list is used as the root template
-			t = template.New(name)
-			tmpl = t
+// FlushErrors will return a list of all template generation errors that occurred
+// while ViewHandlers were being created by this executor
+func (fe *FileExecutor) FlushErrors() ExecutorErrors {
+	return fe.exec.FlushErrors()
+}
+
+// constructTempalate for FileExecutor will treat the template string of each view
+// as a template in of itself.
+func (fe *FileExecutor) constructTemplate(view *View) (*template.Template, error) {
+	if view == nil {
+		return nil, nil
+	}
+	var out *template.Template
+	cache := make(map[string]*parse.Tree)
+	buffer := new(bytes.Buffer)
+
+	queue := viewQueue{}
+	queue.add(view)
+
+	for !queue.empty() {
+		v, _ := queue.next()
+		var t *template.Template
+		if out == nil {
+			out = template.New(v.Defines)
+			t = out
 		} else {
-			tmpl = t.New(name)
+			t = out.New(v.Defines)
 		}
-		_, err = tmpl.Parse(s)
-		if err != nil {
-			panic(fmt.Sprintf("Error parsing template %s, error %s", filename, err.Error()))
+
+		if tree, ok := cache[v.Template]; ok {
+			t.AddParseTree(v.Defines, tree)
+		} else {
+			buffer.Reset()
+			file, err := os.Open(v.Template)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"Failed to open template file '%s', error %s",
+					v.Template, err.Error(),
+				)
+			}
+			_, err = buffer.ReadFrom(file)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"Failed to read contents of template file '%s', error %s",
+					v.Template, err.Error(),
+				)
+			}
+			_, err = t.Parse(buffer.String())
+			if err != nil {
+				return nil, fmt.Errorf(
+					"Failed to parse contents of template file '%s', error %s",
+					v.Template, err.Error(),
+				)
+			}
+		}
+		for _, sub := range v.SubViews {
+			queue.add(sub)
 		}
 	}
-	return t
+	return out, nil
 }
