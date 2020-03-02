@@ -73,6 +73,7 @@ func (h *devHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	handler := h.exec.NewViewHandler(h.view, h.incl...)
 	errs := h.exec.FlushErrors()
 	if len(errs) > 0 {
+		w.WriteHeader(http.StatusInternalServerError)
 		if err := writeDebugErrorPage(w, handler, errs); err != nil {
 			panic(err)
 		}
@@ -87,7 +88,12 @@ func (h *devHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	if th, ok := handler.(*TemplateHandler); ok && th.ServeTemplateError == nil {
 		th.ServeTemplateError = func(err error, resp Response, req *http.Request) {
-			if err := writeDebugErrorPage(w, handler, err); err != nil {
+			if status := resp.Status(0); status > 0 {
+				resp.WriteHeader(status)
+			} else {
+				resp.WriteHeader(http.StatusInternalServerError)
+			}
+			if err := writeDebugErrorPage(resp, handler, err); err != nil {
 				panic(err)
 			}
 		}
@@ -184,6 +190,5 @@ func writeDebugErrorPage(w http.ResponseWriter, handler ViewHandler, err error) 
 			errData.Includes = append(errData.Includes, SprintViewTree(incl))
 		}
 	}
-	w.WriteHeader(http.StatusInternalServerError)
 	return devErrorTemplate.Execute(w, errData)
 }

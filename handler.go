@@ -212,6 +212,9 @@ func (h *TemplateHandler) serveTemplateRequest(resp *ResponseWrapper, req *http.
 func (h *TemplateHandler) newResponseErrorLog(rsp Response, req *http.Request) func(err error) {
 	return func(err error) {
 		if h.ServeTemplateError != nil {
+			if err == ErrNotAcceptable {
+				rsp.Status(http.StatusNotAcceptable)
+			}
 			// delegate handing to user defined function
 			h.ServeTemplateError(err, rsp, req)
 			return
