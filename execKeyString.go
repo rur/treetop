@@ -43,7 +43,7 @@ func (kse *KeyedStringExecutor) NewViewHandler(view *View, includes ...*View) Vi
 
 // FlushErrors will return a list of all template generation errors that occurred
 // while ViewHandlers were being created by this executor
-func (kse *KeyedStringExecutor) FlushErrors() []*ExecutorError {
+func (kse *KeyedStringExecutor) FlushErrors() ExecutorErrors {
 	return kse.exec.FlushErrors()
 }
 

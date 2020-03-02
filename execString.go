@@ -18,7 +18,7 @@ func (se *StringExecutor) NewViewHandler(view *View, includes ...*View) ViewHand
 
 // FlushErrors will return a list of all template generation errors that occurred
 // while ViewHandlers were being created by this executor
-func (se *StringExecutor) FlushErrors() []*ExecutorError {
+func (se *StringExecutor) FlushErrors() ExecutorErrors {
 	return se.exec.FlushErrors()
 }
 

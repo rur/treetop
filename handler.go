@@ -10,6 +10,18 @@ import (
 	"strconv"
 )
 
+// ViewHandlerFunc is the interface for treetop handler functions that support hierarchical
+// partial data loading.
+type ViewHandlerFunc func(Response, *http.Request) interface{}
+
+// ViewHandler is an extention of the http.Handler interface with methods added
+// for extra treetop endpoint configuration
+type ViewHandler interface {
+	http.Handler
+	FragmentOnly() ViewHandler
+	PageOnly() ViewHandler
+}
+
 // Errors used by the TemplateHandler.
 var (
 	// ErrNotAcceptable is produced by ServeHTTP when a request
@@ -31,8 +43,8 @@ type TemplateHandler struct {
 }
 
 // FragmentOnly creates a new Handler that only responds to fragment requests
-func (h TemplateHandler) FragmentOnly() ViewHandler {
-	return TemplateHandler{
+func (h *TemplateHandler) FragmentOnly() ViewHandler {
+	return &TemplateHandler{
 		Partial:          h.Partial,
 		Includes:         h.Includes,
 		PartialTemplate:  h.PartialTemplate,
@@ -41,8 +53,8 @@ func (h TemplateHandler) FragmentOnly() ViewHandler {
 }
 
 // PageOnly create a new handler that will only respond to non-fragment (full page) requests
-func (h TemplateHandler) PageOnly() ViewHandler {
-	return TemplateHandler{
+func (h *TemplateHandler) PageOnly() ViewHandler {
+	return &TemplateHandler{
 		Page:         h.Page,
 		PageTemplate: h.PageTemplate,
 	}
@@ -51,7 +63,7 @@ func (h TemplateHandler) PageOnly() ViewHandler {
 // ServeHTTP is responsible for directing the handing of an incoming request.
 // Implements the procedure through which views functions and templates
 // are to be executed.
-func (h TemplateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (h *TemplateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// NOTE: this is pseudocode
 	resp := BeginResponse(req.Context(), w)
 	defer resp.Cancel()
@@ -71,7 +83,7 @@ func (h TemplateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 // servePageRequest will render a HTML document using hierarchial handlers and templates
-func (h TemplateHandler) servePageRequest(resp *ResponseWrapper, req *http.Request) {
+func (h *TemplateHandler) servePageRequest(resp *ResponseWrapper, req *http.Request) {
 	errlog := h.newResponseErrorLog(resp, req)
 
 	// TODO: use buffer pool
@@ -123,7 +135,7 @@ func (h TemplateHandler) servePageRequest(resp *ResponseWrapper, req *http.Reque
 
 // serverTemplateRequest will execute the partial along with each postscript handler in order
 // then append the postscript HTML to partial HTML
-func (h TemplateHandler) serveTemplateRequest(resp *ResponseWrapper, req *http.Request) {
+func (h *TemplateHandler) serveTemplateRequest(resp *ResponseWrapper, req *http.Request) {
 	errlog := h.newResponseErrorLog(resp, req)
 
 	// This is a template request,
@@ -197,7 +209,7 @@ func (h TemplateHandler) serveTemplateRequest(resp *ResponseWrapper, req *http.R
 }
 
 // newResponseErrorLog create an error handler for a supplied response and request instance
-func (h TemplateHandler) newResponseErrorLog(rsp Response, req *http.Request) func(err error) {
+func (h *TemplateHandler) newResponseErrorLog(rsp Response, req *http.Request) func(err error) {
 	return func(err error) {
 		if h.ServeTemplateError != nil {
 			// delegate handing to user defined function

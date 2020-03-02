@@ -1,7 +1,5 @@
 package treetop
 
-import "net/http"
-
 // View is a utility for building hierarchies of nested templates
 // from which HTTP request handlers can be constructed.
 //
@@ -75,24 +73,6 @@ type View struct {
 	SubViews    map[string]*View
 	Defines     string
 	Parent      *View
-}
-
-// ViewHandlerFunc is the interface for treetop handler functions that support hierarchical
-// partial data loading.
-type ViewHandlerFunc func(Response, *http.Request) interface{}
-
-// ViewHandler is an extention of the http.Handler interface with methods added
-// for extra treetop endpoint configuration
-type ViewHandler interface {
-	http.Handler
-	FragmentOnly() ViewHandler
-	PageOnly() ViewHandler
-}
-
-// ViewExecutor is an interface for objects that implement transforming a View definition
-// into a ViewHandler that supports pages, partial and fragment requests.
-type ViewExecutor interface {
-	NewViewHandler(view *View, includes ...*View) ViewHandler
 }
 
 // NewView creates an instance of a view given a template + handler pair

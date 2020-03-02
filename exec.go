@@ -5,15 +5,45 @@ import (
 	"html/template"
 )
 
-// Executor encapsulates a procedure for converting an endpoint definition
-// into a request handler using golang HTML templates.
+// ViewExecutor is an interface for objects that implement transforming a View definition
+// into a ViewHandler that supports pages, partial and fragment requests.
+type ViewExecutor interface {
+	NewViewHandler(view *View, includes ...*View) ViewHandler
+	FlushErrors() ExecutorErrors
+}
+
+// Executor implements a procedure for converting a view endpoint definition
+// into a request handler using HTML templates.
 //
-// It should be extended, so to speak, with an implementation for
-// constructing the actual template instances, given a View, potentially with a hierarchy
-// of template handlers.
+// It is designed to extended with different means for constructing template instances
+// given a View hierarchy.
+//
+// Example:
+//
+// 		exec := Executor{
+//			NewTemplate: func(v *View) (*template.Template, error){
+//				// always hello
+//				return template.Must(template.New(v.Defines).Parse("Hello!"))
+// 			},
+// 		}
+// 		mux.Handle("/hello", exec.NewViewHandler(v))
+//
 type Executor struct {
 	NewTemplate func(*View) (*template.Template, error)
-	Errors      []*ExecutorError
+	Errors      ExecutorErrors
+}
+
+// ExecutorErrors is a list zero or more template errors created when parsing
+// templates
+type ExecutorErrors []*ExecutorError
+
+// Errors implements error interface
+func (ee ExecutorErrors) Error() string {
+	var output string
+	for i := range ee {
+		output += ee[i].Error() + "\n"
+	}
+	return output
 }
 
 // ExecutorError is created within the executor when a template cannot be created
@@ -31,9 +61,9 @@ func (te *ExecutorError) Error() string {
 	return te.Err.Error()
 }
 
-// FlushErrors will return a list of all template generation errors that occurred
-// while TemplateHandlers were being created
-func (ex *Executor) FlushErrors() []*ExecutorError {
+// FlushErrors will return the list of template creation errors that occurred
+// while ViewHandlers were begin created, since the last time it was called.
+func (ex *Executor) FlushErrors() ExecutorErrors {
 	errors := ex.Errors
 	ex.Errors = nil
 	if len(errors) == 0 {
