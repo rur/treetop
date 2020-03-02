@@ -101,6 +101,20 @@ func TestFileExecutor_NewViewHandler(t *testing.T) {
 					`error open notexists.html: no such file or directory`,
 			},
 		},
+		{
+			name: "malformed file",
+			getHandler: func(exec ViewExecutor) ViewHandler {
+				return exec.NewViewHandler(NewView("testdata/malformed.html", Noop))
+			},
+			expectPage:     "Not Acceptable\n",
+			expectTemplate: "Not Acceptable\n",
+			expectErrors: []string{
+				`Failed to parse contents of template file 'testdata/malformed.html', ` +
+					`error template: :2: function "functhatdoesnexist" not defined`,
+				`Failed to parse contents of template file 'testdata/malformed.html', ` +
+					`error template: :2: function "functhatdoesnexist" not defined`,
+			},
+		},
 	}
 
 	for _, tt := range tests {
