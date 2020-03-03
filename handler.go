@@ -3,12 +3,39 @@ package treetop
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"html/template"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
+	"sync"
 )
+
+// pool of buffers used for executing HTML templates to completion
+// before writing response headers and content
+var buffers = sync.Pool{
+	New: func() interface{} {
+		return new(bytes.Buffer)
+	},
+}
+
+// obtain exclusive use of a buffer resource
+func getBuffer() *bytes.Buffer {
+	v := buffers.Get()
+	buf, ok := v.(*bytes.Buffer)
+	if !ok {
+		panic(fmt.Sprintf("Expecting a Buffer but got %v", v))
+	}
+	return buf
+}
+
+// reset a buffer and make it eligable for either being returned to the
+// pool or being deallocated
+func releaseBuffer(buf *bytes.Buffer) {
+	buf.Reset()
+	buffers.Put(buf)
+}
 
 // ViewHandlerFunc is the interface for treetop handler functions that support hierarchical
 // partial data loading.
@@ -86,9 +113,10 @@ func (h *TemplateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 func (h *TemplateHandler) servePageRequest(resp *ResponseWrapper, req *http.Request) {
 	errlog := h.newResponseErrorLog(resp, req)
 
-	// TODO: use buffer pool
-	buf := new(bytes.Buffer)
-	// TODO: defer release buffer
+	// response body will be buffered before being written to the connection
+	// to avoid torn writes as a result of errors
+	buf := getBuffer()
+	defer releaseBuffer(buf)
 
 	// This is a full page request,
 	// execute the page view handlers and templates
@@ -144,9 +172,10 @@ func (h *TemplateHandler) serveTemplateRequest(resp *ResponseWrapper, req *http.
 		return
 	}
 
-	// TODO: use buffer pool
-	buf := new(bytes.Buffer)
-	// TODO: defer release buffer
+	// response body will be buffered before being written to the connection
+	// to avoid torn writes as a result of errors
+	buf := getBuffer()
+	defer releaseBuffer(buf)
 
 	var (
 		views = append([]*View{h.Partial}, h.Includes...)
