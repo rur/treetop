@@ -2,14 +2,15 @@ package writer
 
 import (
 	"net/http"
+	"text/template"
 
 	"github.com/rur/treetop"
 	"github.com/rur/treetop/examples/shared"
 )
 
 var (
-	content = `
-{{ block "content" . }}
+	base    = template.Must(template.New("base").Parse(shared.BaseTemplate))
+	content = template.Must(template.New("content").Parse(`
 <div id="content" style="text-align: center;">
 	<h1>Treetop Writer Greeter</h1>
 	<div>
@@ -19,21 +20,16 @@ var (
 	</div>
 	{{ template "message" .Message}}
 </div>
-{{ end }}
-	`
-	landing = `
-{{ block "message" . }}
+	`))
+	landing = template.Must(template.New("message").Parse(`
 	<p id="message"><i>Give me someone to say hello to!</i></p>
-{{ end }}
-	`
-	greeting = `
-{{ block "message" . }}
+	`))
+	greeting = template.Must(template.New("message").Parse(`
 	<div id="message">
 		<h2>Hello, {{ . }}!</h2>
 		<p><a href="/writer" treetop>Clear</a></p>
 	</div>
-{{ end }}
-	`
+	`))
 )
 
 // SetupGreeter registers writer greeter endpoints
@@ -50,14 +46,14 @@ func landingHandler(w http.ResponseWriter, req *http.Request) {
 		}
 	}()
 	if pw, ok := treetop.NewPartialWriter(w, req); ok {
-		err = treetop.StringTemplateExec(pw, []string{landing}, nil)
+		landing.ExecuteTemplate(pw, "landing", nil)
 		return
 	}
-	err = treetop.StringTemplateExec(w, []string{
-		shared.BaseTemplate,
-		content,
-		landing,
-	}, nil)
+	t := template.New("base")
+	t.AddParseTree("base", base.Tree)
+	t.AddParseTree("content", content.Tree)
+	t.AddParseTree("message", landing.Tree)
+	err = t.ExecuteTemplate(w, "base", nil)
 }
 
 func greetingHandler(w http.ResponseWriter, req *http.Request) {
@@ -72,13 +68,14 @@ func greetingHandler(w http.ResponseWriter, req *http.Request) {
 		who = "World"
 	}
 	if pw, ok := treetop.NewPartialWriter(w, req); ok {
-		err = treetop.StringTemplateExec(pw, []string{greeting}, who)
+		greeting.ExecuteTemplate(pw, "message", who)
 		return
 	}
+
 	// return full page instead
-	err = treetop.StringTemplateExec(w, []string{
-		shared.BaseTemplate,
-		content,
-		greeting,
-	}, struct{ Message string }{who})
+	t := template.New("base")
+	t.AddParseTree("base", base.Tree)
+	t.AddParseTree("content", content.Tree)
+	t.AddParseTree("message", greeting.Tree)
+	err = t.ExecuteTemplate(w, "base", struct{ Message string }{who})
 }

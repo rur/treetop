@@ -9,7 +9,7 @@ import (
 	"github.com/rur/treetop/examples/shared"
 
 	"github.com/rur/treetop/examples/view"
-	// "github.com/rur/treetop/examples/writer"
+	"github.com/rur/treetop/examples/writer"
 )
 
 var baseTmpl *template.Template
@@ -25,7 +25,7 @@ func main() {
 		baseTmpl.Execute(w, nil)
 	})
 	view.SetupGreeter(mux)
-	// writer.SetupGreeter(mux)
+	writer.SetupGreeter(mux)
 	fmt.Println("serving on http://0.0.0.0:3000/")
 	log.Fatal(http.ListenAndServe(":3000", mux))
 }
