@@ -40,18 +40,22 @@ The `Executor` interface was created to encapsulate responsibility for convertin
 to a HTTP handler. Custom view executor implementations have been made easier to create.
 The following implementations are supplied with the treetop package:
 
-1. `DefaultExecutor` - Loads template files from the files system, wrapper for template.ParseFiles
+1. `FileExecutor` - Loads template files from the files system, similar to template.ParseFiles
 2. `FileSystemExecutor` - resolves templates through a http.FileSystem interface 
-3. `StringTemplateExecutor` - treats view.Template string as a literal template string
-4. `DevelopmentFSExecutor` - FileSystemExecutor without caching the parsed templates
+3. `StringExecutor` - treats view.Template string as a literal template string
+4. `KeyedStringExecutor` - treats view.Template as a key to a template map
+5. `DeveloperExecutor` - Wrap any other executor and the templates will be reloaded for every request
 
 Example usage
 
-    base := NewView("base.html.tmpl", MyHandler)
+    base := NewView("base.html", MyHandler)
     content := base.NewSubView(
-        "content", "content_a.html.tmpl", MyContentAHandler)
+        "content", "content_a.html", MyContentAHandler)
 
-    exec := treetop.DefaultExecutor{}
+    exec := treetop.NewKeyedStringExecutor(map[string]string{
+        "base.html": "Base here",
+        "content_a.html": "Content A here",
+    })
     mux.Handle("/some/path", exec.NewViewHandler(content))
 
 
