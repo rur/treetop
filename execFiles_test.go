@@ -115,6 +115,50 @@ func TestFileExecutor_NewViewHandler(t *testing.T) {
 					`error template: :2: function "functhatdoesnexist" not defined`,
 			},
 		},
+		{
+			name: "with nil subview",
+			getHandler: func(exec ViewExecutor) ViewHandler {
+				base := NewView("testdata/base.html", Constant(struct {
+					Content interface{}
+					PS      interface{}
+				}{
+					Content: struct {
+						Message string
+						Sub     interface{}
+					}{
+						Message: "from base to content",
+						Sub:     "from base via content to sub",
+					},
+					PS: "from base to ps",
+				}))
+				content := base.NewSubView("content", "testdata/content.html", Constant(struct {
+					Message string
+					Sub     interface{}
+				}{
+					Message: "from content to content!",
+					Sub:     "from content to sub",
+				}))
+				content.NewDefaultSubView("sub", "testdata/sub.html", Constant("from sub to sub"))
+				content.NewSubView("never", "never.html", Noop) // nil subview
+				ps := base.NewSubView("ps", "testdata/ps.html", Constant("from ps to ps"))
+				return exec.NewViewHandler(content, ps)
+			},
+			expectPage: stripIndent(`<html><body>
+			<div id="content">
+			<p>Given from base to content</p>
+			<p id="sub">Given from base via content to sub</p>
+			</div>
+			
+			<div id="ps">Given from base to ps</div>
+			</body></html>`),
+			expectTemplate: stripIndent(`<template>
+			<div id="content">
+			<p>Given from content to content!</p>
+			<p id="sub">Given from content to sub</p>
+			</div>
+			<div id="ps">Given from ps to ps</div>
+			</template>`),
+		},
 	}
 
 	for _, tt := range tests {

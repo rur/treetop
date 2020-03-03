@@ -185,6 +185,20 @@ func TestCompileViews(t *testing.T) {
 				NewSubView("other", "other.html", Constant("other!")),
 				NewSubView("subother", "subother.html", Constant("subother!")),
 			},
+		}, {
+			name: "page include a chain of children",
+			view: func() *View {
+				base := NewView("base.html", Noop)
+				c := base.NewSubView("content", "content.html", Noop)
+				s := c.NewSubView("sub", "sub.html", Noop)
+				return s
+			}(),
+			expectPage: `
+			- View("base.html", github.com/rur/treetop.Noop)
+			  '- content: SubView("content", "content.html", github.com/rur/treetop.Noop)
+			     '- sub: SubView("sub", "sub.html", github.com/rur/treetop.Noop)
+			`,
+			expectView: `- SubView("sub", "sub.html", github.com/rur/treetop.Noop)`,
 		},
 	}
 	for _, tCase := range cases {

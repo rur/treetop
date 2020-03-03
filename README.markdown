@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/rur/treetop.svg?branch=v0.2.0)](https://travis-ci.org/rur/treetop)
+[![Build Status](https://travis-ci.org/rur/treetop.svg?branch=v0.3.0)](https://travis-ci.org/rur/treetop)
 
 # Treetop
 

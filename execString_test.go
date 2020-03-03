@@ -28,9 +28,8 @@ func TestStringExecutor_constructTemplate(t *testing.T) {
 				b.NewDefaultSubView("content", `<p id="content">hello {{ . }}!</p>`, Noop)
 				return b
 			}(),
-			data:    "world",
-			want:    `<div> base, content: <p id="content">hello world!</p> </div>`,
-			wantErr: "",
+			data: "world",
+			want: `<div> base, content: <p id="content">hello world!</p> </div>`,
 		},
 		{
 			name: "template parse error",
@@ -41,6 +40,16 @@ func TestStringExecutor_constructTemplate(t *testing.T) {
 			}(),
 			data:    "world",
 			wantErr: `template: :1: function "b" not defined`,
+		},
+		{
+			name: "with nil subviews",
+			view: func() *View {
+				b := NewView(`<div> base, content: {{ block "content" . }} default here {{ end }} </div>`, Noop)
+				b.NewSubView("content", `<p id="content">hello {{ . }}!</p>`, Noop)
+				return b
+			}(),
+			data: "world",
+			want: `<div> base, content:  default here  </div>`,
 		},
 	}
 	for _, tt := range tests {

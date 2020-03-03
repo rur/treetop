@@ -79,7 +79,9 @@ func (fe *FileSystemExecutor) constructTemplate(view *View) (*template.Template,
 			}
 		}
 		for _, sub := range v.SubViews {
-			queue.add(sub)
+			if sub != nil {
+				queue.add(sub)
+			}
 		}
 	}
 	return out, nil

@@ -174,7 +174,7 @@ func CompileViews(view *View, includes ...*View) (page, part *View, postscript [
 		// the child sub view
 		pCopy := root.Parent.Copy()
 		pCopy.SubViews[root.Defines] = root
-		root = root.Parent
+		root = pCopy
 	}
 	if root != view {
 		page, _ = insertView(root, view)

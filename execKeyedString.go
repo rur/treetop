@@ -59,19 +59,24 @@ func (kse *KeyedStringExecutor) constructTemplate(view *View) (*template.Templat
 	queue.add(view)
 
 	for !queue.empty() {
-		v, _ := queue.next()
+		v, err := queue.next()
+		if err != nil {
+			return nil, err
+		}
 		tree, ok := kse.parsed[v.Template]
 		if !ok {
 			return nil, fmt.Errorf(
 				"KeyedStringExecutor: no template found for key '%s'",
 				v.Template)
 		}
-		_, err := out.AddParseTree(v.Defines, tree)
+		_, err = out.AddParseTree(v.Defines, tree)
 		if err != nil {
 			return nil, err
 		}
 		for _, sub := range v.SubViews {
-			queue.add(sub)
+			if sub != nil {
+				queue.add(sub)
+			}
 		}
 	}
 	return out, nil

@@ -31,6 +31,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 		Sub:     "from content to sub",
 	}))
 	content.NewDefaultSubView("sub", "sub.html", Constant("from sub to sub"))
+	content.NewSubView("never", "never.html", Noop)
 	ps := base.NewSubView("ps", "ps.html", Constant("from ps to ps"))
 
 	mustExec := func(exec *KeyedStringExecutor, err error) *KeyedStringExecutor {
@@ -292,6 +293,34 @@ func TestKeyedStringExecutor_constructTemplate(t *testing.T) {
 			data:    "world",
 			wantErr: "KeyedStringExecutor: no template found for key 'content-other.html'",
 		},
+		{
+			name: "multi level default children",
+			exec: func() *KeyedStringExecutor {
+				exec, err := NewKeyedStringExecutor(map[string]string{
+					"base.html": `<div> base, content: {{ block "content" . }} default here {{ end }} </div>`,
+					"content.html": `<p id="content">
+						<h2>hello {{ . }}!</h2>
+						{{ template "sub" .}}
+					</p>`,
+					"sub.html": `<p id="sub">hello {{ . }}!</p>`,
+				})
+				if err != nil {
+					panic(err)
+				}
+				return exec
+			}(),
+			view: func() *View {
+				b := NewView("base.html", Noop)
+				c := b.NewDefaultSubView("content", "content.html", Noop)
+				c.NewDefaultSubView("sub", "sub.html", Noop)
+				return b
+			}(),
+			data: "world",
+			want: stripIndent(`<div> base, content: <p id="content">
+				<h2>hello world!</h2>
+				<p id="sub">hello world!</p>
+			</p> </div>`),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -308,7 +337,7 @@ func TestKeyedStringExecutor_constructTemplate(t *testing.T) {
 			buf := new(bytes.Buffer)
 			got.ExecuteTemplate(buf, tt.view.Defines, tt.data)
 			gotString := buf.String()
-			if gotString != tt.want {
+			if stripIndent(gotString) != stripIndent(tt.want) {
 				t.Errorf("KeyedStringExecutor.constructTemplate() got %v, want %v", gotString, tt.want)
 			}
 		})

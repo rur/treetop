@@ -9,7 +9,6 @@ import (
 
 var (
 	content = `
-{{ block "content" . }}
 <div id="content" style="text-align: center;">
 	<h1>Treetop View Greeter</h1>
 	<div>
@@ -19,27 +18,21 @@ var (
 	</div>
 	{{ template "message" .Message}}
 </div>
-{{ end }}
 	`
 	landing = `
-{{ block "message" . }}
 	<p id="message"><i>Give me someone to say hello to!</i></p>
-{{ end }}
 	`
 	greeting = `
-{{ block "message" . }}
 	<div id="message">
 		<h2>Hello, {{ . }}!</h2>
 		<p><a href="/view" treetop>Clear</a></p>
 	</div>
-{{ end }}
 	`
 )
 
 // SetupGreeter add routes for /view example endpoint
 func SetupGreeter(mux *http.ServeMux) {
 	page := treetop.NewView(
-		treetop.StringTemplateExec,
 		shared.BaseTemplate,
 		treetop.Delegate("content"), // adopt "content" handler as own template data
 	)
@@ -48,8 +41,9 @@ func SetupGreeter(mux *http.ServeMux) {
 	greetForm := content.NewSubView("message", landing, treetop.Noop)
 	greetMessage := content.NewSubView("message", greeting, greetingHandler)
 
-	mux.Handle("/view", treetop.ViewHandler(greetForm))
-	mux.Handle("/view/greet", treetop.ViewHandler(greetMessage))
+	exec := treetop.StringExecutor{}
+	mux.Handle("/view", exec.NewViewHandler(greetForm))
+	mux.Handle("/view/greet", exec.NewViewHandler(greetMessage))
 }
 
 // contentHandler loads data for the content template

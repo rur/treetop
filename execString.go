@@ -53,7 +53,9 @@ func (se *StringExecutor) constructTemplate(view *View) (*template.Template, err
 			return nil, err
 		}
 		for _, sub := range v.SubViews {
-			queue.add(sub)
+			if sub != nil {
+				queue.add(sub)
+			}
 		}
 	}
 	return out, nil
