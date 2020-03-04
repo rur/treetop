@@ -82,6 +82,11 @@ Removed `SeeOtherPage` function, the `Redirect` helper is the only redirect func
 Renamed `IsTreetopRequest` predicate to a `IsTemplateRequest`, this is more consistent with
 changes in protocol terminology.
 
+### Fixes
+
+- The `Content-Length` header is now set on all template responses.
+- Templates are no longer re-parsed for every request
+
 
 ## [0.2.0] - 2020-02-16
 

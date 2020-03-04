@@ -49,8 +49,6 @@ func SetupGreeter(mux *http.ServeMux) {
 // contentHandler loads data for the content template
 func contentHandler(rsp treetop.Response, req *http.Request) interface{} {
 	return struct {
-		// In the content template the .Message field is passed explicitly to the
-		// "message" template block.
 		Message interface{}
 	}{
 		// HandleSubView triggers the sub handler call and returns the sub template data.

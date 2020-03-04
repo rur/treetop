@@ -46,7 +46,7 @@ func landingHandler(w http.ResponseWriter, req *http.Request) {
 		}
 	}()
 	if pw, ok := treetop.NewPartialWriter(w, req); ok {
-		landing.ExecuteTemplate(pw, "landing", nil)
+		landing.ExecuteTemplate(pw, "message", nil)
 		return
 	}
 	t := template.New("base")

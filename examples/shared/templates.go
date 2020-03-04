@@ -22,7 +22,7 @@ var BaseTemplate = `
 	{{ end }}
 
 <script>TREETOP_CONFIG={/*defaults*/}</script>
-<script src="https://rawgit.com/rur/treetop-client/master/treetop.js" async></script>
+<script src="/treetop.js" async></script>
 </body>
 </html>
 	`
