@@ -91,7 +91,6 @@ func (h *TemplateHandler) PageOnly() ViewHandler {
 // Implements the procedure through which views functions and templates
 // are to be executed.
 func (h *TemplateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	// NOTE: this is pseudocode
 	resp := BeginResponse(req.Context(), w)
 	defer resp.Cancel()
 

@@ -193,7 +193,6 @@ func (rsp *ResponseWrapper) Finished() bool {
 // HandleSubView will execute the handler for a specified sub view of the current view
 // if there is no match for the name, nil will be returned.
 func (rsp *ResponseWrapper) HandleSubView(name string, req *http.Request) interface{} {
-	// NOTE: this is pseudocode
 	// don't do anything if a response has already been written
 	if rsp.finished || len(rsp.subViews) == 0 {
 		return nil
@@ -206,7 +205,6 @@ func (rsp *ResponseWrapper) HandleSubView(name string, req *http.Request) interf
 
 	subResp := rsp.WithSubViews(sub.SubViews)
 
-	// NOTE: this is pseudocode
 	// Invoke sub handler, collecting the response
 	data := sub.HandlerFunc(subResp, req)
 	if subResp.finished {
@@ -221,7 +219,6 @@ func (rsp *ResponseWrapper) HandleSubView(name string, req *http.Request) interf
 	}
 	subResp.finished = true
 
-	// NOTE: this is pseudocode
 	// Adopt status and page URL of sub handler (as applicable)
 	rsp.Status(subResp.status)
 	if subResp.pageURLSpecified {
