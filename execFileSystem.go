@@ -12,8 +12,9 @@ import (
 // The underlying file system is abstracted through the http.FileSystem interface to allow for
 // in-memory use.
 type FileSystemExecutor struct {
-	FS   http.FileSystem
-	exec Executor
+	FS    http.FileSystem
+	Funcs template.FuncMap
+	exec  Executor
 }
 
 // NewViewHandler creates a ViewHandler from a View endpoint definition treating
@@ -46,7 +47,7 @@ func (fe *FileSystemExecutor) constructTemplate(view *View) (*template.Template,
 		v, _ := queue.next()
 		var t *template.Template
 		if out == nil {
-			out = template.New(v.Defines)
+			out = template.New(v.Defines).Funcs(fe.Funcs)
 			t = out
 		} else {
 			t = out.New(v.Defines)

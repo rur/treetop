@@ -3,15 +3,15 @@ package treetop
 import (
 	"fmt"
 	"html/template"
-	"text/template/parse"
 )
 
 // KeyedStringExecutor builds handlers templates from a map
 // of available templates. The view templates are treated as
 // keys into the map for the purpose of build handlers.
 type KeyedStringExecutor struct {
-	exec   Executor
-	parsed map[string]*parse.Tree
+	Templates map[string]string
+	Funcs     template.FuncMap
+	exec      Executor
 }
 
 // NewKeyedStringExecutor will parse the templates supplied and
@@ -20,17 +20,11 @@ type KeyedStringExecutor struct {
 // If parsing fails for any of the templates the error will be returned
 func NewKeyedStringExecutor(templates map[string]string) (*KeyedStringExecutor, error) {
 	exec := &KeyedStringExecutor{
-		parsed: make(map[string]*parse.Tree),
+		Templates: make(map[string]string),
 	}
-
 	for key, str := range templates {
-		t, err := template.New(key).Parse(str)
-		if err != nil {
-			return nil, err
-		}
-		exec.parsed[key] = t.Tree
+		exec.Templates[key] = str
 	}
-
 	return exec, nil
 }
 
@@ -53,24 +47,27 @@ func (kse *KeyedStringExecutor) constructTemplate(view *View) (*template.Templat
 	if view == nil {
 		return nil, nil
 	}
-	out := template.New(view.Defines)
+	var out *template.Template
 
 	queue := viewQueue{}
 	queue.add(view)
 
 	for !queue.empty() {
-		v, err := queue.next()
-		if err != nil {
-			return nil, err
+		v, _ := queue.next()
+		var t *template.Template
+		if out == nil {
+			out = template.New(v.Defines).Funcs(kse.Funcs)
+			t = out
+		} else {
+			t = out.New(v.Defines)
 		}
-		tree, ok := kse.parsed[v.Template]
+		templateStr, ok := kse.Templates[v.Template]
 		if !ok {
 			return nil, fmt.Errorf(
 				"KeyedStringExecutor: no template found for key '%s'",
 				v.Template)
 		}
-		_, err = out.AddParseTree(v.Defines, tree)
-		if err != nil {
+		if _, err := t.Parse(templateStr); err != nil {
 			return nil, err
 		}
 		for _, sub := range v.SubViews {

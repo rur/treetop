@@ -13,7 +13,8 @@ import (
 // 		mux.Handle("/hello", exec.NewViewHandler(v))
 //
 type StringExecutor struct {
-	exec Executor
+	Funcs template.FuncMap
+	exec  Executor
 }
 
 // NewViewHandler creates a ViewHandler from a View endpoint definition treating
@@ -44,7 +45,7 @@ func (se *StringExecutor) constructTemplate(view *View) (*template.Template, err
 		v, _ := queue.next()
 		var t *template.Template
 		if out == nil {
-			out = template.New(v.Defines)
+			out = template.New(v.Defines).Funcs(se.Funcs)
 			t = out
 		} else {
 			t = out.New(v.Defines)

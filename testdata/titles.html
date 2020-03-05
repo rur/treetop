@@ -1,0 +1,6 @@
+<div>
+    <p>Input: {{printf "%q" .}}</p>
+    <p>Output 0: {{title .}}</p>
+    <p>Output 1: {{title . | printf "%q"}}</p>
+    <p>Output 2: {{printf "%q" . | title}}</p>
+</div>

@@ -2,7 +2,9 @@ package treetop
 
 import (
 	"bytes"
+	"html/template"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -80,7 +82,7 @@ func TestStringExecutor_NewViewHandler(t *testing.T) {
 	standardHandler := func(exec ViewExecutor) ViewHandler {
 		base := NewView(`<html><body>
 				{{ template "content" .Content }}
-				
+
 				{{ block "ps" .PS }}
 				<p id="ps">Default {{ . }}</p>
 				{{ end }}
@@ -131,7 +133,7 @@ func TestStringExecutor_NewViewHandler(t *testing.T) {
 			<p>Given from base to content</p>
 			<p id="sub">Given from base via content to sub</p>
 			</div>
-			
+
 			<div id="ps">Given from base to ps</div>
 			</body></html>`),
 			expectTemplate: stripIndent(`<template>
@@ -189,7 +191,7 @@ func TestStringExecutor_NewViewHandler(t *testing.T) {
 			<p>Given from base to content</p>
 			<p id="sub">Given from base via content to sub</p>
 			</div>
-			
+
 			<div id="ps">Given from base to ps</div>
 			</body></html>`),
 			expectTemplate: "Not Acceptable\n",
@@ -263,5 +265,35 @@ func TestStringExecutor_NewViewHandler(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestStringExecutor_FuncMap(t *testing.T) {
+	exec := StringExecutor{
+		Funcs: template.FuncMap{
+			"title": strings.Title,
+		},
+	}
+	v := NewView(`
+	<div>
+		<p>Input: {{printf "%q" .}}</p>
+		<p>Output 0: {{title .}}</p>
+		<p>Output 1: {{title . | printf "%q"}}</p>
+		<p>Output 2: {{printf "%q" . | title}}</p>
+	</div>
+	`, Constant("the go programming language"))
+	h := exec.NewViewHandler(v)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, mockRequest("/some/path", "*/*"))
+	gotPage := stripIndent(sDumpBody(rec))
+	if gotPage != stripIndent(`
+	<div>
+		<p>Input: &#34;the go programming language&#34;</p>
+		<p>Output 0: The Go Programming Language</p>
+		<p>Output 1: &#34;The Go Programming Language&#34;</p>
+		<p>Output 2: &#34;The Go Programming Language&#34;</p>
+	</div>
+	`) {
+		t.Errorf("Expecting title case, got\n%s", gotPage)
 	}
 }

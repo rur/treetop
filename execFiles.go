@@ -10,7 +10,8 @@ import (
 
 // FileExecutor loads view templates as a path from a template file.
 type FileExecutor struct {
-	exec Executor
+	Funcs template.FuncMap
+	exec  Executor
 }
 
 // NewViewHandler creates a ViewHandler from a View endpoint definition treating
@@ -43,7 +44,7 @@ func (fe *FileExecutor) constructTemplate(view *View) (*template.Template, error
 		v, _ := queue.next()
 		var t *template.Template
 		if out == nil {
-			out = template.New(v.Defines)
+			out = template.New(v.Defines).Funcs(fe.Funcs)
 			t = out
 		} else {
 			t = out.New(v.Defines)

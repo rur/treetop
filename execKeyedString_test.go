@@ -55,7 +55,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 			exec: mustExec(NewKeyedStringExecutor(map[string]string{
 				"base.html": `<html><body>
 				{{ template "content" .Content }}
-				
+
 				{{ block "ps" .PS }}
 				<p id="ps">Default {{ . }}</p>
 				{{ end }}
@@ -69,7 +69,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 			<p>Given from base to content</p>
 			<p id="sub">Given from base via content to sub</p>
 			</div>
-			
+
 			<div id="ps">Given from base to ps</div>
 			</body></html>`),
 			expectTemplate: stripIndent(`<template>
@@ -96,7 +96,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 			exec: mustExec(NewKeyedStringExecutor(map[string]string{
 				"base.html": `<html><body>
 				{{ template "content" .Content }}
-				
+
 				{{ block "ps" .PS }}
 				<p id="ps">Default {{ . }}</p>
 				{{ end }}
@@ -110,7 +110,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 			<p>Given from base to content</p>
 			<p id="sub">Given from base via content to sub</p>
 			</div>
-			
+
 			<div id="ps">Given from base to ps</div>
 			</body></html>`),
 			expectTemplate: "Not Acceptable\n",
@@ -121,7 +121,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 			exec: mustExec(NewKeyedStringExecutor(map[string]string{
 				"base.html": `<html><body>
 				{{ template "content" .Content }}
-				
+
 				{{ block "ps" .PS }}
 				<p id="ps">Default {{ . }}</p>
 				{{ end }}
@@ -384,7 +384,7 @@ func TestNewKeyedStringExecutor(t *testing.T) {
 				return
 			}
 			buf := new(bytes.Buffer)
-			tpl, err := template.New("test").AddParseTree("test", got.parsed[tt.key])
+			tpl, err := template.New("test").Parse(got.Templates[tt.key])
 			if err != nil {
 				t.Error(err)
 			}
@@ -479,5 +479,38 @@ func Test_stripIndent(t *testing.T) {
 				t.Errorf("stripIndent() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestKeyedStringExecutor_FuncMap(t *testing.T) {
+	exec := KeyedStringExecutor{
+		Templates: map[string]string{
+			"test.html": `
+			<div>
+				<p>Input: {{printf "%q" .}}</p>
+				<p>Output 0: {{title .}}</p>
+				<p>Output 1: {{title . | printf "%q"}}</p>
+				<p>Output 2: {{printf "%q" . | title}}</p>
+			</div>
+			`,
+		},
+		Funcs: template.FuncMap{
+			"title": strings.Title,
+		},
+	}
+	v := NewView("test.html", Constant("the go programming language"))
+	h := exec.NewViewHandler(v)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, mockRequest("/some/path", "*/*"))
+	gotPage := stripIndent(sDumpBody(rec))
+	if gotPage != stripIndent(`
+	<div>
+		<p>Input: &#34;the go programming language&#34;</p>
+		<p>Output 0: The Go Programming Language</p>
+		<p>Output 1: &#34;The Go Programming Language&#34;</p>
+		<p>Output 2: &#34;The Go Programming Language&#34;</p>
+	</div>
+	`) {
+		t.Errorf("Expecting title case, got\n%s", gotPage)
 	}
 }

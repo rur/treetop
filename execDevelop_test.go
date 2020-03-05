@@ -1,7 +1,6 @@
 package treetop
 
 import (
-	"html/template"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -23,8 +22,7 @@ func TestDeveloperExecutor_UpdateTemplate(t *testing.T) {
 	handler.ServeHTTP(rec, req)
 	gotBefore := sDumpBody(rec)
 
-	update := template.Must(template.New("test").Parse("<p>After {{ . }}</p>"))
-	keyed.parsed["test"] = update.Tree
+	keyed.Templates["test"] = "<p>After {{ . }}</p>"
 	rec = httptest.NewRecorder()
 	handler.ServeHTTP(rec, req)
 	gotAfter := sDumpBody(rec)
@@ -64,7 +62,7 @@ func TestDeveloperExecutor_RenderErrors(t *testing.T) {
 		stripIndent(`
 		<pre>
 			<code>
-				template: test.html:1:11: executing &#34;test&#34; at &lt;.FAIL&gt;: can&#39;t evaluate field FAIL in type string
+				template: test:1:11: executing &#34;test&#34; at &lt;.FAIL&gt;: can&#39;t evaluate field FAIL in type string
 			</code>
 		</pre>`),
 	) {
