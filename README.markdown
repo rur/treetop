@@ -4,9 +4,9 @@
 
 ## Hierarchical Web Handlers
 
-Take advantage of Go's nested template support<sup>1</sup> to create handlers that mix and match reusable templates and functions.
+Mix and match templates and functions to create HTML endpoints. Treetop makes it more convenient to take advantage of nested templates<sup>1</sup> in Go web applications. Thus you can assemble many endpoints, reusing common structural elements.
 
-The following example defines a simple view hierarchy which is used it to generate handlers for two routes: `"/content_a"` and `"/content_b"`.
+Example 1, a hierarchy of views are used to bind the routes `"/content_a"` and `"/content_b"` to composite handlers.
 
     base := treetop.NewView(
         "base.html.tmpl", BaseHandler)
@@ -23,7 +23,7 @@ The following example defines a simple view hierarchy which is used it to genera
     mux.Handle("/content_a", exec.NewViewHandler(contentA, nav))
     mux.Handle("/content_b", exec.NewViewHandler(contentB, nav))
 
-Example `"base.html.tmpl"`
+Example z `"base.html.tmpl"`
 
 	...
 	<div id="base">
@@ -35,24 +35,17 @@ Example `"base.html.tmpl"`
 	</div>
 	...
 
-This is beneficial for HTML web apps which have many endpoints using similar structural components.
+There can be multiple levels of nesting, as needed.
 
-### No 3rd-Party Dependencies!
+### No Third-Party Dependencies
 
 The treetop package wraps features of the Go standard library only, mostly within "net/http" and "html/template".
-
-## Example
-
-A very basic example can be run from this repo <sup>[needs improvement]</sup>.
-
-    $ go run example/
-
-Tip. Activate your network tab to observe what's going on.
 
 
 ##  HTML Template Protocol
 
-Self-contained views have a special benefit, sections of a page can be rendered in isolation. Thus, Treetop handlers are capable of generating a list of HTML template fragments which can be 'applied' to the requesting document.
+Hot-swap sections of a page. Views are self-contained, they can be rendered in isolation. Treetop handlers are capable of generating template fragments which can be 'applied' to the loaded document. The following illustrates a template request.
+
 
     > GET / HTTP/1.1
       Accept: application/x.treetop-html-template+xml
@@ -66,25 +59,32 @@ Self-contained views have a special benefit, sections of a page can be rendered 
           <div id="nav">...</div>
       </template>
 
-There are many ways that this can improve user experience <sup>[docs needed]</sup>. A [Treetop Client Library](https://github.com/rur/treetop-client) is available to manage these requests using XHR. It applies templates to the DOM with a very simple find and replace mechanism.
+There are many ways this can be used to improve user experience <sup>[docs needed]</sup>. A [Treetop Client Library](https://github.com/rur/treetop-client) is available to help manage these requests using XHR. The JS client applies template fragments to the DOM with a very simple find and replace mechanism.
 
-### Protocol Examples:
+## Example
+
+A very basic example can be run from this repo <sup>[needs improvement]</sup>.
+
+    $ go run example/
+
+Tip. Activate your network tab to observe what's going on.
+
+### Other Examples:
 
 - [Todo \*Without\* MVC](https://github.com/rur/todowithoutmvc) - Treetop implementation of [TodoMVC](http://todomvc.com) app using the template protocol.
 
 ## Template Executor
 
-The 'Executor' is responsible for loading and configuring the templates. It create a [HTTP Handler](https://golang.org/pkg/net/http/#Handler) which will manage the plumbing to serve requests between loading data and executing templates. You can implement your own template loader <sup>[docs needed]</sup>, the following are provided:
+The 'Executor' is responsible for loading and configuring the templates. It creates a [HTTP Handler](https://golang.org/pkg/net/http/#Handler) which will manage the plumbing between loading data and executing templates. You can implement your own template loader <sup>[docs needed]</sup>, but the following are provided:
 - `FileExecutor` - load template files using os.Open
 - `FileSytemExecutor` - loads templates from a supplied http.FileSystem instance
 - `StringExecutor` - treat the view template property as an inline template string
 - `KeyedStringExecutor` - treat the view template property is key into a template map
 - `DeveloperExecutor` - force per request template parsing
 
+## View Handlers Function
 
-## View Handlers
-
-View handlers load data for a corresponding Go template. Just as nested templates are embedded in their parent, nested handler data is embedded in the data of it's parent. Example of a child handler passing data _back_ to the parent,
+View handler functions load data for a corresponding Go template. Just as nested templates are embedded in their parent, nested handler data is embedded in the data of it's parent. Example of a parent handler loading data from a child handler,
 
     func ParentHandler(rsp treetop.Response, req *http.Request) interface{} {
         return struct {
@@ -96,7 +96,7 @@ View handlers load data for a corresponding Go template. Just as nested template
         }
     }
 
-Data is subsequently passed _down_ within the template like so,
+Data is subsequently passed down within the template like so,
 
     <div id="parent">
         ...
@@ -118,10 +118,7 @@ The Treetop Go library provides utilities for writing ad-hoc template responses 
 
 ## Client Library
 
-The client library will parse the HTML template and use those fragments to update the DOM. The `id` attribute of each top level element will be matched to an existing node in the document.
-
-* Matched elements in the current DOM will be replaced.
-* Unmatched contents of the template will be ignored.
+The client library is used to send template requests from the browser. Response template fragments are handled mechanically so there are no callbacks or other IO boilerplate involved.
 
 See [Client Library](https://github.com/rur/treetop-client) for more information.
 
