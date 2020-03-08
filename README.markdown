@@ -9,8 +9,7 @@ from which HTTP handlers can be constructed.
 
 HTML applications typically share a lot of common structure between endpoints.
 Composable templates are supported in Go<sup>1</sup> to reduce HTML boilerplate.
-Treetop combines a function with each template to make nesting
-easier to manage, reducing boilerplate in request handlers.
+Treetop combines a function with each template to make nesting easier to manage.
 
 _Example of a basic hierarchy_
 
@@ -98,7 +97,7 @@ using XHR and applies template fragments to the DOM with a simple find and repla
 
 ## Example
 
-A very basic example can be run from this repo <sup>[needs improvement]</sup>.
+An example app can be run from this repo <sup>[needs improvement]</sup>.
 
     $ go run ./example/
 
