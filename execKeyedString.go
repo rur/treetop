@@ -18,14 +18,14 @@ type KeyedStringExecutor struct {
 // return an Executor capable of building TemplateHander instances
 // using the parsed trees to construct templates.
 // If parsing fails for any of the templates the error will be returned
-func NewKeyedStringExecutor(templates map[string]string) (*KeyedStringExecutor, error) {
+func NewKeyedStringExecutor(templates map[string]string) *KeyedStringExecutor {
 	exec := &KeyedStringExecutor{
 		Templates: make(map[string]string),
 	}
 	for key, str := range templates {
 		exec.Templates[key] = str
 	}
-	return exec, nil
+	return exec
 }
 
 // NewViewHandler creates a ViewHandler from a View endpoint definition treating

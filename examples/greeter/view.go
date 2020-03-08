@@ -9,19 +9,26 @@ import (
 
 // GreetViewRoutes register routes for /view example endpoint
 func GreetViewRoutes(mux *http.ServeMux) {
-	page := treetop.NewView(
-		assets.BaseHTML,
-		treetop.Delegate("content"), // adopt "content" handler as own template data
-	)
-	page.NewDefaultSubView("nav", assets.NavHTML("View"), treetop.Noop)
-	content := page.NewSubView("content", ContentHTML("View", "/view"), contentViewHandler)
+	page := treetop.NewView("base.html", treetop.Delegate("content"))
+	_ = page.NewDefaultSubView("nav", "nav.html", treetop.Noop)
+	content := page.NewSubView("content", "content.html", contentViewHandler)
+	greetForm := content.NewSubView("message", "landing.html", treetop.Noop)
+	greetMessage := content.NewSubView("message", "greeting.html", greetingViewHandler)
 
-	greetForm := content.NewSubView("message", LandingHTML, treetop.Noop)
-	greetMessage := content.NewSubView("message", GreetingHTML("/view"), greetingViewHandler)
+	exec := treetop.NewKeyedStringExecutor(map[string]string{
+		"base.html":     assets.BaseHTML,
+		"nav.html":      assets.NavHTML("View"),
+		"content.html":  ContentHTML("View", "/view"),
+		"landing.html":  LandingHTML,
+		"greeting.html": GreetingHTML("/view"),
+	})
 
-	exec := treetop.StringExecutor{}
 	mux.Handle("/view", exec.NewViewHandler(greetForm))
 	mux.Handle("/view/greet", exec.NewViewHandler(greetMessage))
+
+	if errs := exec.FlushErrors(); len(errs) != 0 {
+		panic(errs.Error())
+	}
 }
 
 // contentViewHandler loads data for the content template

@@ -34,13 +34,6 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 	content.NewSubView("never", "never.html", Noop)
 	ps := base.NewSubView("ps", "ps.html", Constant("from ps to ps"))
 
-	mustExec := func(exec *KeyedStringExecutor, err error) *KeyedStringExecutor {
-		if err != nil {
-			panic(err)
-		}
-		return exec
-	}
-
 	tests := []struct {
 		name           string
 		exec           *KeyedStringExecutor
@@ -52,7 +45,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 	}{
 		{
 			name: "functional example",
-			exec: mustExec(NewKeyedStringExecutor(map[string]string{
+			exec: NewKeyedStringExecutor(map[string]string{
 				"base.html": `<html><body>
 				{{ template "content" .Content }}
 
@@ -63,7 +56,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 				"content.html": "<div id=\"content\">\n<p>Given {{ .Message }}</p>\n{{ template \"sub\" .Sub }}\n</div>",
 				"sub.html":     `<p id="sub">Given {{ . }}</p>`,
 				"ps.html":      `<div id="ps">Given {{ . }}</div>`,
-			})),
+			}),
 			expectPage: stripIndent(`<html><body>
 			<div id="content">
 			<p>Given from base to content</p>
@@ -82,7 +75,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 		},
 		{
 			name:           "missing base template error",
-			exec:           mustExec(NewKeyedStringExecutor(map[string]string{})),
+			exec:           NewKeyedStringExecutor(map[string]string{}),
 			expectPage:     "Not Acceptable\n",
 			expectTemplate: "Not Acceptable\n",
 			expectErrors: []string{
@@ -93,7 +86,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 		},
 		{
 			name: "page only",
-			exec: mustExec(NewKeyedStringExecutor(map[string]string{
+			exec: NewKeyedStringExecutor(map[string]string{
 				"base.html": `<html><body>
 				{{ template "content" .Content }}
 
@@ -104,7 +97,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 				"content.html": "<div id=\"content\">\n<p>Given {{ .Message }}</p>\n{{ template \"sub\" .Sub }}\n</div>",
 				"sub.html":     `<p id="sub">Given {{ . }}</p>`,
 				"ps.html":      `<div id="ps">Given {{ . }}</div>`,
-			})),
+			}),
 			expectPage: stripIndent(`<html><body>
 			<div id="content">
 			<p>Given from base to content</p>
@@ -118,7 +111,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 		},
 		{
 			name: "template only",
-			exec: mustExec(NewKeyedStringExecutor(map[string]string{
+			exec: NewKeyedStringExecutor(map[string]string{
 				"base.html": `<html><body>
 				{{ template "content" .Content }}
 
@@ -129,7 +122,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 				"content.html": "<div id=\"content\">\n<p>Given {{ .Message }}</p>\n{{ template \"sub\" .Sub }}\n</div>",
 				"sub.html":     `<p id="sub">Given {{ . }}</p>`,
 				"ps.html":      `<div id="ps">Given {{ . }}</div>`,
-			})),
+			}),
 			expectPage: "Not Acceptable\n",
 			expectTemplate: stripIndent(`<template>
 			<div id="content">
@@ -190,11 +183,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 }
 
 func TestKeyedStringExecutor_NewViewHandler_NilView(t *testing.T) {
-	exec, err := NewKeyedStringExecutor(nil)
-	if err != nil {
-		t.Error("Error creating nil keyed executor:", err)
-		return
-	}
+	exec := NewKeyedStringExecutor(nil)
 	handler := exec.NewViewHandler(nil)
 
 	rec := httptest.NewRecorder()
@@ -238,15 +227,9 @@ func TestKeyedStringExecutor_constructTemplate(t *testing.T) {
 	}{
 		{
 			name: "basic",
-			exec: func() *KeyedStringExecutor {
-				exec, err := NewKeyedStringExecutor(map[string]string{
-					"test.key": "<p>hello {{ . }}!</p>",
-				})
-				if err != nil {
-					panic(err)
-				}
-				return exec
-			}(),
+			exec: NewKeyedStringExecutor(map[string]string{
+				"test.key": "<p>hello {{ . }}!</p>",
+			}),
 			view:    NewView("test.key", Noop),
 			data:    "world",
 			want:    "<p>hello world!</p>",
@@ -254,16 +237,10 @@ func TestKeyedStringExecutor_constructTemplate(t *testing.T) {
 		},
 		{
 			name: "with subviews",
-			exec: func() *KeyedStringExecutor {
-				exec, err := NewKeyedStringExecutor(map[string]string{
-					"base.html":    `<div> base, content: {{ block "content" . }} default here {{ end }} </div>`,
-					"content.html": `<p id="content">hello {{ . }}!</p>`,
-				})
-				if err != nil {
-					panic(err)
-				}
-				return exec
-			}(),
+			exec: NewKeyedStringExecutor(map[string]string{
+				"base.html":    `<div> base, content: {{ block "content" . }} default here {{ end }} </div>`,
+				"content.html": `<p id="content">hello {{ . }}!</p>`,
+			}),
 			view: func() *View {
 				b := NewView("base.html", Noop)
 				b.NewDefaultSubView("content", "content.html", Noop)
@@ -275,16 +252,10 @@ func TestKeyedStringExecutor_constructTemplate(t *testing.T) {
 		},
 		{
 			name: "key not found",
-			exec: func() *KeyedStringExecutor {
-				exec, err := NewKeyedStringExecutor(map[string]string{
-					"base.html":    `<div> base, content: {{ block "content" . }} default here {{ end }} </div>`,
-					"content.html": `<p id="content">hello {{ . }}!</p>`,
-				})
-				if err != nil {
-					panic(err)
-				}
-				return exec
-			}(),
+			exec: NewKeyedStringExecutor(map[string]string{
+				"base.html":    `<div> base, content: {{ block "content" . }} default here {{ end }} </div>`,
+				"content.html": `<p id="content">hello {{ . }}!</p>`,
+			}),
 			view: func() *View {
 				b := NewView("base.html", Noop)
 				b.NewDefaultSubView("content", "content-other.html", Noop)
@@ -295,20 +266,14 @@ func TestKeyedStringExecutor_constructTemplate(t *testing.T) {
 		},
 		{
 			name: "multi level default children",
-			exec: func() *KeyedStringExecutor {
-				exec, err := NewKeyedStringExecutor(map[string]string{
-					"base.html": `<div> base, content: {{ block "content" . }} default here {{ end }} </div>`,
-					"content.html": `<p id="content">
+			exec: NewKeyedStringExecutor(map[string]string{
+				"base.html": `<div> base, content: {{ block "content" . }} default here {{ end }} </div>`,
+				"content.html": `<p id="content">
 						<h2>hello {{ . }}!</h2>
 						{{ template "sub" .}}
 					</p>`,
-					"sub.html": `<p id="sub">hello {{ . }}!</p>`,
-				})
-				if err != nil {
-					panic(err)
-				}
-				return exec
-			}(),
+				"sub.html": `<p id="sub">hello {{ . }}!</p>`,
+			}),
 			view: func() *View {
 				b := NewView("base.html", Noop)
 				c := b.NewDefaultSubView("content", "content.html", Noop)
@@ -371,15 +336,7 @@ func TestNewKeyedStringExecutor(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewKeyedStringExecutor(tt.templates)
-			if err != nil {
-				if tt.wantErr == "" {
-					t.Errorf("Unexpected error: %s", err)
-				} else if tt.wantErr != err.Error() {
-					t.Errorf("NewKeyedStringExecutor() error = %v, wantErr %v", err, tt.wantErr)
-				}
-				return
-			}
+			got := NewKeyedStringExecutor(tt.templates)
 			if tt.key == "" {
 				return
 			}

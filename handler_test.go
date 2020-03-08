@@ -9,7 +9,7 @@ import (
 )
 
 func setupTemplateHandler() ViewHandler {
-	exec, err := NewKeyedStringExecutor(map[string]string{
+	exec := NewKeyedStringExecutor(map[string]string{
 		"base.html": strings.Join([]string{
 			`<!DOCTYPE html>`,
 			`<html>`,
@@ -35,9 +35,6 @@ func setupTemplateHandler() ViewHandler {
 		"override-nav.html": `<div id="nav">hello {{ . }}</div>`,
 		"sub-content.html":  `<div id="sub-content">hello {{ . }}</div>`,
 	})
-	if err != nil {
-		panic(err)
-	}
 
 	base := NewView("base.html", func(resp Response, req *http.Request) interface{} {
 		return struct {

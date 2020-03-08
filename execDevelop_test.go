@@ -8,15 +8,15 @@ import (
 )
 
 func TestDeveloperExecutor_UpdateTemplate(t *testing.T) {
-	keyed, err := NewKeyedStringExecutor(map[string]string{
+	keyed := NewKeyedStringExecutor(map[string]string{
 		"test": "<p>Before {{ . }}</p>",
 	})
-	if err != nil {
-		t.Error("Failed to create keyed executor", err)
-		return
-	}
 	dev := DeveloperExecutor{keyed}
 	handler := dev.NewViewHandler(NewView("test", Constant("from handler")))
+	if errs := dev.FlushErrors(); len(errs) != 0 {
+		t.Error("Template errors", errs)
+	}
+
 	rec := httptest.NewRecorder()
 	req := mockRequest("/some/path", "*/*")
 	handler.ServeHTTP(rec, req)
@@ -36,7 +36,7 @@ func TestDeveloperExecutor_UpdateTemplate(t *testing.T) {
 }
 
 func TestDeveloperExecutor_RenderErrors(t *testing.T) {
-	keyed, err := NewKeyedStringExecutor(map[string]string{
+	keyed := NewKeyedStringExecutor(map[string]string{
 		"base.html": `
 		<div>
 			{{ template "test" . }}
@@ -44,14 +44,13 @@ func TestDeveloperExecutor_RenderErrors(t *testing.T) {
 		`,
 		"test.html": "<p>Test {{ .FAIL }}</p>",
 	})
-	if err != nil {
-		t.Error("Failed to create keyed executor", err)
-		return
-	}
 	dev := DeveloperExecutor{keyed}
 	base := NewView("base.html", Delegate("test"))
 	view := base.NewSubView("test", "test.html", Constant("data"))
 	handler := dev.NewViewHandler(view)
+	if errs := dev.FlushErrors(); len(errs) != 0 {
+		t.Error("Template errors", errs)
+	}
 	rec := httptest.NewRecorder()
 	req := mockRequest("/some/path", "*/*")
 	handler.ServeHTTP(rec, req)
@@ -71,7 +70,7 @@ func TestDeveloperExecutor_RenderErrors(t *testing.T) {
 }
 
 func TestDeveloperExecutor_PageOnly(t *testing.T) {
-	keyed, err := NewKeyedStringExecutor(map[string]string{
+	keyed := NewKeyedStringExecutor(map[string]string{
 		"base.html": `
 		<div>
 			{{ template "test" . }}
@@ -79,14 +78,13 @@ func TestDeveloperExecutor_PageOnly(t *testing.T) {
 		`,
 		"test.html": "<p>Test {{ . }}</p>",
 	})
-	if err != nil {
-		t.Error("Failed to create keyed executor", err)
-		return
-	}
 	dev := DeveloperExecutor{keyed}
 	base := NewView("base.html", Delegate("test"))
 	view := base.NewSubView("test", "test.html", Constant("data"))
 	handler := dev.NewViewHandler(view).PageOnly()
+	if errs := dev.FlushErrors(); len(errs) != 0 {
+		t.Error("Template errors", errs)
+	}
 	rec := httptest.NewRecorder()
 	req := mockRequest("/some/path", "*/*")
 	handler.ServeHTTP(rec, req)
@@ -116,7 +114,7 @@ func TestDeveloperExecutor_PageOnly(t *testing.T) {
 }
 
 func TestDeveloperExecutor_FragmentOnly(t *testing.T) {
-	keyed, err := NewKeyedStringExecutor(map[string]string{
+	keyed := NewKeyedStringExecutor(map[string]string{
 		"base.html": `
 		<div>
 			{{ template "test" . }}
@@ -124,14 +122,13 @@ func TestDeveloperExecutor_FragmentOnly(t *testing.T) {
 		`,
 		"test.html": "<p>Test {{ . }}</p>",
 	})
-	if err != nil {
-		t.Error("Failed to create keyed executor", err)
-		return
-	}
 	dev := DeveloperExecutor{keyed}
 	base := NewView("base.html", Delegate("test"))
 	view := base.NewSubView("test", "test.html", Constant("data"))
 	handler := dev.NewViewHandler(view).FragmentOnly()
+	if errs := dev.FlushErrors(); len(errs) != 0 {
+		t.Error("Template errors", errs)
+	}
 	rec := httptest.NewRecorder()
 	req := mockRequest("/some/path", "*/*")
 	handler.ServeHTTP(rec, req)
