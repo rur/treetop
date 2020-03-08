@@ -39,6 +39,7 @@ func landingWriteHandler(w http.ResponseWriter, req *http.Request) {
 	}{
 		Value: req.URL.Query().Get("name"),
 	}
+	w.Header().Set("Vary", "Accept")
 	if pw, ok := treetop.NewPartialWriter(w, req); ok {
 		// template request
 		err = landingTemplate.ExecuteTemplate(pw, "message", d)
@@ -60,6 +61,7 @@ func greetingWriteHandler(w http.ResponseWriter, req *http.Request) {
 
 	msg := getGreetingQuery(req)
 
+	w.Header().Set("Vary", "Accept")
 	if pw, ok := treetop.NewPartialWriter(w, req); ok {
 		// template request
 		err = greetingTemplate.ExecuteTemplate(pw, "message", msg)
