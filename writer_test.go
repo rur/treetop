@@ -318,26 +318,27 @@ func Test_hexEscapeNonASCII(t *testing.T) {
 			want: "hello world!!",
 		},
 		{
-			name: "single character",
-			s:    "☆",
-			want: "%e2%98%86",
-		},
-		{
-			name: "more ASCII",
+			name: "ASCII digits",
 			s:    "abc123",
 			want: "abc123",
 		},
 		{
-			name: "multile characters",
+			name: "Single white star, three byte range",
+			s:    "☆",
+			want: "%e2%98%86",
+		},
+		{
+			name: "multile characters with diaeresis",
 			s:    "äöü",
 			want: "%c3%a4%c3%b6%c3%bc",
 		},
 		{
+			name: "Latin small letter c with acute",
 			s:    "ć",
 			want: "%c4%87",
 		},
 		{
-			name: "special characters",
+			name: "ASCII special characters",
 			s:    "@*_+-./",
 			want: "@*_+-./",
 		},
