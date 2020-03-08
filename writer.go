@@ -1,10 +1,11 @@
 package treetop
 
 import (
-	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
+	"unicode/utf8"
 )
 
 const (
@@ -14,7 +15,7 @@ const (
 
 // Writer is an interface for writing HTTP responses that conform to the Treetop protocol
 type Writer interface {
-	io.Writer
+	http.ResponseWriter
 	Status(int)
 	DesignatePageURL(string)
 	ReplacePageURL(string)
@@ -23,7 +24,7 @@ type Writer interface {
 // writer wraps a http.ResponseWriter instance, to set the appropriate
 // headers based upon the treetop prototcol
 type writer struct {
-	responseWriter    http.ResponseWriter
+	http.ResponseWriter
 	status            int
 	responseURLExists bool
 	responseURL       string
@@ -63,28 +64,39 @@ func (tw *writer) ReplacePageURL(uri string) {
 	tw.replaceURLState = true
 }
 
+// WriteHeader will flush all headers including treetop headers to the
+// underlying response writer instance
+func (tw *writer) WriteHeader(status int) {
+	if tw.responseURLExists {
+		pageURL := tw.responseURL
+		// attempt to normalize using url lib
+		respURI, err := url.Parse(pageURL)
+		if err == nil {
+			pageURL = respURI.String()
+		}
+		tw.ResponseWriter.Header().Set("X-Page-URL", hexEscapeNonASCII(pageURL))
+		if tw.replaceURLState {
+			tw.ResponseWriter.Header().Set("X-Response-History", "replace")
+		}
+	}
+	tw.ResponseWriter.Header().Set("Content-Type", TemplateContentType)
+	tw.ResponseWriter.WriteHeader(status)
+	tw.written = true
+}
+
 // Write will add the necessary headers to the HTTP response
 // and output the supplied bytes in the response body
 func (tw *writer) Write(p []byte) (n int, err error) {
 	if tw.written {
-		return tw.responseWriter.Write(p)
+		return tw.ResponseWriter.Write(p)
 	}
-	if tw.responseURLExists {
-		respURI, err := url.Parse(tw.responseURL)
-		if err != nil {
-			return 0, err
-		}
-		tw.responseWriter.Header().Set("X-Page-URL", respURI.RequestURI())
-		if tw.replaceURLState {
-			tw.responseWriter.Header().Set("X-Response-History", "replace")
-		}
-	}
-	tw.responseWriter.Header().Set("Content-Type", TemplateContentType)
 	if tw.status > 0 {
-		tw.responseWriter.WriteHeader(tw.status)
+		tw.WriteHeader(tw.status)
+	} else {
+		tw.WriteHeader(http.StatusOK)
 	}
 	tw.written = true
-	return tw.responseWriter.Write(p)
+	return tw.ResponseWriter.Write(p)
 }
 
 // NewPartialWriter will check if the client accepts the template content type.
@@ -132,10 +144,35 @@ func NewFragmentWriter(w http.ResponseWriter, req *http.Request) (Writer, bool) 
 	for _, accept := range strings.Split(req.Header.Get("Accept"), ";") {
 		if strings.ToLower(strings.TrimSpace(accept)) == TemplateContentType {
 			ttW = &writer{
-				responseWriter: w,
+				ResponseWriter: w,
 			}
 			break
 		}
 	}
 	return ttW, (ttW != nil)
+}
+
+// lifted from go http internals, escape parameterized header values to be ASCII
+func hexEscapeNonASCII(s string) string {
+	newLen := 0
+	for i := 0; i < len(s); i++ {
+		if s[i] >= utf8.RuneSelf {
+			newLen += 3
+		} else {
+			newLen++
+		}
+	}
+	if newLen == len(s) {
+		return s
+	}
+	b := make([]byte, 0, newLen)
+	for i := 0; i < len(s); i++ {
+		if s[i] >= utf8.RuneSelf {
+			b = append(b, '%')
+			b = strconv.AppendInt(b, int64(s[i]), 16)
+		} else {
+			b = append(b, s[i])
+		}
+	}
+	return string(b)
 }

@@ -44,8 +44,9 @@ func ContentHTML(title, base string) string {
 }
 
 type GreetTemplateData struct {
-	Who   string
-	Notes string
+	Who        string
+	Notes      string
+	IsFullPage bool
 }
 
 func GreetingHTML(base string) string {
@@ -54,13 +55,14 @@ func GreetingHTML(base string) string {
 		<h1>Hello, {{ .Who }}!</h1>
 		<p><a href="%s" treetop>Clear</a></p>
 
-		<div class="alert alert-info" role="alert">
+		<div class="alert alert-info small" role="alert">
 			{{ .Notes }}
 		</div>
-
-		<div class="alert alert-secondary" role="alert">
-			Try refreshing the page or using the back button
+		{{ if not .IsFullPage }}
+		<div class="alert alert-secondary small" role="alert">
+			Browser location and history were updated, try using the back button.
 		</div>
+		{{ end }}
 	</div>
 
 	`, base)
@@ -73,10 +75,11 @@ func getGreetingQuery(req *http.Request) GreetTemplateData {
 	}
 	if !treetop.IsTemplateRequest(req) {
 		data.Notes = "Full page request!"
+		data.IsFullPage = true
 	} else if submitter := query.Get("submitter"); submitter != "" {
 		data.Notes = fmt.Sprintf("XHR form submit with the '%s' button submitter!", submitter)
 	} else {
-		data.Notes = "XHR form submit, notice that the text input focus is preserved."
+		data.Notes = "XHR form submit, notice that the text input cursor is preserved."
 	}
 	if data.Who == "" {
 		data.Who = "World"

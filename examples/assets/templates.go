@@ -43,8 +43,9 @@ var (
 			<h3 class="mt-4">Writer vs. View</h3>
 
 			<p class="mb5">
-				Most examples are implemented using a Treetop view handlers.
-				Examples with the 'Writer' label use vanilla HTTP handlers for the sake of comparison.
+				Most examples are implemented using hierarchical view.
+				However, examples with the 'Writer' label use vanilla HTTP handlers
+				for the sake of comparison.
 			</p>
 		</div>
 		{{ end }}

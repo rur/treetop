@@ -88,16 +88,36 @@ func TestWriter(t *testing.T) {
 			wantPageURL:     "/Some/other/path",
 		},
 		{
-			name: "invalid URL",
+			name: "Ignore invalid URL",
 			args: args{
 				w:       httptest.NewRecorder(),
 				req:     mockRequest("/Some/path", TemplateContentType),
 				status:  201,
-				pageURL: "$%^&*",
+				pageURL: "/$%^&*",
 			},
 
 			wantWriter: true,
-			wantError:  "parse $%^&*: invalid URL escape \"%^&\"",
+
+			wantContentType: TemplateContentType,
+			wantStatus:      201,
+			wantBody:        `<p>this is a test</p>`,
+			wantPageURL:     "/$%^&*",
+		},
+		{
+			name: "Escape non-ascii urls",
+			args: args{
+				w:       httptest.NewRecorder(),
+				req:     mockRequest("/Some/path", TemplateContentType),
+				status:  201,
+				pageURL: "/☆",
+			},
+
+			wantWriter: true,
+
+			wantContentType: TemplateContentType,
+			wantStatus:      201,
+			wantBody:        `<p>this is a test</p>`,
+			wantPageURL:     "/%E2%98%86",
 		},
 	}
 	for _, tt := range tests {
@@ -130,13 +150,8 @@ func TestWriter(t *testing.T) {
 				}
 			}
 			_, err := fmt.Fprint(ttW, "<p>this is a test</p>")
-			if tt.wantError != "" {
-				if err == nil {
-					t.Errorf("Writer expecting error '%s'", tt.wantError)
-					return
-				} else if tt.wantError != err.Error() {
-					t.Errorf("Writer got error %s, expecting %s", err, tt.wantError)
-				}
+			if err != nil {
+				t.Errorf("Writer got error %s", err)
 			}
 			status := tt.args.w.Code
 			contentType := tt.args.w.HeaderMap.Get("Content-Type")
@@ -158,6 +173,179 @@ func TestWriter(t *testing.T) {
 			}
 			if responseHistory != wantHistory {
 				t.Errorf("Writer() response history header = %v, want %v", responseHistory, wantHistory)
+			}
+		})
+	}
+}
+
+func TestNewPartialWriter_Basic(t *testing.T) {
+	request := mockRequest("/test", TemplateContentType)
+	rsp := httptest.NewRecorder()
+	if tW, ok := NewPartialWriter(rsp, request); ok {
+		tW.Write([]byte("something here!"))
+	} else {
+		t.Error("Failed to recognize template request")
+		return
+	}
+
+	if rsp.Code != 200 {
+		t.Errorf("Expecting status 200 got %d", rsp.Code)
+	}
+
+	cType := rsp.HeaderMap.Get("Content-Type")
+	if cType != TemplateContentType {
+		t.Errorf("Expecting content type %s, got %s", TemplateContentType, cType)
+	}
+
+	pageURL := rsp.HeaderMap.Get("X-Page-URL")
+	if pageURL != "/test" {
+		t.Errorf("Expecting page URL %s, got %s", "/test", pageURL)
+	}
+
+	body := rsp.Body.String()
+	if body != "something here!" {
+		t.Errorf("Expecting body 'something here!', got '%s'", body)
+	}
+}
+
+// Test that a treetop writer implements http.ResponseWriter interface and behavior
+func TestNewPartialWriter_AsResponseWriter(t *testing.T) {
+	request := mockRequest("/test", TemplateContentType)
+	rsp := httptest.NewRecorder()
+	if tW, ok := NewPartialWriter(rsp, request); ok {
+		rw, ok := tW.(http.ResponseWriter)
+		if !ok {
+			t.Error("Failed to coerce partial writer to http.ResponseWriter type")
+			return
+		}
+		rw.WriteHeader(http.StatusTeapot)
+		rw.Write([]byte("I'm a teapot!"))
+	} else {
+		t.Error("Failed to recognize template request")
+		return
+	}
+
+	if rsp.Code != 418 {
+		t.Errorf("Expecting status 418 got %d", rsp.Code)
+	}
+
+	cType := rsp.HeaderMap.Get("Content-Type")
+	if cType != TemplateContentType {
+		t.Errorf("Expecting content type %s, got %s", TemplateContentType, cType)
+	}
+
+	pageURL := rsp.HeaderMap.Get("X-Page-URL")
+	if pageURL != "/test" {
+		t.Errorf("Expecting page URL %s, got %s", "/test", pageURL)
+	}
+
+	body := rsp.Body.String()
+	if body != "I'm a teapot!" {
+		t.Errorf("Expecting body 'I'm a teapot!', got '%s'", body)
+	}
+}
+
+func TestNewFragmentWriter_Basic(t *testing.T) {
+	request := mockRequest("/test", TemplateContentType)
+	rsp := httptest.NewRecorder()
+	if tW, ok := NewFragmentWriter(rsp, request); ok {
+		tW.Write([]byte("something here!"))
+	} else {
+		t.Error("Failed to recognize template request")
+		return
+	}
+
+	if rsp.Code != 200 {
+		t.Errorf("Expecting status 200 got %d", rsp.Code)
+	}
+
+	cType := rsp.HeaderMap.Get("Content-Type")
+	if cType != TemplateContentType {
+		t.Errorf("Expecting content type %s, got %s", TemplateContentType, cType)
+	}
+
+	pageURL := rsp.HeaderMap.Get("X-Page-URL")
+	if pageURL != "" {
+		t.Errorf("Expecting page URL not be set, got %s", pageURL)
+	}
+
+	body := rsp.Body.String()
+	if body != "something here!" {
+		t.Errorf("Expecting body 'something here!', got '%s'", body)
+	}
+}
+
+func TestNewFragmentWriter_AddPageURL(t *testing.T) {
+	request := mockRequest("/test", TemplateContentType)
+	rsp := httptest.NewRecorder()
+	if tW, ok := NewFragmentWriter(rsp, request); ok {
+		tW.DesignatePageURL("/test-other")
+		tW.Write([]byte("something here!"))
+	} else {
+		t.Error("Failed to recognize template request")
+		return
+	}
+
+	if rsp.Code != 200 {
+		t.Errorf("Expecting status 200 got %d", rsp.Code)
+	}
+
+	cType := rsp.HeaderMap.Get("Content-Type")
+	if cType != TemplateContentType {
+		t.Errorf("Expecting content type %s, got %s", TemplateContentType, cType)
+	}
+
+	pageURL := rsp.HeaderMap.Get("X-Page-URL")
+	if pageURL != "/test-other" {
+		t.Errorf("Expecting page URL %s, got %s", "/test-other", pageURL)
+	}
+
+	body := rsp.Body.String()
+	if body != "something here!" {
+		t.Errorf("Expecting body 'something here!', got '%s'", body)
+	}
+}
+
+func Test_hexEscapeNonASCII(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want string
+	}{
+		{
+			name: "all ASCII",
+			s:    "hello world!!",
+			want: "hello world!!",
+		},
+		{
+			name: "single character",
+			s:    "☆",
+			want: "%e2%98%86",
+		},
+		{
+			name: "more ASCII",
+			s:    "abc123",
+			want: "abc123",
+		},
+		{
+			name: "multile characters",
+			s:    "äöü",
+			want: "%c3%a4%c3%b6%c3%bc",
+		},
+		{
+			s:    "ć",
+			want: "%c4%87",
+		},
+		{
+			name: "special characters",
+			s:    "@*_+-./",
+			want: "@*_+-./",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := hexEscapeNonASCII(tt.s); got != tt.want {
+				t.Errorf("hexEscapeNonASCII() = %v, want %v", got, tt.want)
 			}
 		})
 	}
