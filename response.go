@@ -2,11 +2,16 @@ package treetop
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"sync/atomic"
 )
 
-var token uint32
+var (
+	token               uint32
+	ErrResponseHijacked = errors.New(
+		"treetop response: cannot write, HTTP response has been hijacked by another handler")
+)
 
 // nextResponseID generates a token which can be used to identify treetop
 // responses *locally*. The only uniqueness requirement
@@ -86,6 +91,7 @@ type ResponseWrapper struct {
 	replaceURL       bool
 	cancel           context.CancelFunc
 	derivedFrom      *ResponseWrapper
+	hijacked         bool
 }
 
 // BeginResponse initializes the context for a treetop request response
@@ -108,6 +114,7 @@ func (rsp *ResponseWrapper) WithSubViews(subViews map[string]*View) *ResponseWra
 		context:        rsp.context,
 		cancel:         rsp.cancel,
 		derivedFrom:    rsp,
+		hijacked:       rsp.hijacked,
 	}
 	if subViews != nil {
 		// some defensive copying here
@@ -147,10 +154,27 @@ func (rsp *ResponseWrapper) Cancel() {
 	rsp.cancel()
 }
 
+// markHijacked prevents this response wrapper instance from attempting to
+// write to the underlying http.ResponseWriter. This will be called by derived
+// response wrappers.
+func (rsp *ResponseWrapper) markHijacked() {
+	if rsp == nil {
+		return
+	}
+	rsp.hijacked = true
+	// mark all responses to the root handler
+	rsp.derivedFrom.markHijacked()
+}
+
 // Write delegates to the underlying ResponseWriter while aborting the
 // treetop executor handler.
 func (rsp *ResponseWrapper) Write(b []byte) (int, error) {
+	if rsp.hijacked {
+		return 0, ErrResponseHijacked
+	}
 	rsp.Cancel()
+	// prevent parent handler attempting to hijack the response
+	rsp.derivedFrom.markHijacked()
 	return rsp.ResponseWriter.Write(b)
 }
 
@@ -161,6 +185,8 @@ func (rsp *ResponseWrapper) WriteHeader(statusCode int) {
 		return
 	}
 	rsp.Cancel()
+	// prevent parent handler attempting to hijack the response
+	rsp.derivedFrom.markHijacked()
 	rsp.ResponseWriter.WriteHeader(statusCode)
 }
 
@@ -168,45 +194,51 @@ func (rsp *ResponseWrapper) WriteHeader(statusCode int) {
 // if a response status has been set previously, the larger
 // code value will be adopted
 func (rsp *ResponseWrapper) Status(status int) int {
+	if rsp == nil {
+		return 0
+	}
 	if status > rsp.status {
 		rsp.status = status
 	}
-	if rsp.derivedFrom != nil {
-		// allow to propegate to root handler response
-		rsp.derivedFrom.Status(status)
-	}
+	// propegate status to root handler
+	rsp.derivedFrom.Status(status)
 	return rsp.status
 }
 
 // ReplacePageURL will instruct the client to replace the current
 // history entry with the supplied URL
 func (rsp *ResponseWrapper) ReplacePageURL(url string) {
+	if rsp == nil {
+		return
+	}
 	rsp.pageURL = url
 	rsp.replaceURL = true
 	rsp.pageURLSpecified = true
 
-	if rsp.derivedFrom != nil {
-		// allow to propegate to root handler response
-		rsp.derivedFrom.ReplacePageURL(url)
-	}
+	// propegate url to root handler
+	rsp.derivedFrom.ReplacePageURL(url)
 }
 
 // DesignatePageURL will result in a header being added to the response
 // that will create a new history entry for the supplied URL
 func (rsp *ResponseWrapper) DesignatePageURL(url string) {
+	if rsp == nil {
+		return
+	}
 	rsp.pageURL = url
 	rsp.replaceURL = false
 	rsp.pageURLSpecified = true
 
-	if rsp.derivedFrom != nil {
-		// allow to propegate to root handler response
-		rsp.derivedFrom.DesignatePageURL(url)
-	}
+	// propegate url to root handler
+	rsp.derivedFrom.DesignatePageURL(url)
 }
 
 // Finished will return true if the response headers have been written to the
 // client, effectively cancelling the treetop view handler lifecycle
 func (rsp *ResponseWrapper) Finished() bool {
+	if rsp == nil {
+		return true
+	}
 	select {
 	case <-rsp.context.Done():
 		return true

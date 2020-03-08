@@ -101,6 +101,45 @@ func TestResponse_WithView_Cancel(t *testing.T) {
 	}
 }
 
+// Parent handler should not be able to hijack a response already
+// hijacked by a sub view.
+func TestResponse_WithView_ParentDontWrite(t *testing.T) {
+	rec := httptest.NewRecorder()
+	rsp := BeginResponse(context.Background(), rec)
+
+	base := NewView("base.html", func(rsp Response, req *http.Request) interface{} {
+		rsp.HandleSubView("sub", req)
+		rsp.HandleSubView("sub2", req)
+		// attempt to hijack the response
+		rsp.WriteHeader(http.StatusInternalServerError)
+		_, err := rsp.Write([]byte("base!!"))
+		return err
+	})
+	_ = base.NewDefaultSubView("sub", "sub.html", func(rsp Response, _ *http.Request) interface{} {
+		rsp.WriteHeader(http.StatusTeapot)
+		rsp.Write([]byte("sub!!"))
+		return "sub!!"
+	})
+	_ = base.NewDefaultSubView("sub2", "sub2.html", func(rsp Response, _ *http.Request) interface{} {
+		rsp.WriteHeader(http.StatusTeapot)
+		rsp.Write([]byte("sub2!!"))
+		return "sub2!!"
+	})
+
+	output := base.HandlerFunc(rsp.WithSubViews(base.SubViews), nil)
+
+	if rec.Code != http.StatusTeapot {
+		t.Errorf("Expecting handler to set status to %d, got %d", http.StatusTeapot, rec.Code)
+	}
+	if bdy := rec.Body.String(); bdy != "sub!!" {
+		t.Errorf("Expecting the first handler to hijack the response and write 'sub!!', got %#v", bdy)
+	}
+
+	if output != ErrResponseHijacked {
+		t.Errorf("Expecting handler to return hijacked error, got %#v", output)
+	}
+}
+
 func Test_ResponseWrapper_HandleSubView(t *testing.T) {
 	type fields struct {
 		http.ResponseWriter
