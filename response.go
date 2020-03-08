@@ -79,13 +79,13 @@ type ResponseWrapper struct {
 	http.ResponseWriter
 	responseID       uint32
 	context          context.Context
-	finished         bool
 	status           int
 	subViews         map[string]*View
 	pageURL          string
 	pageURLSpecified bool
 	replaceURL       bool
 	cancel           context.CancelFunc
+	derivedFrom      *ResponseWrapper
 }
 
 // BeginResponse initializes the context for a treetop request response
@@ -107,6 +107,7 @@ func (rsp *ResponseWrapper) WithSubViews(subViews map[string]*View) *ResponseWra
 		subViews:       make(map[string]*View),
 		context:        rsp.context,
 		cancel:         rsp.cancel,
+		derivedFrom:    rsp,
 	}
 	if subViews != nil {
 		// some defensive copying here
@@ -121,7 +122,7 @@ func (rsp *ResponseWrapper) WithSubViews(subViews map[string]*View) *ResponseWra
 // based up on the state of the response. If the request is not a template request
 // the writer will be nil and the ok flag will be false
 func (rsp *ResponseWrapper) NewTemplateWriter(req *http.Request) (Writer, bool) {
-	if rsp.finished {
+	if rsp.Finished() {
 		return nil, false
 	}
 	ttW, ok := NewFragmentWriter(rsp.ResponseWriter, req)
@@ -146,15 +147,20 @@ func (rsp *ResponseWrapper) Cancel() {
 	rsp.cancel()
 }
 
-// Write delegates to the underlying ResponseWriter while setting finished flag to true
+// Write delegates to the underlying ResponseWriter while aborting the
+// treetop executor handler.
 func (rsp *ResponseWrapper) Write(b []byte) (int, error) {
-	rsp.finished = true
+	rsp.Cancel()
 	return rsp.ResponseWriter.Write(b)
 }
 
 // WriteHeader delegates to the underlying ResponseWriter while setting finished flag to true
 func (rsp *ResponseWrapper) WriteHeader(statusCode int) {
-	rsp.finished = true
+	if rsp.Finished() {
+		// ignore erroneous calls to WriteHeader if the response is finished
+		return
+	}
+	rsp.Cancel()
 	rsp.ResponseWriter.WriteHeader(statusCode)
 }
 
@@ -165,6 +171,10 @@ func (rsp *ResponseWrapper) Status(status int) int {
 	if status > rsp.status {
 		rsp.status = status
 	}
+	if rsp.derivedFrom != nil {
+		// allow to propegate to root handler response
+		rsp.derivedFrom.Status(status)
+	}
 	return rsp.status
 }
 
@@ -174,6 +184,11 @@ func (rsp *ResponseWrapper) ReplacePageURL(url string) {
 	rsp.pageURL = url
 	rsp.replaceURL = true
 	rsp.pageURLSpecified = true
+
+	if rsp.derivedFrom != nil {
+		// allow to propegate to root handler response
+		rsp.derivedFrom.ReplacePageURL(url)
+	}
 }
 
 // DesignatePageURL will result in a header being added to the response
@@ -182,19 +197,29 @@ func (rsp *ResponseWrapper) DesignatePageURL(url string) {
 	rsp.pageURL = url
 	rsp.replaceURL = false
 	rsp.pageURLSpecified = true
+
+	if rsp.derivedFrom != nil {
+		// allow to propegate to root handler response
+		rsp.derivedFrom.DesignatePageURL(url)
+	}
 }
 
 // Finished will return true if the response headers have been written to the
 // client, effectively cancelling the treetop view handler lifecycle
 func (rsp *ResponseWrapper) Finished() bool {
-	return rsp.finished
+	select {
+	case <-rsp.context.Done():
+		return true
+	default:
+		return false
+	}
 }
 
 // HandleSubView will execute the handler for a specified sub view of the current view
 // if there is no match for the name, nil will be returned.
 func (rsp *ResponseWrapper) HandleSubView(name string, req *http.Request) interface{} {
 	// don't do anything if a response has already been written
-	if rsp.finished || len(rsp.subViews) == 0 {
+	if rsp.Finished() || len(rsp.subViews) == 0 {
 		return nil
 	}
 
@@ -206,32 +231,7 @@ func (rsp *ResponseWrapper) HandleSubView(name string, req *http.Request) interf
 	subResp := rsp.WithSubViews(sub.SubViews)
 
 	// Invoke sub handler, collecting the response
-	data := sub.HandlerFunc(subResp, req)
-	if subResp.finished {
-		// sub handler took over the writing of the response, all handlers should be halted.
-		//
-		// NOTE: It seems like this should invole the Golang 'Context' pattern in some way.
-		//       It is not obvious to me but there is probably a better way to tear the
-		//       whole process down. A simple 'finished' flag is fine for the time being.
-		//
-		rsp.finished = true
-		return nil
-	}
-	subResp.finished = true
-
-	// Adopt status and page URL of sub handler (as applicable)
-	rsp.Status(subResp.status)
-	if subResp.pageURLSpecified {
-		// adopt pageURL if the child handler specified one
-		if subResp.replaceURL {
-			rsp.ReplacePageURL(subResp.pageURL)
-		} else {
-			rsp.DesignatePageURL(subResp.pageURL)
-		}
-	}
-
-	// finally, return data resulting from the sub handler
-	return data
+	return sub.HandlerFunc(subResp, req)
 }
 
 // Context is getter for the treetop response context which will indicate when the request

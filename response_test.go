@@ -36,15 +36,79 @@ func TestResponse_WithView(t *testing.T) {
 	}
 }
 
+// test that the sub-response instance will pass the status back up to the
+// response instance from which it was derived
+func TestResponse_WithView_Status(t *testing.T) {
+	rsp := BeginResponse(context.Background(), httptest.NewRecorder())
+
+	d := rsp.WithSubViews(map[string]*View{
+		"test": NewSubView("test", "test.html", func(rsp Response, _ *http.Request) interface{} {
+			rsp.Status(http.StatusTeapot)
+			return "test!!"
+		}),
+	}).HandleSubView("test", nil)
+	if d != "test!!" {
+		t.Errorf("Expecting subview data to be 'test!!' got %v", d)
+	}
+	if rsp.status != http.StatusTeapot {
+		t.Errorf("Expecting handler to set status to %d, got %d", http.StatusTeapot, rsp.status)
+	}
+}
+
+// test that the sub-response instance will pass the status back up to the
+// response instance from which it was derived
+func TestResponse_WithView_Cancel(t *testing.T) {
+	rec := httptest.NewRecorder()
+	rsp := BeginResponse(context.Background(), rec)
+
+	type baseData struct {
+		A interface{}
+		B interface{}
+	}
+
+	base := NewView("base.html", func(rsp Response, req *http.Request) interface{} {
+		return baseData{
+			A: rsp.HandleSubView("a", req),
+			B: rsp.HandleSubView("b", req),
+		}
+	})
+	_ = base.NewDefaultSubView("a", "a.html", func(rsp Response, _ *http.Request) interface{} {
+		rsp.WriteHeader(http.StatusTeapot)
+		rsp.Write([]byte("test!!"))
+		return "test!!"
+	})
+	_ = base.NewDefaultSubView("b", "b.html", func(rsp Response, _ *http.Request) interface{} {
+		return "should not get called"
+	})
+
+	data := base.HandlerFunc(rsp.WithSubViews(base.SubViews), nil)
+
+	baseD, ok := data.(baseData)
+	if !ok {
+		t.Errorf("Unexpected handler data, got %#v", data)
+	}
+	if baseD.A != "test!!" {
+		t.Errorf("Expecting A subview data to be 'test!!' got %#v", baseD.A)
+	}
+	if baseD.B != nil {
+		t.Errorf("Expecting B subview not to be called but got data %#v ", baseD.B)
+	}
+	if rec.Code != http.StatusTeapot {
+		t.Errorf("Expecting handler to set status to %d, got %d", http.StatusTeapot, rec.Code)
+	}
+	if bdy := rec.Body.String(); bdy != "test!!" {
+		t.Errorf("Expecting the first handler to hijack the response and write 'test!!', got %#v", bdy)
+	}
+}
+
 func Test_ResponseWrapper_HandleSubView(t *testing.T) {
 	type fields struct {
 		http.ResponseWriter
-		responseID      uint32
-		responseWritten bool
-		dataCalled      bool
-		data            interface{}
-		status          int
-		subViews        map[string]*View
+		responseID uint32
+		dataCalled bool
+		data       interface{}
+		status     int
+		subViews   map[string]*View
 	}
 	req := httptest.NewRequest("GET", "/some/path", nil)
 	type args struct {
@@ -148,13 +212,11 @@ func Test_ResponseWrapper_HandleSubView(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			rsp := &ResponseWrapper{
-				ResponseWriter: tt.fields.ResponseWriter,
-				responseID:     tt.fields.responseID,
-				finished:       tt.fields.responseWritten,
-				status:         tt.fields.status,
-				subViews:       tt.fields.subViews,
-			}
+			rsp := BeginResponse(context.Background(), tt.fields.ResponseWriter)
+			rsp.responseID = tt.fields.responseID
+			rsp.subViews = tt.fields.subViews
+			rsp.Status(tt.fields.status)
+
 			got := rsp.HandleSubView(tt.args.name, tt.args.req)
 			if !reflect.DeepEqual(got, tt.data) {
 				t.Errorf("ResponseWrapper.HandleSubView() got = %v, want %v", got, tt.data)

@@ -8,33 +8,35 @@ import (
 	"testing"
 )
 
+var handlerTemplateTestTemplateMap = map[string]string{
+	"base.html": strings.Join([]string{
+		`<!DOCTYPE html>`,
+		`<html>`,
+		`<head>`,
+		`	<title>base</title>`,
+		`</head>`,
+		`<body>`,
+		`	<div class="top">	`,
+		`		{{ block "nav" .Nav }}fallback block nav{{ end }}`,
+		`	</div>`,
+		`	<div class="content">	`,
+		`		{{ block "content" .Content }}fallback block content{{ end }}`,
+		`	</div>`,
+		`</body>`,
+		`</html>`,
+	}, "\n"),
+	"content.html": strings.Join([]string{
+		`<div id="content">`,
+		`    <p>hello {{ .Message }}</p>`,
+		`    {{ block "sub-content" .SubContent }}fallback{{ end }}`,
+		`</div>`,
+	}, "\n"),
+	"override-nav.html": `<div id="nav">hello {{ . }}</div>`,
+	"sub-content.html":  `<div id="sub-content">hello {{ . }}</div>`,
+}
+
 func setupTemplateHandler() ViewHandler {
-	exec := NewKeyedStringExecutor(map[string]string{
-		"base.html": strings.Join([]string{
-			`<!DOCTYPE html>`,
-			`<html>`,
-			`<head>`,
-			`	<title>base</title>`,
-			`</head>`,
-			`<body>`,
-			`	<div class="top">	`,
-			`		{{ block "nav" .Nav }}fallback block nav{{ end }}`,
-			`	</div>`,
-			`	<div class="content">	`,
-			`		{{ block "content" .Content }}fallback block content{{ end }}`,
-			`	</div>`,
-			`</body>`,
-			`</html>`,
-		}, "\n"),
-		"content.html": strings.Join([]string{
-			`<div id="content">`,
-			`    <p>hello {{ .Message }}</p>`,
-			`    {{ block "sub-content" .SubContent }}fallback{{ end }}`,
-			`</div>`,
-		}, "\n"),
-		"override-nav.html": `<div id="nav">hello {{ . }}</div>`,
-		"sub-content.html":  `<div id="sub-content">hello {{ . }}</div>`,
-	})
+	exec := NewKeyedStringExecutor(handlerTemplateTestTemplateMap)
 
 	base := NewView("base.html", func(resp Response, req *http.Request) interface{} {
 		return struct {
@@ -179,5 +181,22 @@ func TestTemplateHandler_TemplateRequestNotAcceptable(t *testing.T) {
 
 	if body := buf.String(); body != expecting {
 		t.Errorf("Expecting body \n%s\ngot\n%s", expecting, body)
+	}
+}
+
+func TestTemplateHandler_DesignatePageURL(t *testing.T) {
+	expecting := "/designated/in/handler"
+	exec := NewKeyedStringExecutor(handlerTemplateTestTemplateMap)
+	v := NewSubView("sub-content", "sub-content.html", func(resp Response, req *http.Request) interface{} {
+		resp.DesignatePageURL(expecting)
+		return "testing"
+	})
+
+	th := exec.NewViewHandler(v)
+	rec := httptest.NewRecorder()
+	th.ServeHTTP(rec, mockRequest("/some/path", TemplateContentType))
+	pageURL := rec.HeaderMap.Get("X-Page-URL")
+	if pageURL != expecting {
+		t.Errorf("Expecting X-Page-URL header to be %s, got %s", expecting, pageURL)
 	}
 }
