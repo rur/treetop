@@ -4,13 +4,15 @@
 
 ## Hierarchical Web Handlers
 
-Treetop is a utility for building hierarchies of nested templates
-from which HTTP request handlers can be constructed.
+Treetop is a utility for defining hierarchies of nested templates
+from which HTTP handlers can be constructed.
 
-HTML endpoints in web applications typically share a lot of common structure.
+HTML applications typically share a lot of common structure between endpoints.
 Composable templates are supported in Go<sup>1</sup> to reduce HTML boilerplate.
-Treetop combines functions with nested templates to reduce boilerplate
-in the handlers as well.
+Treetop combines a function with each template to make nesting
+easier to manage, reducing boilerplate in request handlers.
+
+_Example of a basic hierarchy_
 
 
                   BaseHandler(...)
@@ -26,8 +28,6 @@ in the handlers as well.
     |                          |        |                          |
     | <div id="content">...</… |        | <div id="content">...</… |
     |__________________________|        |__________________________|
-
-_Example of a basic view hierarchy_
 
 A 'View' is a template string (usually file path) paired with a handler function.
 Defining a 'SubView' creates a new template + handler pair associated with
