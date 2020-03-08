@@ -67,6 +67,7 @@ func (tw *writer) ReplacePageURL(uri string) {
 // WriteHeader will flush all headers including treetop headers to the
 // underlying response writer instance
 func (tw *writer) WriteHeader(status int) {
+	header := tw.ResponseWriter.Header()
 	if tw.responseURLExists {
 		pageURL := tw.responseURL
 		// attempt to normalize using url lib
@@ -74,12 +75,13 @@ func (tw *writer) WriteHeader(status int) {
 		if err == nil {
 			pageURL = respURI.String()
 		}
-		tw.ResponseWriter.Header().Set("X-Page-URL", hexEscapeNonASCII(pageURL))
+		header.Set("X-Page-URL", hexEscapeNonASCII(pageURL))
+		header.Set("Vary", "Accept")
 		if tw.replaceURLState {
-			tw.ResponseWriter.Header().Set("X-Response-History", "replace")
+			header.Set("X-Response-History", "replace")
 		}
 	}
-	tw.ResponseWriter.Header().Set("Content-Type", TemplateContentType)
+	header.Set("Content-Type", TemplateContentType)
 	tw.ResponseWriter.WriteHeader(status)
 	tw.written = true
 }

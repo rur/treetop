@@ -136,6 +136,11 @@ func (h *TemplateHandler) servePageRequest(resp *ResponseWrapper, req *http.Requ
 	// set content length from write buffer
 	resp.Header().Set("Content-Length", strconv.Itoa(buf.Len()))
 
+	if h.Partial != nil {
+		// inform cache that another content type is possible for this endpoint
+		resp.Header().Set("Vary", "Accept")
+	}
+
 	// set content type as standard html mimetype
 	resp.Header().Set("Content-Type", "text/html")
 

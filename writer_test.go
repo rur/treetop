@@ -162,6 +162,12 @@ func TestWriter(t *testing.T) {
 				wantHistory = "replace"
 			}
 
+			if tt.args.isPartial || tt.args.pageURL != "" {
+				if vary := tt.args.w.HeaderMap.Get("Vary"); vary != "Accept" {
+					t.Errorf("Expecting Vary header to be 'Accept', got %#v", vary)
+				}
+			}
+
 			if tt.wantStatus > 0 && status != tt.wantStatus {
 				t.Errorf("Writer() status writer = %v, want %v", status, tt.wantStatus)
 			}
