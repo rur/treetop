@@ -123,9 +123,8 @@ func (h *TemplateHandler) servePageRequest(resp *ResponseWrapper, req *http.Requ
 		errlog(ErrNotAcceptable)
 		return
 	}
-	pageResp := resp.WithSubViews(h.Page.SubViews)
-	data := h.Page.HandlerFunc(pageResp, req)
-	if pageResp.Finished() {
+	data := h.Page.HandlerFunc(resp.WithSubViews(h.Page.SubViews), req)
+	if resp.Finished() {
 		return
 	}
 	err := h.PageTemplate.ExecuteTemplate(buf, h.Page.Defines, data)
@@ -140,7 +139,7 @@ func (h *TemplateHandler) servePageRequest(resp *ResponseWrapper, req *http.Requ
 	// set content type as standard html mimetype
 	resp.Header().Set("Content-Type", "text/html")
 
-	if status := pageResp.Status(0); status > 0 {
+	if status := resp.Status(0); status > 0 {
 		// response instance was given a status code,
 		// write the status, finalizing the headers
 		resp.WriteHeader(status)
@@ -155,8 +154,6 @@ func (h *TemplateHandler) servePageRequest(resp *ResponseWrapper, req *http.Requ
 		// This will be ignored if the header was sent
 		http.Error(resp, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
-
-	// write full page response
 	return
 }
 
