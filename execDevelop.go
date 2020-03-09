@@ -114,58 +114,41 @@ func init() {
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<title>Treetop Template Error</title>
 		<style type="text/css" media="screen">
-		
+
 			body {
 				line-height: 140%;
 				margin: 50px;
-				width: 650px;
 			}
 			code {font-size: 120%;}
-			
-			
+
+
 			pre code {
 				background-color: #eee;
 				border: 1px solid #999;
 				display: block;
 				padding: 20px;
 			}
-			
+
 		</style>
 	</head>
 	<body>
 		<h1>Treetop Endpoint Error</h1>
 		<h3>Errors:</h3>
-		<pre>
-			<code>
-				{{ .Output }}
-			</code>
-		</pre>
-		
+		<pre><code>{{ .Output }}</code></pre>
+
 		{{ if .PageView }}
 		<h3>Page View:</h3>
-		<pre>
-			<code>
-				{{ .PageView }}
-			</code>
-		</pre>
+		<pre><code>{{ .PageView }}</code></pre>
 		{{ end }}
-	
+
 		{{ if .TemplateView }}
 		<h3>Template View:</h3>
-		<pre>
-			<code>
-				{{ .TemplateView }}
-			</code>
-		</pre>
+		<pre><code>{{ .TemplateView }}</code> </pre>
 		{{ end }}
-	
+
 		{{ range $index, $ps := .Includes }}
 		<h3>Postscript[{{ $index }}]:</h3>
-		<pre>
-			<code>
-				{{ $ps }}
-			</code>
-		</pre>
+		<pre><code>{{ $ps }}</code></pre>
 		{{ end }}
 	</body>
 	</html>
