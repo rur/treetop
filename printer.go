@@ -27,22 +27,22 @@ func SprintViewInfo(v *View) string {
 	if v.Defines == "" {
 		return fmt.Sprintf(
 			"View(%s, %v)",
-			previewTemplate(v.Template, 10, 10),
-			handlerInfo,
+			previewString(v.Template, 20, 30),
+			previewString(handlerInfo, 20, 30),
 		)
 	}
 	return fmt.Sprintf(
 		"SubView(%#v, %s, %v)",
 		v.Defines,
-		previewTemplate(v.Template, 10, 10),
-		handlerInfo,
+		previewString(v.Template, 20, 30),
+		previewString(handlerInfo, 20, 30),
 	)
 }
 
-// previewTemplate previews an arbitrary template string on a single line.
+// previewString previews an arbitrary string on a single line.
 // All whitespace will be stripped and it will be quoted and escaped.
 // A middle ellipsis will be inserted if the string is too long.
-func previewTemplate(str string, before, after int) string {
+func previewString(str string, before, after int) string {
 	re := regexp.MustCompile(`\s`)
 	str = strconv.Quote(re.ReplaceAllString(str, ""))
 	if len(str) > before+after+2 {

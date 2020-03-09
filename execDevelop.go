@@ -2,6 +2,7 @@ package treetop
 
 import (
 	"html/template"
+	"log"
 	"net/http"
 )
 
@@ -88,6 +89,7 @@ func (h *devHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	if th, ok := handler.(*TemplateHandler); ok && th.ServeTemplateError == nil {
 		th.ServeTemplateError = func(err error, resp Response, req *http.Request) {
+			log.Printf("DeveloperExecutor error: %s", err)
 			if status := resp.Status(0); status > 0 {
 				resp.WriteHeader(status)
 			} else {
