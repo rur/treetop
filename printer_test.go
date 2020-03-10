@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func Test_previewTemplate(t *testing.T) {
+func Test_previewString(t *testing.T) {
 	type args struct {
 		str    string
 		before int
@@ -23,7 +23,7 @@ func Test_previewTemplate(t *testing.T) {
 				before: 10,
 				after:  10,
 			},
-			want: `"some/path/on/fs.html"`,
+			want: `some/path/on/fs.html`,
 		},
 		{
 			name: "realistic html",
@@ -32,13 +32,13 @@ func Test_previewTemplate(t *testing.T) {
 				before: 10,
 				after:  10,
 			},
-			want: `"<!doctype……y></html>"`,
+			want: `<!doctypeh……dy></html>`,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := previewTemplate(tt.args.str, tt.args.before, tt.args.after); got != tt.want {
-				t.Errorf("previewTemplate() = %v, want %v", got, tt.want)
+			if got := previewString(tt.args.str, tt.args.before, tt.args.after); got != tt.want {
+				t.Errorf("previewString() = %v, want %v", got, tt.want)
 			}
 		})
 	}

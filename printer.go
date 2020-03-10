@@ -27,14 +27,14 @@ func SprintViewInfo(v *View) string {
 	if v.Defines == "" {
 		return fmt.Sprintf(
 			"View(%s, %v)",
-			previewString(v.Template, 20, 30),
+			strconv.Quote(previewString(v.Template, 20, 30)),
 			previewString(handlerInfo, 20, 30),
 		)
 	}
 	return fmt.Sprintf(
 		"SubView(%#v, %s, %v)",
 		v.Defines,
-		previewString(v.Template, 20, 30),
+		strconv.Quote(previewString(v.Template, 20, 30)),
 		previewString(handlerInfo, 20, 30),
 	)
 }
@@ -44,7 +44,7 @@ func SprintViewInfo(v *View) string {
 // A middle ellipsis will be inserted if the string is too long.
 func previewString(str string, before, after int) string {
 	re := regexp.MustCompile(`\s`)
-	str = strconv.Quote(re.ReplaceAllString(str, ""))
+	str = re.ReplaceAllString(str, "")
 	if len(str) > before+after+2 {
 		return str[:before] + "……" + str[len(str)-after:]
 	}
