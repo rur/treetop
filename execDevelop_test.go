@@ -58,12 +58,9 @@ func TestDeveloperExecutor_RenderErrors(t *testing.T) {
 
 	if !strings.Contains(
 		stripIndent(got),
-		stripIndent(`
-		<pre>
-			<code>
-				template: test:1:11: executing &#34;test&#34; at &lt;.FAIL&gt;: can&#39;t evaluate field FAIL in type string
-			</code>
-		</pre>`),
+		stripIndent(
+			`<pre><code>template: test:1:11: executing &#34;test&#34; at &lt;.FAIL&gt;:`+
+				` can&#39;t evaluate field FAIL in type string</code></pre>`),
 	) {
 		t.Error("Expecting Errors, got", got)
 	}
@@ -100,11 +97,8 @@ func TestDeveloperExecutor_PageOnly(t *testing.T) {
 	if !strings.Contains(
 		stripIndent(gotTemplate),
 		stripIndent(`
-		<pre>
-			<code>
-				treetop template handler: server cannot produce a response matching the list of acceptable values
-			</code>
-		</pre>`),
+		<pre><code>treetop template handler: server cannot produce a response `+
+			`matching the list of acceptable values</code></pre>`),
 	) {
 		t.Error("Expecting Errors, got", gotTemplate)
 	}
@@ -136,11 +130,8 @@ func TestDeveloperExecutor_FragmentOnly(t *testing.T) {
 	if !strings.Contains(
 		stripIndent(gotPage),
 		stripIndent(`
-		<pre>
-			<code>
-				treetop template handler: server cannot produce a response matching the list of acceptable values
-			</code>
-		</pre>`),
+		<pre><code>treetop template handler: server cannot produce `+
+			`a response matching the list of acceptable values</code></pre>`),
 	) {
 		t.Error("Expecting Errors, got", gotPage)
 	}
