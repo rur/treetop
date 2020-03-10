@@ -6,7 +6,7 @@ import (
 )
 
 // ViewExecutor is an interface for objects that implement transforming a View definition
-// into a ViewHandler that supports pages, partial and fragment requests.
+// into a ViewHandler that supports full page and template requests.
 type ViewExecutor interface {
 	NewViewHandler(view *View, includes ...*View) ViewHandler
 	FlushErrors() ExecutorErrors

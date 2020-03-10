@@ -1,11 +1,7 @@
 package treetop
 
-// View is a utility for building hierarchies of nested templates
-// from which HTTP request handlers can be constructed.
-//
-// Multi-page web apps require a lot of endpoints. Template inheritance
-// is commonly used to reduce HTML boilerplate and improve reuse. Treetop views incorporate
-// request handlers into the hierarchy to gain the same advantage.
+// View is used to define hierarchies of nested template-handler pairs
+// so that HTTP endpoints can be constructed for different page configurations.
 //
 // A 'View' is a template string (usually file path) paired with a handler function.
 // Go templates can contain named nested blocks. Defining a 'SubView' associates
@@ -58,7 +54,7 @@ package treetop
 // 			contentBHandler,
 // 		)
 //
-//		exec := treetop.DefaultExecutor{}
+//		exec := treetop.FileExecutor{}
 //		mymux.Handle("/path/to/a", exec.ViewHandler(contentA))
 //		mymux.Handle("/path/to/b", exec.ViewHandler(contentB))
 //

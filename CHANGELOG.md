@@ -1,10 +1,11 @@
-## [0.3.0] - WIP
+## [0.3.0] - 2020-03-09
 
-Protocol and API overhaul, transitioning from prototype to alpha.
+Protocol and API overhaul, improve docs and examples, transitioning from prototype
+to a usable library. Get test coverage to >= 90% range.
 
 ### Protocol Change
 
-Treetop is a 'HTML template' protocol with exactly one content-type value. 
+Treetop is a 'HTML template' protocol with exactly one content-type value.
 
     application/x.treetop-html-template+xml
 
@@ -21,27 +22,27 @@ All HTML content in the response body should be wrapped in a single HTMLTemplate
         <p id="second">this is the second fragment</p>
     </template>
 
-This will make the intention of the protocol more obvious for developers already 
+This will make the intention of the protocol more obvious for developers already
 familiar with the use of HTML5 templates and avoid some issues with non-rooted
 markup in a response body.
 
 ### Change Redirect Header
 
 Treetop now redirects use the Location header value as the destination URL. The only difference
-from a normal HTTP redirect is the status code of 200. The `X-Treetop-Redirect` 
+from a normal HTTP redirect is the status code of 200. The `X-Treetop-Redirect`
 header will have a value of "SeeOther" to signal to the XHR client that a new location
 should be forced.
 
 ### Views and Executors
 
-Implementation of the `View` type has been greatly simplified.
+Implementation of the `View` type has been simplified.
 
 The `Executor` interface was created to encapsulate responsibility for converting a view
-to a HTTP handler. Custom view executor implementations have been made easier to create.
+to a HTTP handler. Template executors have been make more capable.
 The following implementations are supplied with the treetop package:
 
 1. `FileExecutor` - Loads template files from the files system, similar to template.ParseFiles
-2. `FileSystemExecutor` - resolves templates through a http.FileSystem interface 
+2. `FileSystemExecutor` - resolves templates through a http.FileSystem interface
 3. `StringExecutor` - treats view.Template string as a literal template string
 4. `KeyedStringExecutor` - treats view.Template as a key to a template map
 5. `DeveloperExecutor` - Wrap any other executor and the templates will be reloaded for every request
@@ -87,6 +88,12 @@ changes in protocol terminology.
 - The `Content-Length` header is now set on all template responses.
 - Templates are no longer re-parsed for every request
 
+### Examples
+
+- Add bootstrap CDN link for nicer styling and to help with demos
+- Re-organize how demos are loaded to allow for more to be added
+- Create 'Writer' greeter example for comparison
+
 
 ## [0.2.0] - 2020-02-16
 
@@ -106,7 +113,7 @@ Add clarifications to the prototype library API and improve code docs.
 - Change `treetop.View` from an interface to a struct and expose internals to make debugging easier
 - Rename `HandlePartial` method to `HandleSubView` in `treetop.Response` interface to be consistent with the view builder
 - Rename `Done` method to `Finished` in `treetop.Response` interface
-- Rename `HandlerFunc` signature type to `ViewHandlerFunc` to make a clearer association with the view builder 
+- Rename `HandlerFunc` signature type to `ViewHandlerFunc` to make a clearer association with the view builder
 
 
 #### Defining a page with views
