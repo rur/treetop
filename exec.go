@@ -43,8 +43,8 @@ func (te *ExecutorError) Error() string {
 // Executor implements a procedure for converting a view endpoint definition
 // into a request handler using HTML templates.
 //
-// It is designed to extended with different means for constructing template instances
-// given a View hierarchy.
+// It is designed to be extended with different means for creating template instances
+// given a View instance.
 //
 // Example:
 //

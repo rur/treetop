@@ -4,12 +4,12 @@
 
 ## Hierarchical Web Handlers
 
-Treetop is a utility for constructing HTTP handlers for nested templates.
+Treetop is a tool for constructing HTTP handlers for nested templates.
 
 HTML apps typically share a lot of structure between endpoints.
-Composable templates are supported in Go<sup>1</sup> as a tool to reduce
-HTML boilerplate. Treetop views match a function with each template to
-make nesting easier to manage.
+Nested templates are supported in Go<sup>1</sup> to help reduce
+HTML boilerplate. Treetop Views match a function with each template so that
+many endpoints can be constructed for different page configurations.
 
 _Example of a template hierarchy_
 
@@ -29,10 +29,12 @@ _Example of a template hierarchy_
     |__________________________|        |__________________________|
 
 A 'View' is a template string (usually file path) paired with a handler function.
-Defining a 'SubView' creates a new template + handler pair associated with
-an embedded block. HTTP endpoints can then be constructed for various page configurations.
+Defining a SubView creates a new template-handler pair associated with an embedded block.
+Treetop executors can construct a `http.Handler` instance for a given view. This binds
+together all associated templates and functions into a single web endpoint.
 
-The code below extends this example to bind the routes `"/content_a"` and `"/content_b"` with composite handlers.
+The code below extends this example. It binds the routes `"/content_a"` and `"/content_b"` with two
+handlers that share the same base, nav and sidebar templates.
 
     base := treetop.NewView(
         "base.html", BaseHandler)
@@ -49,8 +51,6 @@ The code below extends this example to bind the routes `"/content_a"` and `"/con
     mux.Handle("/content_a", exec.NewViewHandler(contentA, nav))
     mux.Handle("/content_b", exec.NewViewHandler(contentB, nav))
 
-The 'base', 'nav' and 'sidebar' views will be incorporated into both endpoints.
-
 Example of named template blocks in `"base.html"`,
 
 	...
@@ -62,6 +62,8 @@ Example of named template blocks in `"base.html"`,
 		{{ template "content" .Content }}
 	</div>
 	...
+
+_See text/template [Nested Template Definitions](https://tip.golang.org/pkg/text/template/#hdr-Nested_template_definitions) for more info._
 
 Views can have as many levels of nesting as needed.
 
@@ -90,10 +92,12 @@ The following is an illustration of the protocol.
           <div id="nav">...</div>
       </template>
 
-There are many ways hot-swapping views can be used to improve user experience <sup>[docs needed]</sup>.
+A [Treetop Client Library](https://github.com/rur/treetop-client) is available.
+It sends template requests using XHR and applies fragments to the DOM with a simple
+find and replace mechanism.
 
-A [Treetop Client Library](https://github.com/rur/treetop-client) is available. It sends these requests
-using XHR and applies template fragments to the DOM with a simple find and replace mechanism.
+Hot-swapping can be used to improve user experience in several way <sup>[docs needed]</sup>.
+See examples for more details.
 
 ## Example
 
@@ -109,7 +113,11 @@ Tip. Activate your network tab to observe what's going on.
 
 ## Template Executor
 
-An 'Executor' is responsible for loading and configuring templates. It constructs a [HTTP Handler](https://golang.org/pkg/net/http/#Handler) instance to manage the plumbing between loading data and executing templates for a request. You can implement your own template loader <sup>[docs needed]</sup>, but the following are provided:
+An 'Executor' is responsible for loading and configuring templates. It constructs a
+[HTTP Handler](https://golang.org/pkg/net/http/#Handler) instance to manage the plumbing
+between loading data and executing templates for a request. You can implement your own template
+loader <sup>[docs needed]</sup>, but the following are provided:
+
 - `FileExecutor` - load template files using os.Open
 - `FileSytemExecutor` - loads templates from a supplied http.FileSystem instance
 - `StringExecutor` - treat the view template property as an inline template string
@@ -118,7 +126,8 @@ An 'Executor' is responsible for loading and configuring templates. It construct
 
 ## View Handler Function
 
-A view handler function loads data for a corresponding Go template. Just as nested templates are embedded in a parent, nested handler data is embedded in the _data_ of it's parent.
+A view handler function loads data for a corresponding Go template. Just as nested templates
+are embedded in a parent, nested handler data is embedded in the _data_ of it's parent.
 
 Example of a handler loading data for a child template,
 
@@ -165,7 +174,8 @@ in the web browser <sup>[docs needed]</sup>
 
 ## Client Library
 
-The client library is used to send template requests from the browser using XHR. Response fragments are handled mechanically on the client. This avoids the need for callbacks or other IO boilerplate.
+The client library is used to send template requests from the browser using XHR. Response fragments
+are handled mechanically on the client. This avoids the need for callbacks or other IO boilerplate.
 
     treetop.request("GET", "/some/path")
 

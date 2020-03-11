@@ -1,5 +1,7 @@
 /*
-Package treetop is a utility for constructing HTTP handlers for nested templates.
+Package treetop implements tools for constructing HTTP handlers for nested templates
+
+To read about nested template support in Go see https://tip.golang.org/pkg/text/template/#hdr-Nested_template_definitions
 
 Multi-page web apps require a lot of endpoints. Template inheritance
 is commonly used to reduce HTML boilerplate and improve reuse. Treetop views incorporate
@@ -26,7 +28,7 @@ Example of a basic template hierarchy
    | {{ block "content" . }}… |        | {{ block "content" . }}… |
    |__________________________|        |__________________________|
 
-Example of using the library to bind constructed handlers to a HTTP router.
+Example of using the library to constructs handlers for HTTP routes.
 
 	base := treetop.NewView(
 		"base.html",
@@ -49,21 +51,31 @@ Example of using the library to bind constructed handlers to a HTTP router.
 	mymux.Handle("/path/to/a", exec.ViewHandler(contentA))
 	mymux.Handle("/path/to/b", exec.ViewHandler(contentB))
 
-Pseudo request and response:
+The generated handlers bind togeather related views. Thus views can be mixed and matched
+to create many endpoints.
 
     GET /path/to/a
     > HTTP/1.1 200 OK
-    > ... base.html { Content: contentA.html }
+    > <!-- base.html --><html>
+    > ...
+    > <!-- contentA.html --><div id="content"> Content A </div>
+    > ...
+    > </html>
 
     GET /path/to/b
     > HTTP/1.1 200 OK
-    > ... base.html { Content: contentB.html }
+    > <!-- base.html --><html>
+    > ...
+    > <!-- contentB.html --><div id="content"> Content B </div>
+    > ...
+    > </html>
 
+Note, many levels of nesting are possible once block names remain unique.
 
-The constructed handler is capable of rendering either a full page or just
-sections of the page depending upon the request. See the Treetop JS library
-for more details. (https://github.com/rur/treetop-client)
+HTML Template Protocol
 
+The constructed handlers are capable of rendering just sections of the page depending
+upon the request headers. See the Treetop JS library for more details. (https://github.com/rur/treetop-client)
 
 */
 package treetop
