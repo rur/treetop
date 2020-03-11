@@ -1,4 +1,4 @@
-[![Go Report Card](https://goreportcard.com/badge/rur/treetop)](https://goreportcard.com/report/rur/treetop) [![Build Status](https://travis-ci.org/rur/treetop.svg?branch=master)](https://travis-ci.org/rur/treetop)
+[![Go Report Card](https://goreportcard.com/badge/rur/treetop)](https://goreportcard.com/report/rur/treetop) [![Coverage Status](https://coveralls.io/repos/github/rur/treetop/badge.svg?branch=master)](https://coveralls.io/github/rur/treetop?branch=master) [![Build Status](https://travis-ci.org/rur/treetop.svg?branch=master)](https://travis-ci.org/rur/treetop)
 
 # Treetop
 
