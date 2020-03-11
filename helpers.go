@@ -34,18 +34,31 @@ func RequestHandler(f func(*http.Request) interface{}) ViewHandlerFunc {
 	}
 }
 
-// IsTreetopRequest is a predicate function which will check the headers of a given request
-// and return true if a partial (or fragment) response is supported by the client.
-func IsTreetopRequest(req *http.Request) bool {
-	accept := strings.Split(req.Header.Get("Accept"), ";")[0]
-	for _, accept := range strings.Split(accept, ",") {
-		accept = strings.ToLower(strings.TrimSpace(accept))
-		if accept == FragmentContentType {
-			return true
-		}
-		if accept == PartialContentType {
+// IsTemplateRequest is a predicate function which will check the headers of a given request
+// and return true if a template response is supported by the client.
+func IsTemplateRequest(req *http.Request) bool {
+	for _, accept := range strings.Split(req.Header.Get("Accept"), ";") {
+		if strings.ToLower(strings.TrimSpace(accept)) == TemplateContentType {
 			return true
 		}
 	}
 	return false
+}
+
+// Redirect is a helper that will instruct the Treetop client library to direct the web browser
+// to a new URL. If the request is not from a Treetop client, the 3xx redirect method is used.
+//
+// This is necessary because 3xx HTTP redirects are opaque to XHR, when a full browser redirect
+// is needed a 'X-Treetop-Redirect' header is used.
+//
+// Example:
+// 		treetop.Redirect(w, req, "/some/other/path", http.StatusSeeOther)
+//
+func Redirect(w http.ResponseWriter, req *http.Request, location string, status int) {
+	if IsTemplateRequest(req) {
+		w.Header().Add("X-Treetop-Redirect", "SeeOther")
+		http.Redirect(w, req, location, 200) // must be 200 because XHR cannot intercept a 3xx redirect
+	} else {
+		http.Redirect(w, req, location, status)
+	}
 }

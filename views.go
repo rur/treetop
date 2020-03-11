@@ -1,13 +1,7 @@
 package treetop
 
-import "net/http"
-
-// View is a utility for building hierarchies of nested templates
-// from which HTTP request handlers can be constructed.
-//
-// Multi-page web apps require a lot of endpoints. Template inheritance
-// is commonly used to reduce HTML boilerplate and improve reuse. Treetop views incorporate
-// request handlers into the hierarchy to gain the same advantage.
+// View is used to define hierarchies of nested template-handler pairs
+// so that HTTP endpoints can be constructed for different page configurations.
 //
 // A 'View' is a template string (usually file path) paired with a handler function.
 // Go templates can contain named nested blocks. Defining a 'SubView' associates
@@ -44,7 +38,6 @@ import "net/http"
 // Example of using the library to bind constructed handlers to a HTTP router.
 //
 // 		base := treetop.NewView(
-// 			treetop.DefaultTemplateExec,
 // 			"base.html",
 // 			baseHandler,
 // 		)
@@ -61,8 +54,9 @@ import "net/http"
 // 			contentBHandler,
 // 		)
 //
-//		mymux.Handle("/path/to/a", treetop.ViewHandler(contentA))
-//		mymux.Handle("/path/to/b", treetop.ViewHandler(contentB))
+//		exec := treetop.FileExecutor{}
+//		mymux.Handle("/path/to/a", exec.ViewHandler(contentA))
+//		mymux.Handle("/path/to/b", exec.ViewHandler(contentB))
 //
 //
 // This is useful for creating Treetop enabled endpoints because the constructed handler
@@ -71,120 +65,152 @@ import "net/http"
 //
 type View struct {
 	Template    string
-	Extends     *Block
 	HandlerFunc ViewHandlerFunc
-	Blocks      []*Block
-	Renderer    TemplateExec
+	SubViews    map[string]*View
+	Defines     string
+	Parent      *View
 }
 
-// ViewHandlerFunc is the interface for treetop handler functions that support hierarchical
-// partial data loading.
-type ViewHandlerFunc func(Response, *http.Request) interface{}
-
-// NewView create a top level view definition which is designed
-// for constructing hierarchies of template files paired with handler functions.
-func NewView(execute TemplateExec, template string, handlerFunc ViewHandlerFunc) *View {
+// NewView creates an instance of a view given a template + handler pair
+func NewView(tmpl string, handler ViewHandlerFunc) *View {
 	return &View{
-		Template:    template,
-		HandlerFunc: handlerFunc,
-		Renderer:    execute,
-	}
-}
-
-// Block represent a slot that other sub-views can inhabit
-// within an enclosing treetop.View definition
-type Block struct {
-	Name           string
-	Parent         *View
-	DefaultPartial *View
-}
-
-// SubView defines a new view (sub-view) that references to its parent via a
-// named block.
-func (v *View) SubView(blockName, template string, handler ViewHandlerFunc) *View {
-	var block *Block
-	for i := 0; i < len(v.Blocks); i++ {
-		if v.Blocks[i].Name == blockName {
-			block = v.Blocks[i]
-		}
-	}
-	if block == nil {
-		block = &Block{
-			Parent: v,
-			Name:   blockName,
-		}
-		v.Blocks = append(v.Blocks, block)
-	}
-	return &View{
-		Extends:     block,
-		Template:    template,
+		Template:    tmpl,
 		HandlerFunc: handler,
-		Renderer:    v.Renderer,
+		SubViews:    make(map[string]*View),
 	}
 }
 
-// DefaultSubView defines a new view (sub-view) that references it's parent via a
-// named block. It is equivalent to the SubView method except that the parent will also
-// have a return reference. The new view will become the 'default' template
-// for the specified block in the parent.
-func (v *View) DefaultSubView(blockName, template string, handler ViewHandlerFunc) *View {
-	sub := v.SubView(blockName, template, handler)
-	sub.Extends.DefaultPartial = sub
+// NewSubView creates an instance of a view given a template + handler pair
+// this view is a detached subview, in that is does not reference a parent
+func NewSubView(defines, tmpl string, handler ViewHandlerFunc) *View {
+	v := NewView(tmpl, handler)
+	v.Defines = defines
+	return v
+}
+
+// NewSubView create a new view extending a named block within the current view
+func (v *View) NewSubView(defines string, tmpl string, handler ViewHandlerFunc) *View {
+	sub := NewView(tmpl, handler)
+	sub.Defines = defines
+	sub.Parent = v
+	if _, ok := v.SubViews[defines]; !ok {
+		v.SubViews[defines] = nil
+	}
 	return sub
 }
 
-// Handler will create a instance of a http.Handler designed to implement the
-// Treetop protocol through the page view & subview inheritance system.
-//
-// The hander will be derived from the the current state of the View definition,
-// subsequence changes to the View definition will not impact the Handler.
-func (v *View) Handler() *Handler {
-	part := v.derivePartial(nil)
-	page := part
-	root := v
-	for root.Extends != nil && root.Extends.Parent != nil {
-		root = root.Extends.Parent
-		page = root.derivePartial(page)
-	}
-	return &Handler{
-		Fragment: part,
-		Page:     page,
-		Renderer: v.Renderer,
-	}
+// NewDefaultSubView create a new view extending a named block within the current view
+// and updates the parent to use this view by default
+func (v *View) NewDefaultSubView(defines string, tmpl string, handler ViewHandlerFunc) *View {
+	sub := v.NewSubView(defines, tmpl, handler)
+	v.SubViews[defines] = sub
+	return sub
 }
 
-// derivePartial is an internal function used while constructing the HTTP
-// treetop request handler instance.
-func (v *View) derivePartial(override *Partial) *Partial {
-	var extends string
-	if v.Extends != nil {
-		extends = v.Extends.Name
+// Copy creates a duplicate so that the original is not affected by
+// changes. This will propegate as a 'deep copy' to all default subviews
+func (v *View) Copy() *View {
+	if v == nil {
+		return nil
 	}
-
-	p := Partial{
-		Extends:     extends,
-		Template:    v.Template,
-		HandlerFunc: v.HandlerFunc,
+	copy := NewView(v.Template, v.HandlerFunc)
+	copy.Defines = v.Defines
+	copy.Parent = v.Parent
+	for name, sub := range v.SubViews {
+		copy.SubViews[name] = sub.Copy()
 	}
+	return copy
+}
 
-	var blP *Partial
-	for i := 0; i < len(v.Blocks); i++ {
-		b := v.Blocks[i]
-		blP = nil
-		if override != nil && override.Extends == b.Name {
-			blP = override
-		} else if b.DefaultPartial != nil {
-			blP = b.DefaultPartial.derivePartial(override)
-		} else {
-			// fallback when there is no default
-			blP = &Partial{Extends: b.Name, HandlerFunc: Noop}
+// CompileViews is used to create an endpoint configuration combining supplied view
+// definitions based upon the template names they define.
+//
+// This returns:
+//   - a full-page view instance,
+//   - a partial page view instance, and
+//   - any disconnect fragment views that should be appended to partial requests.
+//
+func CompileViews(view *View, includes ...*View) (page, part *View, postscript []*View) {
+	if view == nil {
+		return nil, nil, nil
+	}
+	// Merge the includes and the view where possible.
+	// Views to the left 'consume' those to the right when a match is found.
+	// 'Postscripts' are includes that could not be merged.
+	part = view.Copy()
+	{
+		consumed := make([]bool, len(includes))
+		var found bool
+		for i, incl := range includes {
+			part, found = insertView(part, incl)
+			consumed[i] = found
 		}
-		p.Blocks = append(p.Blocks, Partial{
-			Extends:     b.Name,
-			Template:    blP.Template,
-			HandlerFunc: blP.HandlerFunc,
-			Blocks:      blP.Blocks,
-		})
+		for i := range includes {
+			if i >= len(includes)-1 {
+				break
+			}
+			for j := range includes[i+1:] {
+				includes[i], found = insertView(includes[i], includes[i+j+1])
+				consumed[i] = found || consumed[i]
+			}
+		}
+		for i := range includes {
+			if !consumed[i] {
+				postscript = append(postscript, includes[i])
+			}
+		}
 	}
-	return &p
+
+	// constructing the 'page' involes modifying the series of parents
+	// to ensure that this view is reachable from the root (hence the copying).
+	// The modified root is our page
+	root := view
+	for root.Parent != nil {
+		// make a copy of the parent and ensure that it points to
+		// the child sub view
+		pCopy := root.Parent.Copy()
+		pCopy.SubViews[root.Defines] = root
+		root = pCopy
+	}
+	if root != view {
+		page, _ = insertView(root, view)
+	} else {
+		page = view
+	}
+	for _, incl := range includes {
+		page, _ = insertView(page, incl)
+	}
+
+	return page, part, postscript
+}
+
+// insertView attempts to incorporate the child into the template hierarchy of this view.
+// If a match is found for the definition name, views will be copied & modified as necessary and
+// a flag is returned to indicate whether a match was found.
+//
+func insertView(view, child *View) (*View, bool) {
+	if view == nil {
+		return nil, false
+	}
+	if child == nil || child.Defines == "" || len(view.SubViews) == 0 {
+		return view, false
+	}
+	if _, found := view.SubViews[child.Defines]; found {
+		copy := view.Copy()
+		copy.SubViews[child.Defines] = child
+		return copy, true
+	}
+
+	// At this point a match was not found directly in this view,
+	// Attempt to apply the child to reachable subviews
+	//
+	for _, sub := range view.SubViews {
+		copiedSub, found := insertView(sub, child)
+		if found {
+			copy := view.Copy()
+			copy.SubViews[copiedSub.Defines] = copiedSub
+			return copy, true
+		}
+	}
+	return view, false
 }

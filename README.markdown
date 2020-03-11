@@ -1,92 +1,164 @@
-[![Build Status](https://travis-ci.org/rur/treetop.svg?branch=v0.2.0)](https://travis-ci.org/rur/treetop)
+[![Build Status](https://travis-ci.org/rur/treetop.svg?branch=master)](https://travis-ci.org/rur/treetop)
 
 # Treetop
 
-## Modern UX for multi-page web applications
+## Hierarchical Web Handlers
 
-An uncomplicated approach to help eliminate business logic from client-side code.
+Treetop is a tool for constructing HTTP handlers for nested templates.
 
-### Please note - This is a prototype
+HTML apps typically share a lot of structure between endpoints.
+Nested templates are supported in Go<sup>1</sup> to help reduce
+HTML boilerplate. Treetop Views match a function with each template so that
+many endpoints can be constructed for different page configurations.
 
-The API is not stable and has not yet been extensively tested.
+_Example of a template hierarchy_
 
-## TL;DR
 
-Try it yourself, clone the repo and run the example server.
+                  BaseHandler(...)
+                | base.html ========================|
+                | …                                 |
+                | {{ template "content" .Content }} |
+                | …               ^                 |
+                |_________________|_________________|
+                                  |
+                           ______/ \______
+      ContentAHandler(...)                ContentBHandler(...)
+    | contentA.html ========== |        | contentB.html ========== |
+    |                          |        |                          |
+    | <div id="content">...</… |        | <div id="content">...</… |
+    |__________________________|        |__________________________|
 
-    $ go run example/greeter.go
+A 'View' is a template string (usually file path) paired with a handler function.
+Defining a SubView creates a new template-handler pair associated with an embedded block.
+Treetop executors can construct a `http.Handler` instance for a given view. This binds
+together all associated templates and functions into a single web endpoint.
+
+The code below extends this example. It binds the routes `"/content_a"` and `"/content_b"` with two
+handlers that share the same base, nav and sidebar templates.
+
+    base := treetop.NewView(
+        "base.html", BaseHandler)
+    nav := base.NewSubView(
+        "nav", "nav.html", NavHandler)
+    _ = base.NewDefaultSubView(
+        "sidebar", "sidebar.html", SidebarHandler)
+    contentA := base.NewSubView(
+        "content", "content_a.html", ContentAHandler)
+    contentB := base.NewSubView(
+        "content", "content_b.html", ContentBHandler)
+
+    exec := treetop.FileExecutor{}
+    mux.Handle("/content_a", exec.NewViewHandler(contentA, nav))
+    mux.Handle("/content_b", exec.NewViewHandler(contentB, nav))
+
+Example of named template blocks in `"base.html"`,
+
+	...
+	<div class="layout">
+		{{ block "nav" .Nav }}  <div id="nav">default nav</div> {{ end }}
+
+		{{ template "sidebar" .SideBar }}
+
+		{{ template "content" .Content }}
+	</div>
+	...
+
+_See text/template [Nested Template Definitions](https://tip.golang.org/pkg/text/template/#hdr-Nested_template_definitions) for more info._
+
+Views can have as many levels of nesting as needed.
+
+### No Third-Party Dependencies
+
+The Treetop package wraps features of the Go standard library, mostly within "net/http" and "html/template".
+
+
+##  HTML Template Protocol
+
+### Hot-swap sections of a page without JS boilerplate
+
+Since views are self-contained, they can be rendered in isolation. Treetop
+handlers support rendering template fragments that can be 'applied' to a loaded document.
+The following is an illustration of the protocol.
+
+    > GET /content_a HTTP/1.1
+      Accept: application/x.treetop-html-template+xml
+
+    < HTTP/1.1 200 OK
+      Content-Type: application/x.treetop-html-template+xml
+      Vary: Accept
+
+      <template>
+          <div id="content">...</div>
+          <div id="nav">...</div>
+      </template>
+
+A [Treetop Client Library](https://github.com/rur/treetop-client) is available.
+It sends template requests using XHR and applies fragments to the DOM with a simple
+find and replace mechanism.
+
+Hot-swapping can be used to improve user experience in several way <sup>[docs needed]</sup>.
+See examples for more details.
+
+## Example
+
+An example app can be run from this repo <sup>[needs improvement]</sup>.
+
+    $ go run ./example/
 
 Tip. Activate your network tab to observe what's going on.
 
-### Other Examples
+### Other Examples:
 
-- [Todo \*Without\* MVC](https://github.com/rur/todowithoutmvc) - Treetop implementation of [TodoMVC](http://todomvc.com) app.
+- [Todo \*Without\* MVC](https://github.com/rur/todowithoutmvc) - Treetop implementation of [TodoMVC](http://todomvc.com) app using the template protocol.
 
-## Introduction
+## Template Executor
 
-There are times when application logic is best kept on the server side. Treetop was created to help improve user experience without the need for client facing APIs.
+An 'Executor' is responsible for loading and configuring templates. It constructs a
+[HTTP Handler](https://golang.org/pkg/net/http/#Handler) instance to manage the plumbing
+between loading data and executing templates for a request. You can implement your own template
+loader <sup>[docs needed]</sup>, but the following are provided:
 
-Treetop supports partial page updates with a straightforward extension of standard web navigation. Any application endpoint can be enabled by accepting the Treetop partial or fragment content type. HTML snippets yielded in the response body will be applied to update the loaded page.
+- `FileExecutor` - load template files using os.Open
+- `FileSytemExecutor` - loads templates from a supplied http.FileSystem instance
+- `StringExecutor` - treat the view template property as an inline template string
+- `KeyedStringExecutor` - treat the view template property is key into a template map
+- `DeveloperExecutor` - force per request template parsing
 
+## View Handler Function
 
-### No client configuration necessary
+A view handler function loads data for a corresponding Go template. Just as nested templates
+are embedded in a parent, nested handler data is embedded in the _data_ of it's parent.
 
-A JS client library is provided to help mediate partial requests. Aside from optional component integration, no configuration is needed. For more information see [Treetop Client Library](https://github.com/rur/treetop-client).
+Example of a handler loading data for a child template,
 
+    func ParentHandler(rsp treetop.Response, req *http.Request) interface{} {
+        return struct {
+            ...
+            Child interface{}
+        }{
+            ...
+            Child: rsp.HandleSubView("child", req),
+        }
+    }
 
-## How a partial request works
+Data is subsequently passed down within the template like so,
 
-A Treetop request is triggered in the browser using the [treetop client](https://github.com/rur/treetop-client) like so,
+    <div id="parent">
+        ...
+        {{ template "child" .Child }}
+    </div>
 
-    treetop.request("GET", "/some/path")
+### Hijacking the Response
 
-An XHR request is sent that includes the following accept header,
+The `treetop.Response` type implements `http.ResponseWriter`. Any handler can halt the executor and
+take full responsibility for the response by using one of the write methods of that interface<sup>2</sup>.
 
-    Accept: application/x.treetop-html-partial+xml, application/x.treetop-html-fragment+xml
+## Response Writer
 
-If the Treetop content type is supported at that end-point, the response header will specify a partial or fragment response. The body will contain a list of HTML snippets to be applied to the current document.
+The Treetop Go library provides utilities for writing ad-hoc template responses when needed.
+PartialWriter and FragmentWriter wrap a supplied `http.ResponseWriter`.
 
 For example,
-
-    HTTP/1.1 200 OK
-    [...]
-    Content-Type: application/x.treetop-html-partial+xml
-    Vary: Accept
-    X-Response-URL: /some/path
-    [...]
-
-    <section id="content"><p>Hello, Treetop!</p></section>
-    <div id="sidebar"><a href="/">Homepage</a></div>
-
-Finally, once the `Content-Type` has been recognized in the response headers, the client library will parse the body as a list of HTML fragments. The `id` attribute of each top level element will be matched to an existing node in the document.
-
-* Matched elements in the current DOM will be replaced.
-* Unmatched fragments will be discarded.
-
-_Note that aspects of the client processing can be configured and extended. See [client docs](https://github.com/rur/treetop-client)_
-
-
-### Fragment vs Partial
-
-The `Content-Type` response header denotes whether a request should be treated as a partial or a fragment by the client.
-
-#### Partial content type
-
-    application/x.treetop-html-partial+xml
-
-A 'partial' URL supports rendering either a fragment or a full HTML document. When this Content-Type is received the client library will update the browser location bar with the response URL.
-
-#### Fragment content type
-
-    application/x.treetop-html-fragment+xml
-
-The contents of this response should be treated as a transient view update. The URL is not necessarily capable of yielding a valid HTML document so the location bar will not change.
-
-## Server Side Helpers
-
-### Response Writer
-
-The Treetop Go library provides utilities for writing compatible HTTP responses. Ad hoc integration is supported with a `ResponseWriter` wrapper like so,
 
     func myHandler(w http.ResponseWriter, req *http.Request) {
         // check for treetop request and construct a writer
@@ -95,78 +167,21 @@ The Treetop Go library provides utilities for writing compatible HTTP responses.
         }
     }
 
-### Page API - Hierarchical Views
+This is useful when you want to use the template protocol with a conventional handler function.
 
-An abstraction is included in the Treetop GO library for creating more complex networks of handlers. A page view API is available for building handler instances that take advantage of the template inheritance feature supported by the Go standard library<sup>(1)</sup>.
-
-    page := treetop.NewPage(treetop.DefaultTemplateExec)
-    base := page.NewView("base.html.tmpl", baseHandler)
-    content := base.SubView(
-        "content",
-        "content.html.tmpl",
-        contentHandler,
-    )
-    form := content.SubView(
-        "form",
-        "contact.html.tmpl",
-        contactHandler,
-    )
-    submit := content.SubView(
-        "form",
-        "contactSubmit.html.tmpl",
-        submitHandler,
-    )
-
-    mux.HandleGET("/", treetop.ViewHandler(content))
-    mux.HandleGET("/contact", treetop.ViewHandler(form))
-    mux.HandlePOST("/contact/submit", treetop.ViewHandler(submit).FragmentOnly())
-
-Each template filepath is paired with a data handler which is responsible for yielding execution data for the template. Hierarchy works by chaining handlers together to assemble tiers of template data into one data structure.
-
-    // top-level handler delegates to zero or more sub handler
-    func baseHandler(rsp treetop.Response, req *http.Request) interface{} {
-        return struct{
-            Session app.Session
-            Content interface{}
-        }{
-            Session: Session{"example.user"},
-            Content: rsp.HandleSubView("content", req),
-        }
-    }
-
-    // "content" subview, delegates to "form"
-    func contentHandler(rsp treetop.Response, req *http.Request) interface{} {
-        return struct{
-            Title string
-            Form  interface{}
-        }{
-            Title: "My Contact Form",
-            Form: rsp.HandleSubView("form", req),
-        }
-    }
-
-    // "form" sub-view
-    func contactHandler(_ treetop.Response, _ *http.Request) interface{} {
-        return "...form config..."
-    }
-
-    // alternative "form" handler
-    func submitHandler(_ treetop.Response, req *http.Request) interface{} {
-        // ...handle POST data here...
-        return "Thanks!"
-    }
-
-
-The standard Go [html/template](https://golang.org/pkg/html/template/) library is used under the hood. However, a preferred engine can be configured without much fuss (once it supports inheritance).
-
-_TODO: This feature should have dedicated documentation._
+The difference between a "Partial" and "Fragment" writer has to with navigation history
+in the web browser <sup>[docs needed]</sup>
 
 ## Client Library
 
-The __treetop.js__ script must be sourced by the browser to enable in-page navigation.
+The client library is used to send template requests from the browser using XHR. Response fragments
+are handled mechanically on the client. This avoids the need for callbacks or other IO boilerplate.
+
+    treetop.request("GET", "/some/path")
 
 See [Client Library](https://github.com/rur/treetop-client) for more information.
 
 
-## References
+## _Footnotes_
 1. Go supports template inheritance through [nested template definitions](https://tip.golang.org/pkg/text/template/#hdr-Nested_template_definitions).
+2. A [http.ResponseWriter](https://golang.org/pkg/net/http/#ResponseWriter) will flush headers when either `WriteHeaders(..)` or `Write(..)` methods are invoked.
