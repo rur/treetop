@@ -36,16 +36,11 @@ together all associated templates and functions into a single web endpoint.
 The code below extends this example. It binds the routes `"/content_a"` and `"/content_b"` with two
 handlers that share the same base, nav and sidebar templates.
 
-    base := treetop.NewView(
-        "base.html", BaseHandler)
-    nav := base.NewSubView(
-        "nav", "nav.html", NavHandler)
-    _ = base.NewDefaultSubView(
-        "sidebar", "sidebar.html", SidebarHandler)
-    contentA := base.NewSubView(
-        "content", "content_a.html", ContentAHandler)
-    contentB := base.NewSubView(
-        "content", "content_b.html", ContentBHandler)
+    base := treetop.NewView("base.html", BaseHandler)
+    nav := base.NewSubView("nav", "nav.html", NavHandler)
+    _ = base.NewDefaultSubView("sidebar", "sidebar.html", SidebarHandler)
+    contentA := base.NewSubView("content", "content_a.html", ContentAHandler)
+    contentB := base.NewSubView("content", "content_b.html", ContentBHandler)
 
     exec := treetop.FileExecutor{}
     mux.Handle("/content_a", exec.NewViewHandler(contentA, nav))
