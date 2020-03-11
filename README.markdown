@@ -6,12 +6,12 @@
 
 Treetop is a tool for constructing HTTP handlers for nested templates.
 
-HTML apps typically share a lot of structure between endpoints.
-Nested templates are supported in Go<sup>1</sup> to help reduce
+HTML apps typically have a lot of common structure shared between endpoints.
+Nested templates supported in Go<sup>1</sup> can be used to reduce
 HTML boilerplate. Treetop Views match a function with each template so that
 many endpoints can be constructed for different page configurations.
 
-_Example of a template hierarchy_
+_Example of a basic hierarchy showing content A and B sharing the same 'base' template_
 
 
                   BaseHandler(...)
@@ -28,11 +28,6 @@ _Example of a template hierarchy_
     | <div id="content">...</… |        | <div id="content">...</… |
     |__________________________|        |__________________________|
 
-A 'View' is a template string (usually file path) paired with a handler function.
-Defining a SubView creates a new template-handler pair associated with an embedded block.
-Treetop executors can construct a `http.Handler` instance for a given view. This binds
-together all associated templates and functions into a single web endpoint.
-
 The code below extends this example. It binds the routes `"/content_a"` and `"/content_b"` with two
 handlers that share the same base, nav and sidebar templates.
 
@@ -46,7 +41,11 @@ handlers that share the same base, nav and sidebar templates.
     mux.Handle("/content_a", exec.NewViewHandler(contentA, nav))
     mux.Handle("/content_b", exec.NewViewHandler(contentB, nav))
 
-Example of named template blocks in `"base.html"`,
+The 'Executor' is responsible for collecting related views,
+configuring templates and plumbing it all together to produce a `http.Handler` instance
+for each route.
+
+Example of embedded template blocks in `"base.html"`,
 
 	...
 	<div class="layout">
