@@ -1,11 +1,11 @@
-## [0.3.0] - 2020-03-09
+## [0.3.0] - 2020-03-10
 
 Protocol and API overhaul, improve docs and examples, transitioning from prototype
-to a usable library. Get test coverage to >= 90% range.
+to a usable library. Improve test coverage >= 90% range.
 
 ### Protocol Change
 
-Treetop is a 'HTML template' protocol with exactly one content-type value.
+Treetop is a 'HTML template' protocol with one content-type value.
 
     application/x.treetop-html-template+xml
 
@@ -28,7 +28,7 @@ markup in a response body.
 
 ### Change Redirect Header
 
-Treetop now redirects use the Location header value as the destination URL. The only difference
+Treetop redirects now use the Location header value as the destination URL. The only difference
 from a normal HTTP redirect is the status code of 200. The `X-Treetop-Redirect`
 header will have a value of "SeeOther" to signal to the XHR client that a new location
 should be forced.
@@ -37,9 +37,9 @@ should be forced.
 
 Implementation of the `View` type has been simplified.
 
-The `Executor` interface was created to encapsulate responsibility for converting a view
-to a HTTP handler. Template executors have been make more capable.
-The following implementations are supplied with the treetop package:
+The `ViewExecutor` interface was created to encapsulate responsibility for converting a view
+to a HTTP handler. The `TemplateExec` function interface is gone. The following template loaders
+have been implemented with the treetop package:
 
 1. `FileExecutor` - Loads template files from the files system, similar to template.ParseFiles
 2. `FileSystemExecutor` - resolves templates through a http.FileSystem interface
@@ -75,6 +75,18 @@ Example output
       '- B: SubView("B", "B.html", ...Constant.func1)
           |- B1: SubView("B1", "B1.html", ...Constant.func1)
           '- B2: SubView("B2", "B2.html", ...Constant.func1)
+
+#### DeveloperExecutor Error Page
+
+During development you can wrap your server template executor in a `DeveloperExecutor`
+It will reload/re-parse templates for every request. Any template errors will be
+rendered to the client in a formatted error page.
+
+    exec := treetop.FileExecutor{}
+    if devMode {
+        exec = treetop.DeveloperExecutor{exec}
+    }
+    mux.Handle(....)
 
 ### View Helpers
 
