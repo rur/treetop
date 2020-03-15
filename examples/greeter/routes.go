@@ -7,8 +7,8 @@ import (
 	"github.com/rur/treetop/examples/assets"
 )
 
-// GreetViewRoutes register routes for /view example endpoint
-func GreetViewRoutes(mux *http.ServeMux) {
+// Routes register routes for /greeter example endpoint
+func Routes(mux *http.ServeMux) {
 	page := treetop.NewView("base.html", treetop.Delegate("content"))
 	_ = page.NewDefaultSubView("nav", "nav.html", treetop.Noop)
 	content := page.NewSubView("content", "content.html", contentViewHandler)
@@ -17,14 +17,14 @@ func GreetViewRoutes(mux *http.ServeMux) {
 
 	exec := treetop.NewKeyedStringExecutor(map[string]string{
 		"base.html":     assets.BaseHTML,
-		"nav.html":      assets.NavHTML("View"),
-		"content.html":  ContentHTML("View", "/view"),
+		"nav.html":      assets.NavHTML(assets.GreeterNav),
+		"content.html":  ContentHTML,
 		"landing.html":  LandingHTML,
-		"greeting.html": GreetingHTML("/view"),
+		"greeting.html": GreetingHTML,
 	})
 
-	mux.Handle("/view", exec.NewViewHandler(greetForm))
-	mux.Handle("/view/greet", exec.NewViewHandler(greetMessage))
+	mux.Handle("/greeter", exec.NewViewHandler(greetForm))
+	mux.Handle("/greeter/greet", exec.NewViewHandler(greetMessage))
 
 	if errs := exec.FlushErrors(); len(errs) != 0 {
 		panic(errs.Error())
@@ -45,5 +45,5 @@ func contentViewHandler(rsp treetop.Response, req *http.Request) interface{} {
 
 // greetingViewHandler obtains the name for the greeting from the request query
 func greetingViewHandler(_ treetop.Response, req *http.Request) interface{} {
-	return getGreetingQuery(req)
+	return GetGreetingQuery(req)
 }

@@ -1,4 +1,10 @@
-package greeter
+package writer
+
+import (
+	"html/template"
+
+	"github.com/rur/treetop/examples/assets"
+)
 
 var (
 	LandingHTML = `
@@ -7,8 +13,8 @@ var (
 	ContentHTML = `
 	<div id="content">
 		<hr>
-		<h3 class="mb-3">Treetop Greeter</h3>
-		<form action="/greeter/greet" treetop>
+		<h3 class="mb-3">Treetop Greeter <sup>(Writer)</sup></h3>
+		<form action="/writer/greet" treetop>
 			<div class="input-group mb-3">
 				<input id="name"
 					name="name"
@@ -36,7 +42,7 @@ var (
 	GreetingHTML = `
 	<div id="message" class="mt-4 text-center">
 		<h1>Hello, {{ .Who }}!</h1>
-		<p><a href="/greeter" treetop>Clear</a></p>
+		<p><a href="/writer" treetop>Clear</a></p>
 
 		<div class="alert alert-info small" role="alert">
 			{{ .Notes }}
@@ -48,4 +54,17 @@ var (
 		{{ end }}
 	</div>
 	`
+)
+
+// parse nested templates and configure instances
+var (
+	baseTemplate = template.Must(
+		template.Must(
+			template.New("base").
+				Parse(assets.BaseHTML),
+		).New("nav").
+			Parse(assets.NavHTML(assets.WriterNav)))
+	contentTemplate  = template.Must(template.New("content").Parse(ContentHTML))
+	landingTemplate  = template.Must(template.New("message").Parse(LandingHTML))
+	greetingTemplate = template.Must(template.New("message").Parse(GreetingHTML))
 )

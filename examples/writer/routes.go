@@ -1,27 +1,14 @@
-package greeter
+package writer
 
 import (
-	"html/template"
 	"net/http"
 
 	"github.com/rur/treetop"
-	"github.com/rur/treetop/examples/assets"
+	"github.com/rur/treetop/examples/greeter"
 )
 
-var (
-	baseTemplate = template.Must(
-		template.Must(
-			template.New("base").
-				Parse(assets.BaseHTML),
-		).New("nav").
-			Parse(assets.NavHTML("Writer")))
-	contentTemplate  = template.Must(template.New("content").Parse(ContentHTML("Writer", "/writer")))
-	landingTemplate  = template.Must(template.New("message").Parse(LandingHTML))
-	greetingTemplate = template.Must(template.New("message").Parse(GreetingHTML("/writer")))
-)
-
-// GreetWriterRoutes registers writer greeter endpoints
-func GreetWriterRoutes(mux *http.ServeMux) {
+//Routes registers writer greeter endpoints
+func Routes(mux *http.ServeMux) {
 	mux.HandleFunc("/writer/greet", greetingWriteHandler)
 	mux.HandleFunc("/writer", landingWriteHandler)
 }
@@ -59,7 +46,8 @@ func greetingWriteHandler(w http.ResponseWriter, req *http.Request) {
 		}
 	}()
 
-	msg := getGreetingQuery(req)
+	// use the greet parsing logic from greeting page
+	msg := greeter.GetGreetingQuery(req)
 
 	w.Header().Set("Vary", "Accept")
 	if pw, ok := treetop.NewPartialWriter(w, req); ok {

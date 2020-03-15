@@ -58,24 +58,36 @@ var (
 	`
 )
 
-func NavHTML(title string) string {
+// Navigation Enum
+const (
+	NoPage = iota - 1
+	HomeNav
+	GreeterNav
+	WriterNav
+	TuringNav
+	TicketsNav
+)
+
+// NavHTML returns the app navigation template for a page given the page numbers
+func NavHTML(nav int) string {
 	items := []string{
 		`<li class="nav-item"><a class="nav-link" href="/" title="Home">Home</a></li>`,
-		`<li class="nav-item"><a class="nav-link" href="/view" title="View Greeter">Greeter (View)</a></li>`,
-		`<li class="nav-item"><a class="nav-link" href="/writer" title="Writer Greeter">Greeter (Writer)</a></li>`,
-		`<li class="nav-item"><a class="nav-link disabled" href="/" >More... (TODO)</a></li>`,
+		`<li class="nav-item"><a class="nav-link" href="/greeter" title="View Greeter">Greeter</a></li>`,
+		`<li class="nav-item"><a class="nav-link" href="/writer" title="Writer Greeter">Greeter <sup>(Writer)</sup></a></li>`,
+		`<li class="nav-item"><a class="nav-link" href="/turing" title="Turing Chat">Turing Chat</a></li>`,
+		`<li class="nav-item"><a class="nav-link" href="/ticket" title="Create Ticket">Ticket Form</a></li>`,
 	}
-	switch title {
-	case "Home":
-		items[0] = strings.Replace(items[0], "nav-link", "nav-link active", 1)
-	case "View":
-		items[1] = strings.Replace(items[1], "nav-link", "nav-link active", 1)
-	case "Writer":
-		items[2] = strings.Replace(items[2], "nav-link", "nav-link active", 1)
+
+	if nav < NoPage || nav >= len(items) {
+		panic(fmt.Sprintf("Invalid page %d", nav))
+	}
+
+	if nav != NoPage {
+		items[nav] = strings.Replace(items[nav], "nav-link", "nav-link active", 1)
 	}
 	return fmt.Sprintf(`
 	<nav>
-		<ul class="nav justify-content-center">
+		<ul class="nav nav-pills justify-content-center">
 			%s
 		</ul>
 	</nav>
