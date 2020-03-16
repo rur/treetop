@@ -83,13 +83,13 @@ func notesHandler(_ treetop.Response, req *http.Request) interface{} {
 		if submitter := req.URL.Query().Get("submitter"); submitter != "" {
 			notes = append(
 				notes,
-				fmt.Sprintf("Submitted with the '%s' button!", submitter),
+				fmt.Sprintf("Form submit with the '%s' button. Treetop JS client supports element submitters.", submitter),
 			)
 		} else {
 			notes = append(notes, "Notice that the input cursor has not lost its focus or position.")
 		}
 		notes = append(notes, "A history state was pushed, try using browser back and forward button.")
-		notes = append(notes, "These notes where 'included' with the message update template. Check your network inspector for details.")
+		notes = append(notes, "These notes were 'included' with the message template. Check your network inspector for details.")
 	}
 	return notes
 }
