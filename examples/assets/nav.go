@@ -8,7 +8,7 @@ import (
 // Navigation Enum
 const (
 	NoPage = iota - 1
-	HomeNav
+	IntroNav
 	GreeterNav
 	InlineNav
 	TicketsNav
@@ -17,7 +17,7 @@ const (
 // NavHTML returns the app navigation template for a page given the page numbers
 func NavHTML(nav int) string {
 	items := []string{
-		`<li class="nav-item"><a class="nav-link" href="/" title="Home">Home</a></li>`,
+		`<li class="nav-item"><a class="nav-link" href="/" title="Intro">Intro</a></li>`,
 		`<li class="nav-item"><a class="nav-link" href="/greeter" title="View Greeter">Greeter</a></li>`,
 		`<li class="nav-item"><a class="nav-link" href="/inline" title="Inline Edit">Inline Edit</a></li>`,
 		`<li class="nav-item"><a class="nav-link" href="/ticket" title="Create Ticket">Ticket Form</a></li>`,

@@ -33,7 +33,7 @@ func main() {
 	// define handler for home page
 	exec := treetop.NewKeyedStringExecutor(map[string]string{
 		"local://base.html": assets.BaseHTML,
-		"local://nav.html":  assets.NavHTML(assets.HomeNav),
+		"local://nav.html":  assets.NavHTML(assets.IntroNav),
 	})
 
 	home := treetop.
