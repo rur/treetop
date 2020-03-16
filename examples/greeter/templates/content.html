@@ -1,7 +1,7 @@
 <div id="content">
     <hr>
     <h3 class="mb-3">Treetop Greeter</h3>
-    <p>A little more than hello world.</p>
+    <p>Only a little more than hello world.</p>
     <form action="/greeter/greet" treetop>
         <div class="input-group mb-3">
             <input id="name"
@@ -25,4 +25,9 @@
     </form>
 
     {{ template "message" .Message}}
+
+    {{ block "notes" .Notes }}
+    <div id="notes" class="hide"></div>
+    {{ end }}
+
 </div>

@@ -1,13 +1,4 @@
 <div id="message" class="mt-4">
-    <h1>Hello, {{ .Who }}!</h1>
+    <h1>Hello, {{ . }}!</h1>
     <p><a href="/greeter" treetop>[x] clear</a></p>
-
-    <div class="mt-5 border rounded bg-light text-muted p-3 small">
-        <h6 class="muted">To Note:</h6>
-        <ul class="list-group list-group-flush">
-            <li class="list-group-item bg-light">{{ .Notes }}</li>
-            {{ if not .IsFullPage -}}
-            <li class="list-group-item bg-light">Browser location and history were updated, try using the back button.</li>{{ end }}
-        </ul>
-    </div>
 </div>
