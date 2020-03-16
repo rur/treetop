@@ -16,7 +16,9 @@ import (
 
 func main() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/favicon.ico", func(_ http.ResponseWriter, _ *http.Request) { /* noop */ })
+	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, req *http.Request) {
+		http.Redirect(w, req, "https://golang.org/favicon.ico", http.StatusSeeOther)
+	})
 	mux.HandleFunc("/treetop.js", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript")
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(assets.TreetopJS)))

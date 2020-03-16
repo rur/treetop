@@ -79,7 +79,7 @@ func notesHandler(_ treetop.Response, req *http.Request) interface{} {
 	if !treetop.IsTemplateRequest(req) {
 		notes = append(notes, "Full page request!")
 	} else {
-		notes = append(notes, "XHR form submit")
+		notes = append(notes, "XHR form submit, see url query parameters.")
 		if submitter := req.URL.Query().Get("submitter"); submitter != "" {
 			notes = append(
 				notes,
@@ -89,7 +89,7 @@ func notesHandler(_ treetop.Response, req *http.Request) interface{} {
 			notes = append(notes, "Notice that the input cursor has not lost its focus or position.")
 		}
 		notes = append(notes, "A history state was pushed, try using browser back and forward button.")
-		notes = append(notes, "These notes where 'included' with the message update template.")
+		notes = append(notes, "These notes where 'included' with the message update template. Check your network inspector for details.")
 	}
 	return notes
 }
