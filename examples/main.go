@@ -2,24 +2,16 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"io"
 	"log"
 	"net/http"
+
+	"github.com/rur/treetop"
 
 	"github.com/rur/treetop/examples/assets"
 	"github.com/rur/treetop/examples/greeter"
 	"github.com/rur/treetop/examples/inline"
 	"github.com/rur/treetop/examples/ticket"
-)
-
-var (
-	home = template.Must(
-		template.Must(
-			template.New("base").
-				Parse(assets.BaseHTML),
-		).New("nav").
-			Parse(assets.NavHTML(assets.HomeNav)))
 )
 
 func main() {
@@ -30,12 +22,28 @@ func main() {
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(assets.TreetopJS)))
 		io.WriteString(w, assets.TreetopJS)
 	})
+
+	// Register routes for example apps
 	greeter.Routes(mux)
 	inline.Routes(mux)
 	ticket.Routes(mux)
-	mux.HandleFunc("/", func(w http.ResponseWriter, _ *http.Request) {
-		home.ExecuteTemplate(w, "base", nil)
+
+	// define handler for home page
+	exec := treetop.NewKeyedStringExecutor(map[string]string{
+		"local://base.html": assets.BaseHTML,
+		"local://nav.html":  assets.NavHTML(assets.HomeNav),
 	})
+
+	home := treetop.
+		NewView("local://base.html", treetop.Noop).
+		NewSubView("nav", "local://nav.html", treetop.Noop)
+
+	mux.Handle("/", exec.NewViewHandler(home).PageOnly())
+
+	if errs := exec.FlushErrors(); len(errs) > 0 {
+		log.Fatalf("Error(s) loading example templates:\n%s", errs)
+	}
+
 	fmt.Println("serving on http://0.0.0.0:3000/")
 	log.Fatal(http.ListenAndServe(":3000", mux))
 }
