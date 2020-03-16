@@ -15,8 +15,8 @@ type GreetTemplateData struct {
 	IsFullPage bool
 }
 
-// GetGreetingQuery interprets the greeting from the request URL query
-func GetGreetingQuery(req *http.Request) GreetTemplateData {
+// getGreetingQuery interprets the greeting from the request URL query
+func getGreetingQuery(req *http.Request) GreetTemplateData {
 	query := req.URL.Query()
 	data := GreetTemplateData{
 		Who: query.Get("name"),

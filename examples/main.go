@@ -9,9 +9,8 @@ import (
 
 	"github.com/rur/treetop/examples/assets"
 	"github.com/rur/treetop/examples/greeter"
+	"github.com/rur/treetop/examples/inline"
 	"github.com/rur/treetop/examples/ticket"
-	"github.com/rur/treetop/examples/turing"
-	"github.com/rur/treetop/examples/writer"
 )
 
 var (
@@ -32,8 +31,7 @@ func main() {
 		io.WriteString(w, assets.TreetopJS)
 	})
 	greeter.Routes(mux)
-	writer.Routes(mux)
-	turing.Routes(mux)
+	inline.Routes(mux)
 	ticket.Routes(mux)
 	mux.HandleFunc("/", func(w http.ResponseWriter, _ *http.Request) {
 		home.ExecuteTemplate(w, "base", nil)
