@@ -1,7 +1,9 @@
 package inline
 
 import (
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/rur/treetop"
 	"github.com/rur/treetop/examples/assets"
@@ -28,9 +30,49 @@ func Routes(mux *http.ServeMux) {
 	}
 }
 
+const formDataCookieName = "inline-form-data"
+
 // ticketContentHandler
 // extends: base.html{content}
 func ticketContentHandler(rsp treetop.Response, req *http.Request) interface{} {
-	// TODO: implement
-	return nil
+	data := struct {
+		FormData *FormData
+	}{
+		FormData: &FormData{},
+	}
+	// get or set an encoded cookie to simulate persistance
+	if cookie, err := req.Cookie(formDataCookieName); err == nil {
+		err := data.FormData.UnmarshalBase64([]byte(cookie.Value))
+		if err != nil {
+			http.Error(
+				rsp,
+				fmt.Sprintf("Error unmarshalling cookie base64 data, %s", err),
+				http.StatusInternalServerError,
+			)
+			return nil
+		}
+	} else {
+		// create default form state for the demo and
+		// set an encoded cookie value
+		data.FormData = getDefaultFormData()
+		b64, err := data.FormData.MarshalBase64()
+		if err != nil {
+			http.Error(
+				rsp,
+				fmt.Sprintf("Error unmarshalling cookie base64 data, %s", err),
+				http.StatusInternalServerError,
+			)
+			return nil
+		}
+		cookie := http.Cookie{
+			Name:     formDataCookieName,
+			Path:     "/inline",
+			Value:    string(b64),
+			Expires:  time.Now().Add(1 * time.Hour),
+			HttpOnly: true,
+		}
+		http.SetCookie(rsp, &cookie)
+	}
+
+	return data
 }

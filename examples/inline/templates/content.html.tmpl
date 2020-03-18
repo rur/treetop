@@ -14,14 +14,16 @@
         <label for="firstName">First name</label>
         {{/*<input type="text" class="form-control" id="firstName" placeholder="" value="" required="">*/}}
         <div>
-          <h5>Edward <sup></h5>
+          <h5>{{ .FormData.FirstName }} <sup></h5>
         </div>
         <div class="small font-italic"><a class="text-secondary" href="">[edit]</a></div>
         </div>
         <div class="col-md-6 mb-3">
         <label for="lastName">Last name <em>(Editing)</em></label>
         <div class="input-group">
-          <input type="text" class="form-control" placeholder="Surname" aria-label="Recipient's username with two button addons" aria-describedby="button-addon4">
+          <form treetop action=".">
+          <input type="text" class="form-control" placeholder="Surname" value="{{ .FormData.LastName }}" required="required" aria-label="TODO" aria-describedby="TODO">
+          </form>
           <div class="input-group-append" id="button-addon4">
           <button class="btn btn-primary" type="button">Save</button>
           </div>
@@ -46,11 +48,10 @@
         <div>
           <h5>edward.pinkerton@yahoo.com</h5>
         </div>
-        <div class="small"><a class="text-secondary" href="">[edit]</a></div>
+        <div class="small"><a class="text-secondary" href=""><i>[edit]</i></a></div>
       </div>
 
-      <div class="row">
-        <div class="col-md-5 mb-3">
+      <div class="mb-3">
         <label for="country">Country</label>
         <select class="custom-select d-block w-100" id="country" required="">
           <option value="">Choose...</option>
@@ -59,22 +60,6 @@
         <div class="my-2 text-right">
           <button class="btn">Cancel</button>
           <button class="btn btn-primary">Save</button>
-        </div>
-
-        </div>
-        <div class="col-md-4 mb-3">
-        <label for="state">State</label>
-        <div>
-          <h5>British Columbia</h5>
-        </div>
-        <div class="small"><a class="text-secondary" href="">[edit]</a></div>
-        </div>
-        <div class="col-md-3 mb-3">
-        <label for="zip">Zip</label>
-        <div>
-          <h5>123-456</h5>
-        </div>
-        <div class="small"><a class="text-secondary" href="">[edit]</a></div>
         </div>
       </div>
 
