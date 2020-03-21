@@ -12,7 +12,7 @@ func TestFormData_MarshalBase64(t *testing.T) {
 		{
 			name:     "nil case",
 			data:     &FormData{},
-			wantSize: 36,
+			wantSize: 28,
 			wantErr:  false,
 		},
 		{
@@ -25,7 +25,7 @@ func TestFormData_MarshalBase64(t *testing.T) {
 				Description: "test",
 			},
 			wantErr:  false,
-			wantSize: 84,
+			wantSize: 64,
 		},
 	}
 	for _, tt := range tests {

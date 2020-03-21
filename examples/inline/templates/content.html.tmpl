@@ -5,29 +5,27 @@
   <section class="mt-3 mb5">
     <p>Load a mini-form to edit text fields in place.</p>
 
+    <div class="d-none" id="error-message"></div>
+
     <div class="card">
     <h5 class="card-header">User Profile</h5>
     <div class="card-body">
       <div class="container">
       <div class="row">
+
         <div class="col-md-6 mb-3">
-        <label for="firstName">First name</label>
-        {{/*<input type="text" class="form-control" id="firstName" placeholder="" value="" required="">*/}}
-        <div>
-          <h5>{{ .FormData.FirstName }} <sup></h5>
-        </div>
-        <div class="small font-italic"><a class="text-secondary" href="">[edit]</a></div>
+          {{ template "first-name" .FirstName }}
         </div>
         <div class="col-md-6 mb-3">
-        <label for="lastName">Last name <em>(Editing)</em></label>
-        <div class="input-group">
+          <label for="lastName">Last name <em>(Editing)</em></label>
           <form treetop action=".">
-          <input type="text" class="form-control" placeholder="Surname" value="{{ .FormData.LastName }}" required="required" aria-label="TODO" aria-describedby="TODO">
-          </form>
-          <div class="input-group-append" id="button-addon4">
-          <button class="btn btn-primary" type="button">Save</button>
+          <div class="input-group">
+            <input type="text" class="form-control" placeholder="Surname" value="{{ .FormData.LastName }}" required="required" aria-label="TODO" aria-describedby="TODO">
+            <div class="input-group-append" id="button-addon4">
+            <button class="btn btn-primary" type="button">Save</button>
+            </div>
           </div>
-        </div>
+          </form>
         <div>
           <a class="btn btn-sm text-primary" href="">[x] cancel</a>
         </div>
@@ -91,3 +89,18 @@
   </div>
 
 </div>
+
+{{ define "treetop-config" }}
+<script>
+  window.TREETOP_CONFIG = {
+    mountAttrs: {
+      // autofocus attribute component will cause an input element
+      // to be focused and have the cursor placed at the end of the input
+      "autofocus": (emt) => {
+        emt.focus()
+        setTimeout(function(){ emt.selectionStart = emt.selectionEnd = 10000; }, 0);
+      }
+    }
+  }
+</script>
+{{ end }}

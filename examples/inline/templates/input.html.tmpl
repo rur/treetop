@@ -1,0 +1,25 @@
+<div id="input-{{ .Field }}">
+    <label for="firstName">{{ .Title }}{{ if .Editing }} <i>(editing)</i>{{ end }}</label>
+
+    {{ if .Editing }}
+	<form treetop action="/inline/{{ .Field }}" method="POST">
+	<div class="input-group">
+		<input type="text" autofocus class="form-control" name="{{ .Field }}" placeholder="{{ .Field }}" value="{{ .Value }}" required="required" aria-label="TODO" aria-describedby="TODO" onfocus="this.value = this.value;" >
+		<div class="input-group-append" id="button-addon4">
+			<button class="btn btn-primary">Save</button>
+		</div>
+	</div>
+	<div><a class="small font-italic btn btn-link p-0 text-primary" treetop-link="/inline/{{ .Field }}?edit=false">[x] cancel</a></div>
+	</form>
+
+    {{ else }}
+    <div>
+        <h5>{{ .Value }} <sup></h5>
+	    <div class=""><a class="small font-italic btn btn-link p-0 text-secondary" treetop-link="/inline/{{ .Field }}?edit=true">[edit]</a></div>
+    </div>
+    {{ end }}
+
+    {{ if .ErrorMessage }}
+    <p>{{ .ErrorMessage }}</p>
+    {{ end }}
+</div>

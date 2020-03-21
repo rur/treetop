@@ -18,12 +18,18 @@ type FormData struct {
 	Description string
 }
 
+var CountryOptions = []string{
+	"USA",
+	"Canada",
+	"Mexico",
+}
+
 // formDataTypeDict is the DEFLATE dictionary used for compressing and
 // decompressing JSON marshalled from FormData type
-var formDataTypeDict = []byte(`{"FirstName":,"LastName": ,"Email": ,"Country": ,"Description":`)
+var formDataTypeDict = []byte(`{"FirstName":","LastName":","Email":","Country":"USACanadaMexico","Description":"`)
 
-func (i *FormData) MarshalBase64() ([]byte, error) {
-	jsonD, err := json.Marshal(i)
+func (fd *FormData) MarshalBase64() ([]byte, error) {
+	jsonD, err := json.Marshal(fd)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +53,7 @@ func (i *FormData) MarshalBase64() ([]byte, error) {
 	return []byte(base64.StdEncoding.EncodeToString(b.Bytes())), nil
 }
 
-func (i *FormData) UnmarshalBase64(in []byte) error {
+func (fd *FormData) UnmarshalBase64(in []byte) error {
 	compressed := make([]byte, len(in))
 	count, err := base64.StdEncoding.Decode(compressed, in)
 	if err != nil {
@@ -66,7 +72,7 @@ func (i *FormData) UnmarshalBase64(in []byte) error {
 		return err
 	}
 
-	return json.Unmarshal(raw, i)
+	return json.Unmarshal(raw, fd)
 }
 
 func getDefaultFormData() *FormData {
@@ -76,5 +82,20 @@ func getDefaultFormData() *FormData {
 		Email:       "john.doe@gmail.com",
 		Country:     "Canada",
 		Description: "test",
+	}
+}
+
+func (fd *FormData) SetField(field, value string) {
+	switch field {
+	case "firstName":
+		fd.FirstName = value
+	case "surname":
+		fd.LastName = value
+	case "email":
+		fd.Email = value
+	case "country":
+		fd.Country = value
+	case "description":
+		fd.Description = value
 	}
 }

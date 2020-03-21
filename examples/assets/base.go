@@ -38,7 +38,7 @@ var (
 		{{ end }}
 		</div>
 	</main>
-<script>TREETOP_CONFIG={/*defaults*/}</script>
+{{ block "treetop-config" . }}{{ end }}
 <script src="/treetop.js" async></script>
 </body>
 </html>
