@@ -4,7 +4,7 @@
     {{ if .Editing }}
 	<form treetop action="/inline/{{ .Field }}" method="POST">
 	<div class="input-group">
-		<input type="text" autofocus class="form-control" name="{{ .Field }}" placeholder="{{ .Field }}" value="{{ .Value }}" required="required" aria-label="TODO" aria-describedby="TODO" onfocus="this.value = this.value;" >
+		<input type="{{ if .Type }}{{ .Type }}{{ else }}text{{ end }}" autofocus class="form-control" name="{{ .Field }}" placeholder="{{ .Field }}" value="{{ .Value }}" required="required" aria-label="TODO" aria-describedby="TODO" onfocus="this.value = this.value;" >
 		<div class="input-group-append" id="button-addon4">
 			<button class="btn btn-primary">Save</button>
 		</div>

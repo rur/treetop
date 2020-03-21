@@ -30,7 +30,7 @@ func Routes(mux *http.ServeMux) {
 		srv.bind(getFormFieldHandler("email")))
 
 	country := content.NewDefaultSubView("country",
-		"examples/inline/templates/input.html.tmpl",
+		"examples/inline/templates/select.html.tmpl",
 		srv.bind(getFormFieldHandler("country")))
 
 	description := content.NewDefaultSubView("description",
@@ -96,6 +96,8 @@ func getFormFieldHandler(field string) formDataHandlerFunc {
 			Editing      bool
 			ElementID    string
 			Title        string
+			Options      []string
+			Type         string
 		}{
 			Field: field,
 		}
@@ -112,10 +114,12 @@ func getFormFieldHandler(field string) formDataHandlerFunc {
 		case "email":
 			data.Title = "Email"
 			data.Value = form.Email
+			data.Type = "email"
 			validate = assertValidEmail
 		case "country":
 			data.Title = "Country"
 			data.Value = form.Country
+			data.Options = CountryOptions
 			validate = assertValidContry
 		case "description":
 			data.Title = "Description"

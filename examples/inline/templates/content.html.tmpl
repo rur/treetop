@@ -17,48 +17,16 @@
           {{ template "first-name" .FirstName }}
         </div>
         <div class="col-md-6 mb-3">
-          <label for="lastName">Last name <em>(Editing)</em></label>
-          <form treetop action=".">
-          <div class="input-group">
-            <input type="text" class="form-control" placeholder="Surname" value="{{ .FormData.LastName }}" required="required" aria-label="TODO" aria-describedby="TODO">
-            <div class="input-group-append" id="button-addon4">
-            <button class="btn btn-primary" type="button">Save</button>
-            </div>
-          </div>
-          </form>
-        <div>
-          <a class="btn btn-sm text-primary" href="">[x] cancel</a>
-        </div>
-        {{/*
-        <input type="text" class="form-control" id="lastName" placeholder="" value="" required="">
-        <div>
-          <h5>Gearson</h5>
-        </div>
-        */}}
+          {{ template "surname" .Surname }}
         </div>
       </div>
 
       <div class="mb-3">
-        <label for="email">Email</label>
-        {{/*
-        <input type="email" class="form-control" id="email" placeholder="you@example.com">
-        */}}
-        <div>
-          <h5>edward.pinkerton@yahoo.com</h5>
-        </div>
-        <div class="small"><a class="text-secondary" href=""><i>[edit]</i></a></div>
+        {{ template "email" .Email }}
       </div>
 
       <div class="mb-3">
-        <label for="country">Country</label>
-        <select class="custom-select d-block w-100" id="country" required="">
-          <option value="">Choose...</option>
-          <option>United States</option>
-        </select>
-        <div class="my-2 text-right">
-          <button class="btn">Cancel</button>
-          <button class="btn btn-primary">Save</button>
-        </div>
+        {{ template "country" .Country }}
       </div>
 
 

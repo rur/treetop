@@ -1,0 +1,32 @@
+<div id="form-{{ .Field }}">
+    <label for="{{ .Field }}">{{ .Title }}{{ if .Editing }} <i>(editing)</i>{{ end }}</label>
+
+    {{ if .Editing }}
+    <form treetop action="/inline/{{ .Field }}" method="POST">
+        <select name="{{ .Field}}" class="custom-select d-block w-100" id="{{ .Field }}" required>
+            <option value="">Choose...</option>
+            {{ range $index, $option := .Options }}
+            <option {{ if eq $.Value $option }} selected{{ end }} value="{{ $option }}">{{ $option }}</option>
+            {{ end }}
+        </select>
+        <div class="my-2 text-right">
+            <button type="button" treetop-link="/inline/{{ .Field }}?edit=false" class="btn">Cancel</button>
+            <button class="btn btn-primary">Save</button>
+        </div>
+    </form>
+
+    {{ else }}
+    <div>
+        <h5>{{ .Value }}</h5>
+        <div>
+            <a class="small font-italic btn btn-link p-0 text-secondary"
+                treetop-link="/inline/{{ .Field }}?edit=true">[edit]</a>
+        </div>
+    </div>
+
+    {{ end }}
+
+    {{ if .ErrorMessage }}
+    <p>{{ .ErrorMessage }}</p>
+    {{ end }}
+</div>
