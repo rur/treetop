@@ -13,5 +13,7 @@
 .sublime-*
 
 treetop
+_temp/
+_idea/
 temp/
 idea/

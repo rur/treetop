@@ -21,7 +21,7 @@ const formDataCookieName = "inline-form-data"
 type cookieServer struct {
 	sync.RWMutex
 	// per-request resource cache. Multiple handlers may be called for a given
-	// request, cookieServer ensures these share the same FormData instances
+	// request, cookieServer ensures they share the same FormData instances
 	cache map[int]*FormData
 }
 
@@ -31,7 +31,7 @@ func newCookieServer() *cookieServer {
 	}
 }
 
-// get from cache data for this request
+// get from cache data for this request with an 'found' flag
 func (srv *cookieServer) get(respID int) (*FormData, bool) {
 	srv.RLock()
 	defer srv.RUnlock()
@@ -59,7 +59,8 @@ func (srv *cookieServer) teardown(respID int) {
 type formDataHandlerFunc func(fd *FormData, rsp treetop.Response, req *http.Request) interface{}
 
 // bind is middleware function that wraps a treetop view handler function.
-// It decodes a FormData instance from the request cookies
+// The middleward will decode a FormData instance from the request cookies
+// and pass it as the first argument of the wrapped handler.
 func (srv *cookieServer) bind(hdl formDataHandlerFunc) treetop.ViewHandlerFunc {
 	return func(rsp treetop.Response, req *http.Request) interface{} {
 		var (
@@ -105,8 +106,11 @@ func (srv *cookieServer) bind(hdl formDataHandlerFunc) treetop.ViewHandlerFunc {
 			return nil
 		}
 		if data != nil {
+			// add it to the cache
 			srv.put(rID, data)
 			go func() {
+				// When the Treetop response context is done free any sever resources
+				// associated with this request.
 				<-rsp.Context().Done()
 				srv.teardown(rID)
 			}()

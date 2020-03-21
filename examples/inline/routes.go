@@ -11,9 +11,9 @@ import (
 func Routes(mux *http.ServeMux) {
 	srv := newCookieServer()
 
-	page := treetop.NewView("local://base.html", treetop.Delegate("content"))
-	_ = page.NewDefaultSubView("nav", "local://nav.html", treetop.Noop)
-	content := page.NewSubView("content",
+	base := treetop.NewView("local://base.html", treetop.Delegate("content"))
+	_ = base.NewDefaultSubView("nav", "local://nav.html", treetop.Noop)
+	content := base.NewSubView("content",
 		"examples/inline/templates/content.html.tmpl",
 		srv.bind(ticketContentHandler))
 

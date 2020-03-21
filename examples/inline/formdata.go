@@ -21,12 +21,12 @@ type FormData struct {
 var CountryOptions = []string{
 	"Canada",
 	"Mexico",
-	"USA",
+	"United States",
 }
 
 // formDataTypeDict is the DEFLATE dictionary used for compressing and
 // decompressing JSON marshalled from FormData type
-var formDataTypeDict = []byte(`{"FirstName":","LastName":","Email":","Country":"USACanadaMexico","Description":"`)
+var formDataTypeDict = []byte(`{"FirstName":","LastName":","Email":","Country":"United StatesCanadaMexico","Description":"`)
 
 // MarshalBase64 encodes struct value for use as cookie value with limited characterset and available space.
 // The struct value is encoded to a JSON byte array, compress and return base 64 encoding.
