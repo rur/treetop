@@ -17,6 +17,9 @@ var (
 	nav {
 		padding: 1rem;
 	}
+	.pointer {
+		cursor: pointer;
+	}
 	</style>
 </head>
 <body>

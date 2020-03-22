@@ -1,0 +1,44 @@
+<div id="input-{{ .Field }}">
+    <label for="{{ .Field }}"><span class="text-uppercase">{{ .Title }}</span>
+         {{- if .Editing }} <i>(editing)</i>
+        {{- else -}}
+        <a class="font-italic pointer p-0 text-secondary ml-2"
+                treetop-link="/inline/{{ .Field }}?edit=true">[edit]</a>
+        {{- end }}</label>
+
+    {{ if .Editing }}
+    {{/* Editing Form */}}
+    <form treetop action="/inline/{{ .Field }}" method="POST">
+
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Address</span>
+        </div>
+        <input id="{{ .Field }}" type="email" autofocus class="form-control {{ if .ErrorMessage }}is-invalid{{ end }}" name="{{ .Field }}" placeholder="{{ .Field }}" value="{{ .Value }}" required="required">
+
+        {{ if .ErrorMessage }}
+        <div class="invalid-feedback">{{ .ErrorMessage }}</div>
+        {{ end }}
+    </div>
+
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Confirm</span>
+        </div>
+        <input id="{{ .Field }}" type="email" class="form-control {{ if .ErrorMessage }}is-invalid{{ end }}" name="{{ .Field }}_confirm" required="required">
+    </div>
+
+    <div class="my-2 text-right">
+        <button type="button" treetop-link="/inline/{{ .Field }}?edit=false" class="btn">Cancel</button>
+        <button class="btn btn-primary">Save</button>
+    </div>
+    </form>
+
+    {{ else }}
+    {{/* Display Mode */}}
+    <div class="mb-5">
+        <h5>{{ .Value }}</h5>
+    </div>
+
+    {{ end }}
+</div>

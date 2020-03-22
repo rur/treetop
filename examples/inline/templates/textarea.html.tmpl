@@ -9,16 +9,12 @@
     {{ if .Editing }}
     {{/* Editing Form */}}
     <form treetop action="/inline/{{ .Field }}" method="POST">
-        <select name="{{ .Field}}" class="custom-select d-block w-100 {{ if .ErrorMessage }}is-invalid{{ end }}" id="{{ .Field }}" required>
-            <option value="">Choose...</option>
-            <option value="FAIL">something invalid!</option>
-            {{ range $index, $option := .Options }}
-            <option {{ if eq $.Value $option }} selected{{ end }} value="{{ $option }}">{{ $option }}</option>
-            {{ end }}
-        </select>
+        <textarea autofocus="" name="{{ .Field }}" class="form-control {{ if .ErrorMessage }}is-invalid{{ end }}" id="{{ .Field }}" rows="3">{{ .Value }}</textarea>
 
         {{ if .ErrorMessage }}
-        <div class="invalid-feedback">{{ .ErrorMessage }}</div>
+        <div class="invalid-feedback">
+          {{ .ErrorMessage }}
+        </div>
         {{ end }}
 
         <div class="my-2 text-right">
@@ -29,10 +25,15 @@
 
     {{ else }}
     {{/* Display Mode */}}
-    <div class="mb-5">
-        <h5>{{ .Value }}</h5>
+    <div>
+        {{ if .Value }}
+        <blockquote class="blockquote border-left">
+            <pre class="ml-3 pb-3 mb-4">{{ .Value }}</pre>
+        </blockquote>
+        {{ else }}
+        <p class="text-muted"><i>(none)</i></p>
+        {{ end }}
     </div>
 
     {{ end }}
-
 </div>

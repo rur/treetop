@@ -1,25 +1,34 @@
 <div id="input-{{ .Field }}">
-    <label for="firstName">{{ .Title }}{{ if .Editing }} <i>(editing)</i>{{ end }}</label>
+    <label for="{{ .Field }}"><span class="text-uppercase">{{ .Title }}</span>
+         {{- if .Editing }} <i>(editing)</i>
+        {{- else -}}
+        <a class="font-italic pointer p-0 text-secondary ml-2"
+                treetop-link="/inline/{{ .Field }}?edit=true">[edit]</a>
+        {{- end }}</label>
 
     {{ if .Editing }}
-	<form treetop action="/inline/{{ .Field }}" method="POST">
-	<div class="input-group">
-		<input type="{{ if .Type }}{{ .Type }}{{ else }}text{{ end }}" autofocus class="form-control" name="{{ .Field }}" placeholder="{{ .Field }}" value="{{ .Value }}" required="required" aria-label="TODO" aria-describedby="TODO" onfocus="this.value = this.value;" >
-		<div class="input-group-append" id="button-addon4">
-			<button class="btn btn-primary">Save</button>
-		</div>
-	</div>
-	<div><a class="small font-italic btn btn-link p-0 text-primary" treetop-link="/inline/{{ .Field }}?edit=false">[x] cancel</a></div>
-	</form>
-
-    {{ else }}
-    <div>
-        <h5>{{ .Value }} <sup></h5>
-	    <div class=""><a class="small font-italic btn btn-link p-0 text-secondary" treetop-link="/inline/{{ .Field }}?edit=true">[edit]</a></div>
+    {{/* Editing Form */}}
+    <form treetop action="/inline/{{ .Field }}" method="POST">
+    <div class="input-group">
+        <input type="text" autofocus class="form-control {{ if .ErrorMessage }}is-invalid {{ end }}" name="{{ .Field }}" placeholder="{{ .Field }}" value="{{ .Value }}" required="required">
+        <div class="input-group-append" id="button-addon4">
+            <button class="btn btn-primary">Save</button>
+        </div>
     </div>
-    {{ end }}
 
     {{ if .ErrorMessage }}
-    <p>{{ .ErrorMessage }}</p>
+    <div class="text-danger">{{ .ErrorMessage }}</div>
+    {{ end }}
+
+    <div><a class="small font-italic btn btn-link p-0 text-primary" treetop-link="/inline/{{ .Field }}?edit=false">[x] cancel</a></div>
+
+    </form>
+
+    {{ else }}
+    {{/* Display Mode */}}
+    <div class="mb-5">
+        <h5>{{ .Value }}</h5>
+    </div>
+
     {{ end }}
 </div>

@@ -3,6 +3,7 @@ package inline
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/rur/treetop"
 	"github.com/rur/treetop/examples/assets"
@@ -26,7 +27,7 @@ func Routes(mux *http.ServeMux) {
 		srv.bind(getFormFieldHandler("surname")))
 
 	email := content.NewDefaultSubView("email",
-		"examples/inline/templates/input.html.tmpl",
+		"examples/inline/templates/email.html.tmpl",
 		srv.bind(getFormFieldHandler("email")))
 
 	country := content.NewDefaultSubView("country",
@@ -34,7 +35,7 @@ func Routes(mux *http.ServeMux) {
 		srv.bind(getFormFieldHandler("country")))
 
 	description := content.NewDefaultSubView("description",
-		"examples/inline/templates/input.html.tmpl",
+		"examples/inline/templates/textarea.html.tmpl",
 		srv.bind(getFormFieldHandler("description")))
 
 	exec := &treetop.DeveloperExecutor{
@@ -101,30 +102,30 @@ func getFormFieldHandler(field string) formDataHandlerFunc {
 		}{
 			Field: field,
 		}
-		var validate func(string) string
+		var processInput func(url.Values, string) (string, string)
 		switch data.Field {
 		case "firstName":
 			data.Title = "First Name"
 			data.Value = form.FirstName
-			validate = assertValidName
+			processInput = processInputName
 		case "surname":
 			data.Title = "Last Name"
 			data.Value = form.LastName
-			validate = assertValidName
+			processInput = processInputName
 		case "email":
 			data.Title = "Email"
 			data.Value = form.Email
 			data.Type = "email"
-			validate = assertValidEmail
+			processInput = processInputEmail
 		case "country":
 			data.Title = "Country"
 			data.Value = form.Country
 			data.Options = CountryOptions
-			validate = assertValidContry
+			processInput = processInputContry
 		case "description":
 			data.Title = "Description"
 			data.Value = form.Description
-			validate = assertValidDescription
+			processInput = processInputDescription
 		default:
 			data.ErrorMessage = fmt.Sprintf("Unknown field '%s'", field)
 			return data
@@ -141,10 +142,8 @@ func getFormFieldHandler(field string) formDataHandlerFunc {
 				return nil
 			}
 
-			value := req.PostFormValue(field)
-			data.Value = value
-			form.SetField(field, value)
-			data.ErrorMessage = validate(value)
+			data.Value, data.ErrorMessage = processInput(req.PostForm, field)
+			form.SetField(field, data.Value)
 
 			if data.ErrorMessage != "" {
 				rsp.Status(http.StatusBadRequest)
