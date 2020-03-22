@@ -52,8 +52,8 @@ func processInputContry(form url.Values, field string) (string, string) {
 func processInputDescription(form url.Values, field string) (string, string) {
 	// TODO: unicode normalization here
 	value := form.Get(field)
-	if len(value) > 255 {
-		return value, "Message is too large, max 255 character bytes"
+	if len(value) > 1000 {
+		return value, "Message is too large, max 1000 character bytes"
 	}
 	return value, ""
 }

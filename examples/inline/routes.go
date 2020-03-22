@@ -9,6 +9,10 @@ import (
 	"github.com/rur/treetop/examples/assets"
 )
 
+var viewDebug string
+
+// Routes will construct a view hierarchy for this form and bind
+// handlers to the supplied HTTP request router.
 func Routes(mux *http.ServeMux) {
 	srv := newCookieServer()
 
@@ -57,6 +61,10 @@ func Routes(mux *http.ServeMux) {
 	if errs := exec.FlushErrors(); len(errs) != 0 {
 		panic(errs.Error())
 	}
+
+	// get debug string print for this page
+	page, _, _ := treetop.CompileViews(content)
+	viewDebug = treetop.SprintViewTree(page)
 }
 
 // ticketContentHandler
@@ -65,14 +73,14 @@ func ticketContentHandler(form *FormData, rsp treetop.Response, req *http.Reques
 	switch req.Method {
 	case "GET", "HEAD":
 		return struct {
-			FormData    *FormData
+			ViewTree    string
 			FirstName   interface{}
 			Surname     interface{}
 			Email       interface{}
 			Country     interface{}
 			Description interface{}
 		}{
-			FormData:    form,
+			ViewTree:    viewDebug,
 			FirstName:   rsp.HandleSubView("first-name", req),
 			Surname:     rsp.HandleSubView("surname", req),
 			Email:       rsp.HandleSubView("email", req),
@@ -88,8 +96,10 @@ func ticketContentHandler(form *FormData, rsp treetop.Response, req *http.Reques
 
 // getFormFieldHandler will create a request handler for an editable
 // field of the FormData object
+// extends: content.html{?field?}
 func getFormFieldHandler(field string) formDataHandlerFunc {
 	return func(form *FormData, rsp treetop.Response, req *http.Request) interface{} {
+		// data structure to be passed to the template
 		data := struct {
 			Field        string
 			Value        string

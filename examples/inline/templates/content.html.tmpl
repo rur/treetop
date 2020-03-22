@@ -37,11 +37,19 @@
       </div>
     </div>
 
-    <div id="notes" class="mt-5 border rounded bg-light text-muted p-3 small mb-5">
+    <div class="mt-5 border rounded bg-light text-muted p-3 small mb-3">
       <h6 class="muted">Notes:</h6>
       <ul class="list-group list-group-flush">
-        <li class="list-group-item bg-light">XHR form submit, see url query parameters.</li><li class="list-group-item bg-light">Notice that the input cursor has not lost its focus or position.</li><li class="list-group-item bg-light">A history state was pushed, try using browser back and forward button.</li><li class="list-group-item bg-light">These notes were 'included' with the message template. Check your network inspector for details.</li>
+        <li class="list-group-item bg-light">No JS boilerplate; just HTML forms, <a href="https://getbootstrap.com/docs/4.0/components/forms/" target="_blank">Bootstrap</a> styles and <a href="https://github.com/rur/treetop-client" target="_blank">Treetop</a> template requests.</li>
+        <li class="list-group-item bg-light">Updates occur <em>without</em> navigation history entries being created, similar to SPA behavior.</li>
+        <li class="list-group-item bg-light">Persistent state is emulated with an encoded cookie that will expire in one hour.</li>
       </ul>
+    </div>
+
+    <div class="mt-2 border rounded bg-light text-muted p-3 small mb-5">
+      <h6 class="muted">Treetop View Hierarchy</h6>
+      <p>Debug print-out of the page view hierarchy as an ASCII tree</p>
+      <pre class="small bg-dark text-white p-3 pb-4 mb-1 rounded">{{ .ViewTree }}</pre>
     </div>
   </section>
   </div>
@@ -53,7 +61,7 @@
   window.TREETOP_CONFIG = {
     mountAttrs: {
       // autofocus attribute component will cause an input element
-      // to be focused and have the cursor placed at the end of the input
+      // to be focused and have the cursor placed at the end of the input (buggy).
       "autofocus": (emt) => {
         emt.focus()
         setTimeout(function(){ emt.selectionStart = emt.selectionEnd = 10000; }, 0);

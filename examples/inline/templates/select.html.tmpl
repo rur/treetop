@@ -2,14 +2,14 @@
     <label for="{{ .Field }}"><span class="text-uppercase">{{ .Title }}</span>
          {{- if .Editing }} <i>(editing)</i>
         {{- else -}}
-        <a class="font-italic pointer p-0 text-secondary ml-2"
-                treetop-link="/inline/{{ .Field }}?edit=true">[edit]</a>
+        <a treetop-link="/inline/{{ .Field }}?edit=true"
+           class="font-italic pointer p-0 text-secondary ml-2">[edit]</a>
         {{- end }}</label>
 
     {{ if .Editing }}
     {{/* Editing Form */}}
     <form treetop action="/inline/{{ .Field }}" method="POST">
-        <select name="{{ .Field}}" class="custom-select d-block w-100 {{ if .ErrorMessage }}is-invalid{{ end }}" id="{{ .Field }}" required>
+        <select autofocus name="{{ .Field}}" class="custom-select d-block w-100 {{ if .ErrorMessage }}is-invalid{{ end }}" id="{{ .Field }}" required>
             <option value="">Choose...</option>
             <option value="FAIL">something invalid!</option>
             {{ range $index, $option := .Options }}
