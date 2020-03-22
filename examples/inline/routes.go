@@ -20,7 +20,7 @@ func Routes(mux *http.ServeMux) {
 	_ = base.NewDefaultSubView("nav", "local://nav.html", treetop.Noop)
 	content := base.NewSubView("content",
 		"examples/inline/templates/content.html.tmpl",
-		srv.bind(ticketContentHandler))
+		ticketContentHandler)
 
 	firstName := content.NewDefaultSubView("first-name",
 		"examples/inline/templates/input.html.tmpl",
@@ -69,7 +69,7 @@ func Routes(mux *http.ServeMux) {
 
 // ticketContentHandler
 // extends: base.html{content}
-func ticketContentHandler(form *FormData, rsp treetop.Response, req *http.Request) interface{} {
+func ticketContentHandler(rsp treetop.Response, req *http.Request) interface{} {
 	switch req.Method {
 	case "GET", "HEAD":
 		return struct {
