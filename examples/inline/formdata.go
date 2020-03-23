@@ -81,11 +81,11 @@ func (fd *FormData) UnmarshalBase64(in []byte) error {
 // getDefaultFormData is used to initialize the demo
 func getDefaultFormData() *FormData {
 	return &FormData{
-		FirstName:   "John",
-		LastName:    "Doe",
-		Email:       "john.doe@gmail.com",
-		Country:     "Canada",
-		Description: "test",
+		FirstName:   "Theodore H.",
+		LastName:    "Wolfe",
+		Email:       "theodore.h.wolfe@example.com",
+		Country:     "United States",
+		Description: `Hoist and winch operator from Circuit City`,
 	}
 }
 

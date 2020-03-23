@@ -3,7 +3,7 @@
   <div class="container">
   <h3>Edit in Place</h3>
   <section class="mt-3 mb5">
-    <p>Load a mini-form to edit text fields in place.</p>
+    <p>Load a mini-form to edit text fields in place. Update the fields as you wish.</p>
 
     <div class="d-none" id="error-message"></div>
 
@@ -41,14 +41,14 @@
       <h6 class="muted">Notes:</h6>
       <ul class="list-group list-group-flush">
         <li class="list-group-item bg-light">No JS boilerplate; just HTML forms, <a href="https://getbootstrap.com/docs/4.0/components/forms/" target="_blank">Bootstrap</a> styles and <a href="https://github.com/rur/treetop-client" target="_blank">Treetop</a> template requests.</li>
-        <li class="list-group-item bg-light">Persistent state is emulated with an encoded cookie that will expire in one hour.</li>
+        <li class="list-group-item bg-light">Server state is emulated with an encoded cookie that will expire in one hour.</li>
         <li class="list-group-item bg-light">Form updates occur <em>without</em> navigation history entries being created, similar to SPA behavior.</li>
       </ul>
     </div>
 
     <div class="mt-2 border rounded bg-light text-muted p-3 small mb-5">
       <h6 class="muted">Treetop View Hierarchy</h6>
-      <p>This page is constructed from nested templates and handlers, which you can read more about <a href="https://github.com/rur/treetop#hierarchical-web-handlers" target="_blank">here</a></p>
+      <p>This page is constructed from nested templates and handlers (read more <a href="https://github.com/rur/treetop#hierarchical-web-handlers" target="_blank">here</a>)</p>
       <figure>
         <pre class="small bg-dark text-white p-3 pb-4 mb-1 rounded">{{ .ViewTree }}</pre>
         <figcaption class="figure-caption">
@@ -69,7 +69,13 @@
       // to be focused and have the cursor placed at the end of the input (buggy).
       "autofocus": (emt) => {
         emt.focus()
-        setTimeout(function(){ emt.selectionStart = emt.selectionEnd = 10000; }, 0);
+        setTimeout(function(){
+          if (emt.type != "email") {
+            emt.selectionStart = emt.selectionEnd = 10000;
+          } else {
+            emt.select()
+          }
+        }, 0);
       }
     }
   }

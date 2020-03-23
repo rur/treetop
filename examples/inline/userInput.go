@@ -8,7 +8,7 @@ import (
 
 var (
 	emailRE = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-	nameRE  = regexp.MustCompile("^[\\w\\- .']{2,}$")
+	nameRE  = regexp.MustCompile(`^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}$`)
 )
 
 func processInputName(form url.Values, field string) (string, string) {
