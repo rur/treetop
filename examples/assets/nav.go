@@ -20,7 +20,7 @@ func NavHTML(nav int) string {
 		`<li class="nav-item"><a class="nav-link" href="/" title="Intro">Intro</a></li>`,
 		`<li class="nav-item"><a class="nav-link" href="/greeter" title="View Greeter">Greeter</a></li>`,
 		`<li class="nav-item"><a class="nav-link" href="/inline" title="Inline Edit">Inline Edit</a></li>`,
-		`<li class="nav-item"><a class="nav-link" href="/ticket" title="Create Ticket">Ticket Form</a></li>`,
+		`<li class="nav-item"><a class="nav-link" href="/ticket" title="Ticket Wizard">Ticket Wizard</a></li>`,
 	}
 
 	if nav < NoPage || nav >= len(items) {

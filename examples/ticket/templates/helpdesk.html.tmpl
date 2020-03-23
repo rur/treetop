@@ -1,0 +1,99 @@
+<div id="form">
+	<div class="form-group row">
+		<label for="ticketTypeFormSelect" class="col-sm-2 col-form-label">Priority</label>
+		<div class="col-sm-10">
+			<select class="form-control" name="priority" id="priority" required="required">
+				<option>Critical</option>
+				<option>Major</option>
+				<option selected>Normal</option>
+				<option>Minor</option>
+				<option>Wishlist</option>
+			</select>
+		</div>
+	</div>
+	<div class="form-group row">
+		<label for="serviceFormSelect" class="col-sm-2 col-form-label">Service</label>
+		<div class="col-sm-10">
+			<select class="form-control" name="service" id="serviceFormSelect" required="required">
+				<option>Web Services</option>
+				<option>Workstation</option>
+				<option>Billing</option>
+			</select>
+		</div>
+	</div>
+	<div class="form-group row">
+		<label for="customerFormSelect" class="col-sm-2 col-form-label">Customer</label>
+		<div class="col-sm-10">
+			<select class="form-control" name="customer" id="customerFormSelect" required="required">
+				<option>Customer A</option>
+				<option>Customer B</option>
+				<option>Customer C</option>
+			</select>
+		</div>
+	</div>
+	<fieldset class="form-group">
+		<div class="row">
+			<legend class="col-form-label col-sm-2 pt-0">Assignee</legend>
+			<div class="col-sm-10">
+				<div class="form-check">
+					<input class="form-check-input" type="radio" name="gridRadios" id="gridRadios1" value="option1" checked>
+					<label class="form-check-label" for="gridRadios1">
+						Assign to me
+					</label>
+				</div>
+				<div class="form-check">
+					<input class="form-check-input" type="radio" name="gridRadios" id="gridRadios2" value="option2">
+					<label class="form-check-label" for="gridRadios2">
+						Assign to someone else
+					</label>
+				</div>
+				<div class="form-check">
+					<input class="form-check-input" type="radio" name="gridRadios" id="gridRadios3" value="option3">
+					<label class="form-check-label" for="gridRadios3">
+						Create Unassigned
+					</label>
+				</div>
+			</div>
+		</div>
+	</fieldset>
+
+	<div class="form-group row">
+		<label class="col-sm-2 col-form-label">Attachments</label>
+		<div class="col-sm-10">
+			<div class="input-group">
+				<div class="custom-file">
+					<input name="attachments" type="file" class="custom-file-input" id="inputGroupFile02" multiple>
+					<label class="custom-file-label" for="inputGroupFile02" aria-describedby="inputGroupFileAddon02">Choose file</label>
+				</div>
+				<div class="input-group-append">
+					<button treetop-submitter name="button" value="upload" type="button" formmethod="POST" formenctype="multipart/form-data" formaction="/test" class="input-group-text" id="inputGroupFileAddon02">Upload</button>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+	<div class="form-group row">
+		<div class="col-sm-2">After</div>
+		<div class="col-sm-10">
+			<div class="form-check">
+				<input class="form-check-input" type="radio" name="after" id="after2" value="view-ticket" checked>
+				<label class="form-check-label" for="after2">
+					View newly created issue
+				</label>
+			</div>
+			<div class="form-check">
+				<input class="form-check-input" type="radio" name="after" id="after1" value="create-another">
+				<label class="form-check-label" for="after1">
+					Create another ticket
+				</label>
+			</div>
+		</div>
+	</div>
+	<div class="form-group row">
+		<div class="col-sm-12 text-right">
+			<a href="/ticket" title="Clear form an start again" class="btn btn-muted">Reset</a>
+			<button type="submit" treetop-submitter formaction="/ticket/helpdesk/submit" formmethod="POST" class="btn btn-primary">Submit to Help Desk</button>
+		</div>
+	</div>
+</div>

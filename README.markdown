@@ -4,14 +4,13 @@
 
 ## Hierarchical Web Handlers
 
-Treetop is a tool for constructing HTTP handlers for nested templates.
+Treetop is a tool for creating request handlers for nested templates.
 
-HTML apps typically have a lot of common structure shared between endpoints.
-Nested templates supported in Go<sup>1</sup> can be used to reduce
-HTML boilerplate. Treetop Views match a function with each template so that
-many endpoints can be constructed for different page configurations.
-
-_Example of a basic hierarchy showing content A and B sharing the same 'base' template_
+HTML applications typically have a lot of common structure shared between
+endpoints. The Go template library has support for nested templates<sup>1</sup>,
+this is a powerful tool to help reduce HTML boilerplate. Treetop views match
+a function with each template so that many endpoints can be constructed for
+different page configurations.
 
 
                   BaseHandler(...)
@@ -27,6 +26,8 @@ _Example of a basic hierarchy showing content A and B sharing the same 'base' te
     |                          |        |                          |
     | <div id="content">...</… |        | <div id="content">...</… |
     |__________________________|        |__________________________|
+
+_Example of a basic hierarchy showing content A and B sharing the same 'base' template_
 
 The code below extends this example. It binds the routes `"/content_a"` and `"/content_b"` with two
 handlers that share the same base, nav and sidebar templates.
