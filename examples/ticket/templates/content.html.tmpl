@@ -1,10 +1,10 @@
 <div id="content">
 	<hr>
 	<h3>Create a new issue <span class="badge badge-warning">WIP</span></h3>
-  	<section class="mt-3 mb5">
-	<p>A more involved HTML form workflow.</p>
+	<section class="mt-3 mb5">
+	<p>Demonstrate different controls working together for a more complex workflow.</p>
 
-    <div class="d-none" id="error-message"></div>
+	<div class="d-none" id="error-message"></div>
 
 	<form id="issue" treetop>
 		<div class="form-group row">
@@ -28,7 +28,11 @@
 		</div>
 
 		{{ block "form" .Form}}
-		<h4 id="form" class="text-muted font-weight-light text-center mt-4">Please select a Department</h4>
+		<div id="form" class="my-4 alert alert-light text-center">
+			<h5 class="alert-heading">Please Select a Department</h5>
+			<p class="mb-0">Choosing a department will show the form specific to that department.</p>
+		</div>
+
 		{{ end }}
 
 	</form>
@@ -37,7 +41,41 @@
 
 {{ define "treetop-config" }}
 <script>
-    // activate treetop with defaults
-    window.TREETOP_CONFIG = true;
+		// activate treetop with custom form control attributes
+		window.TREETOP_CONFIG = {
+			mountAttr: {
+				// autofocus attribute component will cause an input element
+				// to be focused and have the cursor placed at the end of the input.
+				"autofocus": (emt) => {
+					emt.focus()
+					// move cursor to the end of the input.
+					// Note, this is buggy but non-essential
+					setTimeout(function(){
+						if (emt.type != "email") {
+							emt.selectionStart = emt.selectionEnd = 10000;
+						} else {
+							emt.select()
+						}
+					}, 0);
+				},
+				// specify the form submitter button for an text input ENTER submit
+				'enter-submitter': function (el) {
+					// Use the attribute value to find the submitter element
+					// if none is found, throw an error and do not register the listener
+					var submitButtonID = el.getAttribute("enter-submitter")
+					var submitButton = document.getElementById(submitButtonID)
+					if (!submitButton) {
+						throw Error("enter-submitter: No submitter element found for #"+submitButtonID)
+					}
+					function onKeyDown(e) {
+						if (e.key == "Enter") {
+							e.preventDefault()
+							submitButton.click()
+						}
+					}
+					el.addEventListener('keydown', onKeyDown, false);
+				}
+			}
+		};
 </script>
 {{ end }}

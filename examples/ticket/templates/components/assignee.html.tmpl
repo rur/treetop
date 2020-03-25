@@ -1,35 +1,21 @@
-<div id="form-assignee" class="row">
-    <legend class="col-form-label col-sm-2 pt-0">Assignee</legend>
-    <div class="col-sm-5">
-        <div class="form-check">
-            <input class="form-check-input" type="radio" name="assignee" id="assignee_unassigned_input" value="unassigned"{{ if eq .Assignee "unassigned" }} checked{{ end }}  onchange="document.getElementById('update-assignee').click()">
-            <label class="form-check-label" for="assignee_unassigned_input">
-                Create Unassigned
-            </label>
-        </div>
-        <div class="form-check">
-            <input class="form-check-input" type="radio" name="assignee" id="assignee_myself_input" value="myself"{{ if eq .Assignee "myself" }} checked{{ end }}  onchange="document.getElementById('update-assignee').click()">
-            <label class="form-check-label" for="assignee_myself_input">
-                Assign to me
-            </label>
-        </div>
-        <div class="form-check">
-            <input class="form-check-input" type="radio" name="assignee" id="assignee_username_input" value="user-name"{{ if eq .Assignee "user-name" }} checked{{ end }}  onchange="document.getElementById('update-assignee').click()">
-            <label class="form-check-label" for="assignee_username_input">
-                Assign to someone else
-            </label>
-        </div>
-        {{/* submit button will update form when assignee is changed */}}
-        <button class="d-none" id="update-assignee" treetop-submitter formnovalidate formaction="/ticket/get-assignee"></button>
-    </div>
-    <div id="find-assingee-user" class="col-sm-5">
-    {{ if eq .Assignee "user-name" }}
-        {{ if .AssignedUser }}<p>Assigned user: <span class="pill">{{ .AssignedUser }}</span></p>
-        {{ else }} <p class="muted">No-one has been assigned</p>
-        {{ end }}
-        <input class="hide" onkeypress="return false;" type="text" required name="assigned-user" value="{{ .AssignedUser }}">
+<div id="find-assingee-user">
+{{ if eq .Assignee "user-name" }}
+    {{ if .AssignedUser }}
+    <p>Assigned user: <span class="pill">{{ .AssignedUser }}</span> <button treetop-link="/ticket/get-assignee?assignee=user-name">[x]</button> </p>
     {{ else }}
-        <!-- nothing to show -->
-    {{ end }}
+    <div class="input-group">
+        <input autofocus enter-submitter="assignee-find-user" type="text" class="form-control" name="user-query">
+        <div class="input-group-append"><button id="assignee-find-user" treetop-submitter formnovalidate formaction="/ticket/find-user" name="query-result-target" value="search-assignee-results">Find User</button></div>
     </div>
+    <div id="search-assignee-results">
+        <p class="text-muted small">Enter a query to find a user</p>
+    </div>
+    {{ end }}
+    <input class="hide" onkeypress="return false;" type="text" required name="assigned-user" value="{{ .AssignedUser }}">
+{{ end }}
+{{ if eq .Assignee "myself" }}
+    <div class="alert alert-warning my-3" role="alert">
+      <strong>Note:</strong> Triage will be skipped
+    </div>
+{{ end }}
 </div>

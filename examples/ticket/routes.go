@@ -11,6 +11,7 @@ import (
 // Routes register routes for /view example endpoint
 func Routes(mux *http.ServeMux) {
 	// components
+	findUser := treetop.NewSubView("find-user", "examples/ticket/templates/components/findUser.html.tmpl", findUsersHandler)
 	assignee := treetop.NewSubView("assignee", "examples/ticket/templates/components/assignee.html.tmpl", assigneeHandler)
 
 	// page views
@@ -50,6 +51,7 @@ func Routes(mux *http.ServeMux) {
 	// form update handlers
 	mux.HandleFunc("/ticket/get-form", formDepartmentRedirectHandler)
 	mux.Handle("/ticket/get-assignee", exec.NewViewHandler(assignee).FragmentOnly())
+	mux.Handle("/ticket/find-user", exec.NewViewHandler(findUser).FragmentOnly())
 
 	if errs := exec.FlushErrors(); len(errs) != 0 {
 		panic(errs.Error())

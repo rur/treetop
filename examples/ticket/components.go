@@ -27,3 +27,17 @@ func assigneeHandler(rsp treetop.Response, req *http.Request) interface{} {
 	}
 	return data
 }
+
+func findUsersHandler(rsp treetop.Response, req *http.Request) interface{} {
+	query := req.URL.Query()
+	// for example purposes, vary number of results based solely
+	// on the number of alpha characters in the input query
+	data := struct {
+		QueryResultTarget string
+		Results           []string
+	}{
+		QueryResultTarget: query.Get("query-result-target"),
+		Results:           []string{"User A", "User B", "User C"},
+	}
+	return data
+}

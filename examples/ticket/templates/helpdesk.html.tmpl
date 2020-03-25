@@ -21,6 +21,38 @@
 			</select>
 		</div>
 	</div>
+	<fieldset class="form-group">
+		<div id="form-assignee" class="row">
+			<legend class="col-form-label col-sm-2 pt-0">Assignee</legend>
+			<div class="col-sm-10">
+				<div>
+					<div class="form-check">
+						<input required class="form-check-input" type="radio" name="assignee" id="assignee_unassigned_input" value="unassigned"{{ if eq .Assignee "unassigned" }} checked{{ end }}  onchange="document.getElementById('update-assignee').click()">
+						<label class="form-check-label" for="assignee_unassigned_input">
+							Create Unassigned
+						</label>
+					</div>
+					<div class="form-check">
+						<input class="form-check-input" type="radio" name="assignee" id="assignee_myself_input" value="myself"{{ if eq .Assignee "myself" }} checked{{ end }}  onchange="document.getElementById('update-assignee').click()">
+						<label class="form-check-label" for="assignee_myself_input">
+							Assign to me
+						</label>
+					</div>
+					<div class="form-check">
+						<input class="form-check-input" type="radio" name="assignee" id="assignee_username_input" value="user-name"{{ if eq .Assignee "user-name" }} checked{{ end }}  onchange="document.getElementById('update-assignee').click()">
+						<label class="form-check-label" for="assignee_username_input">
+							Assign to someone else
+						</label>
+					</div>
+					{{/* submit button will update form when assignee is changed */}}
+					<button class="d-none" id="update-assignee" treetop-submitter formnovalidate formaction="/ticket/get-assignee"></button>
+				</div>
+
+				{{ template "assignee" .AssigneeData }}
+			</div>
+		</div>
+
+	</fieldset>
 	<div class="form-group row">
 		<label for="customerFormSelect" class="col-sm-2 col-form-label">Customer</label>
 		<div class="col-sm-10">
@@ -31,9 +63,6 @@
 			</select>
 		</div>
 	</div>
-	<fieldset class="form-group">
-		{{ template "assignee" .AssigneeData }}
-	</fieldset>
 
 	<div class="form-group row">
 		<label class="col-sm-2 col-form-label">Attachments</label>

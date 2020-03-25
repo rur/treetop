@@ -17,8 +17,10 @@ func formHandler(rsp treetop.Response, req *http.Request) interface{} {
 	data := struct {
 		// TODO: add components here
 		AssigneeData interface{}
+		Assignee     string
 	}{
 		AssigneeData: rsp.HandleSubView("assignee", req),
+		Assignee:     req.URL.Query().Get("assignee"),
 	}
 	return data
 }

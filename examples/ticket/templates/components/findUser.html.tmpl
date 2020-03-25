@@ -1,0 +1,8 @@
+<div id="{{ .QueryResultTarget }}">
+	<p>Found {{ len .Results }}</p>
+	<ul>
+		{{ range $index, $result := .Results }}
+		<li>{{ $result }}</li>
+		{{ end }}
+	</ul>
+</div>
