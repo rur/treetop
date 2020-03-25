@@ -1,7 +1,6 @@
 package ticket
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 
@@ -11,12 +10,22 @@ import (
 
 // Routes register routes for /view example endpoint
 func Routes(mux *http.ServeMux) {
+	// components
+	assignee := treetop.NewSubView("assignee", "examples/ticket/templates/components/assignee.html.tmpl", assigneeHandler)
+
+	// page views
 	page := treetop.NewView("local://base.html", treetop.Delegate("content"))
 	_ = page.NewDefaultSubView("nav", "local://nav.html", treetop.Noop)
 	content := page.NewSubView("content", "examples/ticket/templates/content.html.tmpl", ticketContentHandler)
-	helpdesk := content.NewDefaultSubView("form", "examples/ticket/templates/helpdesk.html.tmpl", formHandler)
+
+	helpdesk := content.NewSubView("form", "examples/ticket/templates/helpdesk.html.tmpl", formHandler)
+	helpdesk.SubViews["assignee"] = assignee // use assignee view for helpdesk form
+
 	software := content.NewSubView("form", "examples/ticket/templates/software.html.tmpl", formHandler)
+	software.SubViews["assignee"] = assignee // use assignee view for software form
+
 	systems := content.NewSubView("form", "examples/ticket/templates/systems.html.tmpl", formHandler)
+	systems.SubViews["assignee"] = assignee // use assignee view for systems form
 
 	var exec treetop.ViewExecutor
 	exec = &treetop.FileExecutor{
@@ -26,13 +35,21 @@ func Routes(mux *http.ServeMux) {
 		},
 	}
 
+	// developer executor will force templates to be reloaded from disk for
+	// every request. Also template errors will be rendered in the browser
 	exec = &treetop.DeveloperExecutor{ViewExecutor: exec}
 
+	// demo page entry point
 	mux.Handle("/ticket", exec.NewViewHandler(content).PageOnly())
-	mux.HandleFunc("/ticket/get-form", getFormHandler)
+
+	// forms entry point
 	mux.Handle("/ticket/helpdesk/new", exec.NewViewHandler(helpdesk))
 	mux.Handle("/ticket/software/new", exec.NewViewHandler(software))
 	mux.Handle("/ticket/systems/new", exec.NewViewHandler(systems))
+
+	// form update handlers
+	mux.HandleFunc("/ticket/get-form", formDepartmentRedirectHandler)
+	mux.Handle("/ticket/get-assignee", exec.NewViewHandler(assignee).FragmentOnly())
 
 	if errs := exec.FlushErrors(); len(errs) != 0 {
 		panic(errs.Error())
@@ -42,27 +59,32 @@ func Routes(mux *http.ServeMux) {
 // ticketContentHandler
 // extends: base.html{content}
 func ticketContentHandler(rsp treetop.Response, req *http.Request) interface{} {
+	query := req.URL.Query()
 	data := struct {
-		Form interface{}
+		Summary string
+		Dept    string
+		Form    interface{}
 	}{
-		Form: rsp.HandleSubView("form", req),
+		Summary: sanitizeSummary(query.Get("summary")),
+		Form:    rsp.HandleSubView("form", req),
+	}
+	// validate department and redirect if necessary
+	switch d := query.Get("department"); d {
+	case "helpdesk", "software", "systems":
+		// form redirect handler
+		data.Dept = d
+	}
+	if (data.Dept == "" && req.URL.Path != "/ticket") || (data.Dept != "" && req.URL.Path == "/ticket") {
+		// url does not match the department value, redirect
+		formDepartmentRedirectHandler(rsp, req)
+		return nil
 	}
 	return data
 }
 
-// formHandler
-// extends: content.html{form}
-func formHandler(rsp treetop.Response, req *http.Request) interface{} {
-	if treetop.IsTemplateRequest(req) {
-		// replace existing browser history entry with current URL
-		rsp.ReplacePageURL(req.URL.String())
-	}
-
-	// TODO: Implement this
-	return nil
-}
-
-func getFormHandler(w http.ResponseWriter, req *http.Request) {
+// formDepartmentRedirectHandler will issue a redirect to the correct form path based upon the value
+// of the department query parameter. If not recognized it directs browser to ticket landing page.
+func formDepartmentRedirectHandler(w http.ResponseWriter, req *http.Request) {
 	var (
 		redirect *url.URL
 		query    = req.URL.Query()
@@ -78,7 +100,8 @@ func getFormHandler(w http.ResponseWriter, req *http.Request) {
 		redirect = mustParseURL("/ticket/systems/new")
 
 	default:
-		http.Error(w, fmt.Sprintf(`Unknown department: %s`, dpt), http.StatusBadRequest)
+		query.Del("department")
+		redirect = mustParseURL("/ticket")
 	}
 
 	redirect.RawQuery = query.Encode()
@@ -86,6 +109,7 @@ func getFormHandler(w http.ResponseWriter, req *http.Request) {
 	http.Redirect(w, req, redirect.String(), http.StatusSeeOther)
 }
 
+// for use with hard coded urls
 func mustParseURL(path string) *url.URL {
 	u, err := url.Parse(path)
 	if err != nil {

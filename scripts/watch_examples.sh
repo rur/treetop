@@ -20,5 +20,5 @@ while true; do
   # see https://unix.stackexchange.com/questions/124127/kill-all-descendant-processes
   kill -- -$PID
   # some throttling is good to allow potentilly multiple files be edited
-  sleep 1
+  sleep 5
 done

@@ -10,22 +10,26 @@
 		<div class="form-group row">
 			<label for="inputTitle" class="col-sm-2 col-form-label">Summary</label>
 			<div class="col-sm-10">
-				<input autofocus="autofocus" required type="summary" class="form-control" id="inputTitle" placeholder="Issue Title">
+				<input autofocus="autofocus" required type="text" name="summary" class="form-control" id="inputTitle" placeholder="Title for you issue" value="{{ .Summary }}">
 			</div>
 		</div>
 		<div class="form-group row">
-			<label for="projectSelect" class="col-sm-2 col-form-label">Department</label>
+			<label for="departmentSelect" class="col-sm-2 col-form-label">Department</label>
 			<div class="col-sm-10">
-				<select class="form-control" id="projectSelect" name="department" onchange="document.getElementById('update-department').click()" formnovalidate required="required">
-					<option value="helpdesk">Helpdesk</option>
-					<option value="software">Software Development</option>
-					<option value="systems">Systems & IT</option>
+				<select class="form-control" id="departmentSelect" name="department" onchange="document.getElementById('update-department').click()" required="required">
+					<option disabled value=""{{ if eq .Dept "" }} selected{{ end }}>-- choose one --</option>
+					<option value="helpdesk"{{ if eq .Dept "helpdesk" }} selected{{ end }}>Helpdesk</option>
+					<option value="software"{{ if eq .Dept "software" }} selected{{ end }}>Software Development</option>
+					<option value="systems"{{ if eq .Dept "systems" }} selected{{ end }}>Systems & IT</option>
 				</select>
+				{{/* submit button will update form when department is changed */}}
 				<button class="d-none" id="update-department" treetop-submitter formnovalidate formaction="/ticket/get-form"></button>
 			</div>
 		</div>
 
-		{{ template "form" .Form}}
+		{{ block "form" .Form}}
+		<h4 id="form" class="text-muted font-weight-light text-center mt-4">Please select a Department</h4>
+		{{ end }}
 
 	</form>
 	</section>
