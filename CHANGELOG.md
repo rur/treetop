@@ -5,6 +5,10 @@
 - `FileExecutor` and `FileSystemExecutor` now have an optional `KeyedString` property to mix files with hard coded templates
 - Added `Template` interface so that `TemplateHandler` no longer depends directly on html/template
 
+### Bugfix
+
+- Template cache not used/not working when constructing template in file executors
+
 
 ## [0.3.0] - 2020-03-10
 
