@@ -1,3 +1,11 @@
+## [0.3.1] - WIP
+
+### New Features
+
+- `FileExecutor` and `FileSystemExecutor` now have an optional `KeyedString` property to mix files with hard coded templates
+- Added `Template` interface so that `TemplateHandler` no longer depends directly on html/template
+
+
 ## [0.3.0] - 2020-03-10
 
 Protocol and API overhaul, improve docs and examples, transitioning from prototype
