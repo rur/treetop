@@ -2,14 +2,12 @@
 
 # Treetop
 
-## Hierarchical Web Handlers
+### A tool that creates request handlers for nested templates in Go
 
-Treetop is a tool for creating request handlers for nested templates.
-
-HTML applications typically have a lot of common structure shared between
-endpoints. The Go template library has support for nested templates<sup>1</sup>,
-this is a powerful tool to help reduce HTML boilerplate. Treetop views match
-a function with each template so that many endpoints can be constructed for
+HTML web applications typically share a lot of common structure between
+endpoints. The Go template library supports nested templates<sup>1</sup>.
+This is a powerful tool that HTML apps can use to reduce boilerplate. Treetop adds
+functions to the template hierarchy so that HTTP endpoints can be constructed from
 different page configurations.
 
 
@@ -27,10 +25,10 @@ different page configurations.
     | <div id="content">...</… |        | <div id="content">...</… |
     |__________________________|        |__________________________|
 
-_Example of a basic hierarchy showing content A and B sharing the same 'base' template_
+_Basic example of a page hierarchy showing content A and B sharing the same 'base' template_
 
-The code below extends this example. It binds the routes `"/content_a"` and `"/content_b"` with two
-handlers that share the same base, nav and sidebar templates.
+The code below is an extension of this example. It binds the routes `"/content_a"` and `"/content_b"` with two
+handlers that share the same "base", "nav" and "sidebar" templates.
 
     base := treetop.NewView("base.html", BaseHandler)
     nav := base.NewSubView("nav", "nav.html", NavHandler)
@@ -91,7 +89,7 @@ A [Treetop Client Library](https://github.com/rur/treetop-client) is available.
 It sends template requests using XHR and applies fragments to the DOM with a simple
 find and replace mechanism.
 
-Hot-swapping can be used to improve user experience in several way <sup>[docs needed]</sup>.
+Hot-swapping can be used to improve user experience in several ways <sup>[docs needed]</sup>.
 See examples for more details.
 
 ## Example
@@ -146,7 +144,7 @@ Data is subsequently passed down within the template like so,
 ### Hijacking the Response
 
 The `treetop.Response` type implements `http.ResponseWriter`. Any handler can halt the executor and
-take full responsibility for the response by using one of the write methods of that interface<sup>2</sup>.
+take full responsibility for the response by using one of the 'Write' methods of that interface<sup>2</sup>. This is a common and useful practice making things like error messages and redirects possible.
 
 ## Response Writer
 
