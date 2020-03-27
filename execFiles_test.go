@@ -107,15 +107,15 @@ func TestFileExecutor_NewViewHandler(t *testing.T) {
 		{
 			name: "error template file",
 			getHandler: func(exec ViewExecutor) ViewHandler {
-				return exec.NewViewHandler(NewView("testdata/invalid.html", Noop))
+				return exec.NewViewHandler(NewView("testdata/missingFunc.html", Noop))
 			},
 			expectPage:     "Not Acceptable\n",
 			expectTemplate: "Not Acceptable\n",
 			expectErrors: []string{
-				`Failed to parse contents of template file 'testdata/invalid.html', ` +
-					`error template: :2: function "functhatdoesnexist" not defined`,
-				`Failed to parse contents of template file 'testdata/invalid.html', ` +
-					`error template: :2: function "functhatdoesnexist" not defined`,
+				`Failed to parse contents of template file 'testdata/missingFunc.html', ` +
+					`error template: :2: function "func_that_does_not_exist" not defined`,
+				`Failed to parse contents of template file 'testdata/missingFunc.html', ` +
+					`error template: :2: function "func_that_does_not_exist" not defined`,
 			},
 		},
 		{
