@@ -8,8 +8,8 @@ import (
 	"github.com/rur/treetop/examples/assets"
 )
 
-// Routes register routes for /greeter example endpoint
-func Routes(mux *http.ServeMux) {
+// Setup register routes for /greeter example endpoint
+func Setup(mux *http.ServeMux) {
 	// base view
 	page := treetop.NewView("local://base.html", treetop.Delegate("content"))
 	_ = page.NewDefaultSubView("nav", "local://nav.html", treetop.Noop)

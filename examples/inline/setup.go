@@ -11,9 +11,9 @@ import (
 
 var viewDebug string
 
-// Routes will construct a view hierarchy for this form and bind
+// Setup will construct a view hierarchy for this form and bind
 // handlers to the supplied HTTP request router.
-func Routes(mux *http.ServeMux) {
+func Setup(mux *http.ServeMux) {
 	srv := newCookieServer()
 
 	base := treetop.NewView("local://base.html", treetop.Delegate("content"))

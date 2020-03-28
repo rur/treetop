@@ -11,6 +11,29 @@
 		</div>
 	</div>
 
+    {{ block "assignee" .Assignee }}
+    <div class="alert alert-danger">
+    	<h5 class="alert-header">Assignee Not Implemented</h5>
+    	<p class="mb-0">This field has not yet been implemented</p>
+    </div>
+    {{ end }}
+
+	<div class="form-group row">
+		<label class="col-sm-2 col-form-label">Attachments</label>
+		<div class="col-sm-10">
+			<div class="input-group">
+				<div class="custom-file">
+					<input name="attachments" type="file" class="custom-file-input" id="inputGroupFile02" multiple>
+					<label class="custom-file-label" for="inputGroupFile02" aria-describedby="inputGroupFileAddon02">Choose file</label>
+				</div>
+				<div class="input-group-append">
+					<button treetop-submitter name="button" value="upload" type="button" formmethod="POST" formenctype="multipart/form-data" formaction="/test" class="input-group-text" id="inputGroupFileAddon02">Upload</button>
+				</div>
+			</div>
+
+		</div>
+	</div>
+
 	<div class="form-group row">
 		<div class="col-sm-2">After</div>
 		<div class="col-sm-10">
@@ -30,8 +53,8 @@
 	</div>
 	<div class="form-group row">
 		<div class="col-sm-12 text-right">
-			<button type="submit" class="btn btn-muted">Cancel</button>
-			<button type="submit" class="btn btn-primary">Create Report</button>
+			<a href="/ticket/software/new" title="Clear form an start again" class="btn btn-muted">Reset</a>
+			<button type="submit" class="btn btn-primary">Create Ticket</button>
 		</div>
 	</div>
 </div>

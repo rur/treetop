@@ -26,10 +26,18 @@ func main() {
 	})
 
 	// Register routes for example apps
-	greeter.Routes(mux)
-	inline.Routes(mux)
-	ticket.Routes(mux)
+	greeter.Setup(mux)
+	inline.Setup(mux)
+	ticket.Setup(mux)
 
+	infoSetup(mux)
+
+	fmt.Println("serving on http://0.0.0.0:3000/")
+	log.Fatal(http.ListenAndServe(":3000", mux))
+}
+
+// infoSetup will create template, handlers and bind to routes for the example landing page
+func infoSetup(mux *http.ServeMux) {
 	// define handler for home page
 	exec := treetop.NewKeyedStringExecutor(map[string]string{
 		"local://base.html": assets.BaseHTML,
@@ -45,7 +53,4 @@ func main() {
 	if errs := exec.FlushErrors(); len(errs) > 0 {
 		log.Fatalf("Error(s) loading example templates:\n%s", errs)
 	}
-
-	fmt.Println("serving on http://0.0.0.0:3000/")
-	log.Fatal(http.ListenAndServe(":3000", mux))
 }

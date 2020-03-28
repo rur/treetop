@@ -1,0 +1,69 @@
+namespace = "github.com/treetop/examples"
+page = "ticket"
+
+[views]
+  [views.base]
+    name = "base"
+    handler = "treetop.Delegate(\"content\")"
+    template = "local://base.html"
+    doc = "HTML template for demo example site"
+    uri = "/ticket"
+    [views.base.blocks]
+
+      [[views.base.blocks.content]]
+        name = "ticket-form-content"
+        default = true
+        path = "/ticket"
+        method = "any"
+        handler = "ticketFormContentHandler"
+        template = "examples/ticket/templates/content/ticketFormContent.html.tmpl"
+        doc = "Landing page for ticket wizard"
+        [views.base.blocks.content.blocks]
+
+          [[views.base.blocks.content.blocks.form]]
+            name = "new-helpdesk-ticket"
+            path = "/ticket/helpdesk/new"
+            method = "any"
+            handler = "newHelpdeskTicketHandler"
+            template = "examples/ticket/templates/content/form/newHelpdeskTicket.html.tmpl"
+            doc = "Form designed for creating helpdesk tickets"
+            [views.base.blocks.content.blocks.form.blocks]
+
+              [[views.base.blocks.content.blocks.form.blocks.assignee]]
+                name = "helpdesk-assignee"
+                path = "/ticket/helpdesk/update-assignee"
+                method = "any"
+                default = true
+                handler = "helpdeskAssigneeHandler"
+                template = "examples/ticket/templates/content/form/assignee/helpdeskAssignee.html.tmpl"
+                doc = "Options for assigning someone to the help desk item, different options for admins"
+                [views.base.blocks.content.blocks.form.blocks.assignee.blocks]
+
+                  [[views.base.blocks.content.blocks.form.blocks.assignee.blocks.find-assignee]]
+                    name = "find-helpdesk-assignee"
+                    handler = "findHelpdeskAssigneeHandler"
+                    template = "examples/ticket/templates/content/form/assignee/findAssignee/findHelpdeskAssignee.html.tmpl"
+                    doc = "user supplied query string to select a user to assign to helpdesk ticket"
+
+          [[views.base.blocks.content.blocks.form]]
+            name = "new-software-ticket"
+            path = "/ticket/software/new"
+            method = "any"
+            handler = "newSoftwareTicketHandler"
+            template = "examples/ticket/templates/content/form/newSoftwareTicket.html.tmpl"
+            doc = "Form designed for creating software tickets"
+
+          [[views.base.blocks.content.blocks.form]]
+            name = "new-systems-ticket"
+            path = "/ticket/systems/new"
+            method = "any"
+            handler = "newSystemsTicketHandler"
+            template = "examples/ticket/templates/content/form/newSystemsTicket.html.tmpl"
+            doc = "Form designed for creating systems tickets"
+
+      [[views.base.blocks.nav]]
+        name = "demo-nav"
+        default = true
+        handler = "treetop.Noop"
+        template = "local://nav.html"
+        doc = "Navigate between the different example apps"

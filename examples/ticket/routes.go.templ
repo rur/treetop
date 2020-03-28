@@ -1,0 +1,11 @@
+package ticket
+
+import (
+	"net/http"
+
+	"github.com/rur/treetop"
+)
+
+func Routes(m *http.ServeMux, exec treetop.ViewExecutor) {
+	{{ block "routes" . }}{{ end }}
+}
