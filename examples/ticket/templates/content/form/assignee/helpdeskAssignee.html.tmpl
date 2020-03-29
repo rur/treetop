@@ -2,54 +2,68 @@
     <div id="form-assignee" class="row">
         <legend class="col-form-label col-sm-2 pt-0">Assignee</legend>
         <div class="col-sm-10">
-            <div class="mb-2">
-                <div class="form-check">
-                    <input required class="form-check-input" type="radio" name="assignee" id="assignee_unassigned_input" value="unassigned"{{ if eq .Assignee "unassigned" }} checked{{ end }} click-on-change="update-assignee">
-                    <label class="form-check-label" for="assignee_unassigned_input">
-                        Create Unassigned
-                    </label>
+            <div class="card mb-2">
+                <div class="card-body px-4">
+                    <h6 class="card-title">Select One:</h6>
+                    <div class="form-check">
+                        <input required class="form-check-input" type="radio" name="assignee" id="assignee_unassigned_input" value="unassigned"{{ if eq .Assignee "unassigned" }} checked{{ end }} click-on-change="update-assignee">
+                        <label class="form-check-label" for="assignee_unassigned_input">
+                            Create Unassigned
+                        </label>
+                    </div>
+                    {{ if .IsAdmin }}
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="assignee" id="assignee_myself_input" value="myself"{{ if eq .Assignee "myself" }} checked{{ end }}  click-on-change="update-assignee">
+                        <label class="form-check-label" for="assignee_myself_input">
+                            Assign to me <i class="text-muted">(option only shown to admins)</i>
+                        </label>
+                    </div>
+                    {{ end }}
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="assignee" id="assignee_username_input" value="user-name"{{ if eq .Assignee "user-name" }} checked{{ end }}  click-on-change="update-assignee">
+                        <label class="form-check-label" for="assignee_username_input">
+                            Assign to someone else
+                        </label>
+                    </div>
+                    {{/* submit button will update form when assignee is changed */}}
+                    <button class="d-none" id="update-assignee" treetop-submitter formnovalidate formaction="/ticket/helpdesk/update-assignee"></button>
                 </div>
-                {{ if .IsAdmin }}
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="assignee" id="assignee_myself_input" value="myself"{{ if eq .Assignee "myself" }} checked{{ end }}  click-on-change="update-assignee">
-                    <label class="form-check-label" for="assignee_myself_input">
-                        Assign to me <i class="text-muted">(option only shown to admins)</i>
-                    </label>
+
+
+                {{ if eq .Assignee "user-name" }}
+                <div class="card-footer" id="helpdesk-assignee-status">
+                    {{ if .AssignedUser }}
+                    <h6 class="my-3">
+                        <a treetop-link="/ticket/helpdesk/update-assignee?assignee=user-name" type="button" class="mr-2 text-primary">[x]</a>
+                        Assigned user: <strong>{{ .AssignedUser }}</strong>
+                    </h6>
+                    <input type="hidden" name="assigned-user" value="{{ .AssignedUser }}">
+                    {{ else }}
+                    <div class="input-group mb-2">
+                        <input autofocus enter-submitter="assignee-find-user" type="text" class="form-control" name="search-query">
+                        <div class="input-group-append"><button id="assignee-find-user" class="btn"  treetop-submitter formnovalidate formaction="/ticket/helpdesk/find-assignee">Find User</button></div>
+                    </div>
+                    <div id="find-assignee">
+                        <p class="text-muted small">Enter a query to find a user</p>
+                        <input class="hide" required type="text" onkeydown="return false" name="assigned-user" value="">
+                    </div>
+                    {{ end }}
                 </div>
                 {{ end }}
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="assignee" id="assignee_username_input" value="user-name"{{ if eq .Assignee "user-name" }} checked{{ end }}  click-on-change="update-assignee">
-                    <label class="form-check-label" for="assignee_username_input">
-                        Assign to someone else
-                    </label>
-                </div>
-                {{/* submit button will update form when assignee is changed */}}
-                <button class="d-none" id="update-assignee" treetop-submitter formnovalidate formaction="/ticket/helpdesk/update-assignee"></button>
-            </div>
-            <div id="helpdesk-assignee-status" class="mt-2">
-            {{ if eq .Assignee "user-name" }}
-                {{ if .AssignedUser }}
-                <h6 class="my-3">
-                    <button treetop-link="/ticket/helpdesk/update-assignee?assignee=user-name" type="button" class="btn">[x]</button>
-                    Assigned user: <span class="badge badge-secondary">{{ .AssignedUser }}</span>
-                </h6>
-                <input type="hidden" name="assigned-user" value="{{ .AssignedUser }}">
-                {{ else }}
-                <div class="input-group mb-2">
-                    <input autofocus enter-submitter="assignee-find-user" type="text" class="form-control" name="search-query">
-                    <div class="input-group-append"><button id="assignee-find-user" treetop-submitter formnovalidate formaction="/ticket/helpdesk/find-assignee">Find User</button></div>
-                </div>
-                <div id="find-assignee">
-                    <p class="text-muted small">Enter a query to find a user</p>
-                    <input class="hide" required type="text" onkeydown="return false" name="assigned-user" value="">
+
+                {{ if eq .Assignee "myself" }}
+                <div id="helpdesk-assignee-status" class="card-footer text-muted">
+                    <div class="my-2" role="alert">
+                        <strong>Note:</strong> Triage will be skipped
+                    </div>
                 </div>
                 {{ end }}
-            {{ end }}
-            {{ if eq .Assignee "myself" }}
-                <div class="alert alert-warning my-3" role="alert">
-                <strong>Note:</strong> Triage will be skipped
-                </div>
-            {{ end }}
+
+
+                {{ if eq .Assignee "unassigned" }}
+                <div id="helpdesk-assignee-status" class="d-none"></div>
+                {{ end }}
+
             </div>
         </div>
     </div>
