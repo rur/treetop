@@ -18,7 +18,7 @@
 			<div class="col-sm-10">
 				<select class="form-control" id="departmentSelect" name="department" onchange="document.getElementById('update-department').click()" required="required">
 					<option disabled value=""{{ if eq .Dept "" }} selected{{ end }}>-- choose one --</option>
-					<option value="helpdesk"{{ if eq .Dept "helpdesk" }} selected{{ end }}>Helpdesk</option>
+					<option value="helpdesk"{{ if eq .Dept "helpdesk" }} selected{{ end }}>Help Desk</option>
 					<option value="software"{{ if eq .Dept "software" }} selected{{ end }}>Software Development</option>
 					<option value="systems"{{ if eq .Dept "systems" }} selected{{ end }}>Systems & IT</option>
 				</select>
@@ -43,10 +43,18 @@
 <script>
 		// activate treetop with custom form control attributes
 		window.TREETOP_CONFIG = {
+			/*
+				# Mount Attributes #
+
+				A set of attribute names which can be used to mount JS code and components
+				to an element when it is attached to the DOM
+
+			 */
 			mountAttr: {
-				// autofocus attribute component will cause an input element
-				// to be focused and have the cursor placed at the end of the input.
+
 				"autofocus": (emt) => {
+					// autofocus attribute component will cause an input element
+					// to be focused and have the cursor placed at the end of the input.
 					emt.focus()
 					// move cursor to the end of the input.
 					// Note, this is buggy but non-essential
@@ -58,8 +66,9 @@
 						}
 					}, 0);
 				},
-				// specify the form submitter button for an text input ENTER submit
+
 				'enter-submitter': function (el) {
+					// specify the form submitter button for an text input ENTER submit
 					// Use the attribute value to find the submitter element
 					// if none is found, throw an error and do not register the listener
 					var submitButtonID = el.getAttribute("enter-submitter")
@@ -74,6 +83,38 @@
 						}
 					}
 					el.addEventListener('keydown', onKeyDown, false);
+				}
+			},
+
+			/*
+				# Element Merge #
+
+				When a new element is matched with an existing one, the treetop client
+				will swap one for the other by default. However, if the new and old element
+				have a matching `treetop-merge` attribute value, and a corresponding functions
+				is defined here, that will be used instead.
+
+			 */
+			merge: {
+
+				"update-child": (nue, old) => {
+					// Having received an update for an element, try only updating a child element.
+					// The "data-update-child-id" attribute value will supply an identifier to find
+					// the corresponding child elements.
+					//
+					// If a pair of matching children cannot be found, just do a standard swap.
+					const childID = old.getAttribute("data-update-child-id")
+					if (childID) {
+						const oldChild = old.querySelector("#"+childID)
+						const nueChild = nue.querySelector("#"+childID)
+						if (nueChild instanceof HTMLElement && oldChild instanceof HTMLElement) {
+							//  swap the new child for the old one
+							treetop.updateElement(nueChild, oldChild)
+							return
+						}
+					}
+					// fall back on standard element swap
+					treetop.updateElement(nue, old)
 				}
 			}
 		};
