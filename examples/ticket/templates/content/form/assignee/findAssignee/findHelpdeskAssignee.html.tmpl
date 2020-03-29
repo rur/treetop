@@ -1,8 +1,18 @@
 <div id="find-assignee">
-	<p>Found {{ len .Results }}</p>
-	<ul>
+	{{ if .Results }}
+	<p class="text-muted mt-3 mb-2 font-italic">Select a user:</p>
+	<div class="list-group">
 		{{ range $index, $result := .Results }}
-		<li>{{ $result }}</li>
+		<button type="button" treetop-submitter formaction="/ticket/helpdesk/update-assignee" name="assigned-user" value="{{ $result }}" formnovalidate class="list-group-item list-group-item-action">{{ $result }}</button>
 		{{ end }}
-	</ul>
+	</div>
+
+	{{ else }}
+	{{ if .QueryString }}
+	<p class="text-muted">No users found for query '{{ .QueryString }}'</p>
+	{{ else }}
+	<p class="text-muted">Type a name of find a user to assign</p>
+	{{ end }}
+    <input class="hide" required type="text" onkeydown="return false" name="assigned-user" value="">
+	{{ end }}
 </div>

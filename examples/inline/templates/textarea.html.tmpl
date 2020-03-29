@@ -28,7 +28,7 @@
     <div>
         {{ if .Value }}
         <blockquote class="blockquote border-left">
-            <pre class="ml-3 pb-3 mb-4">{{ .Value }}</pre>
+            <pre style="white-space: pre-wrap;" class="ml-3 pb-3 mb-4">{{ .Value }}</pre>
         </blockquote>
         {{ else }}
         <p class="text-muted"><i>(none)</i></p>

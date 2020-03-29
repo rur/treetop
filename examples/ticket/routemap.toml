@@ -34,6 +34,7 @@ page = "ticket"
                 path = "/ticket/helpdesk/update-assignee"
                 method = "any"
                 default = true
+                fragment = true
                 handler = "helpdeskAssigneeHandler"
                 template = "examples/ticket/templates/content/form/assignee/helpdeskAssignee.html.tmpl"
                 doc = "Options for assigning someone to the help desk item, different options for admins"
@@ -41,7 +42,10 @@ page = "ticket"
 
                   [[views.base.blocks.content.blocks.form.blocks.assignee.blocks.find-assignee]]
                     name = "find-helpdesk-assignee"
+                    fragment = true
                     handler = "findHelpdeskAssigneeHandler"
+                    path = "/ticket/helpdesk/find-assignee"
+                    method = "any"
                     template = "examples/ticket/templates/content/form/assignee/findAssignee/findHelpdeskAssignee.html.tmpl"
                     doc = "user supplied query string to select a user to assign to helpdesk ticket"
 

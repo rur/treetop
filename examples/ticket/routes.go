@@ -41,7 +41,7 @@ func Routes(m *http.ServeMux, exec treetop.ViewExecutor) {
 	)
 
 	// content -> form -> assignee -> find-assignee
-	_ = helpdeskAssignee.NewSubView(
+	findHelpdeskAssignee := helpdeskAssignee.NewSubView(
 		"find-assignee",
 		"examples/ticket/templates/content/form/assignee/findAssignee/findHelpdeskAssignee.html.tmpl",
 		findHelpdeskAssigneeHandler,
@@ -64,8 +64,10 @@ func Routes(m *http.ServeMux, exec treetop.ViewExecutor) {
 		treetop.Noop,
 	)
 
+	m.Handle("/ticket/helpdesk/find-assignee",
+		exec.NewViewHandler(findHelpdeskAssignee).FragmentOnly())
 	m.Handle("/ticket/helpdesk/update-assignee",
-		exec.NewViewHandler(helpdeskAssignee))
+		exec.NewViewHandler(helpdeskAssignee).FragmentOnly())
 	m.Handle("/ticket/helpdesk/new",
 		exec.NewViewHandler(newHelpdeskTicket))
 	m.Handle("/ticket/software/new",
