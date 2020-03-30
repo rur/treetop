@@ -39,14 +39,19 @@ func main() {
 // infoSetup will create template, handlers and bind to routes for the example landing page
 func infoSetup(mux *http.ServeMux) {
 	// define handler for home page
-	exec := treetop.NewKeyedStringExecutor(map[string]string{
-		"local://base.html": assets.BaseHTML,
-		"local://nav.html":  assets.NavHTML(assets.IntroNav),
-	})
+	exec := &treetop.DeveloperExecutor{
+		ViewExecutor: &treetop.FileExecutor{
+			KeyedString: map[string]string{
+				"local://base.html": assets.BaseHTML,
+				"local://nav.html":  assets.NavHTML(assets.IntroNav),
+			},
+		},
+	}
 
 	home := treetop.
 		NewView("local://base.html", treetop.Noop).
-		NewSubView("nav", "local://nav.html", treetop.Noop)
+		NewSubView("content", "examples/intro.html", treetop.Noop)
+	home.NewDefaultSubView("nav", "local://nav.html", treetop.Noop)
 
 	mux.Handle("/", exec.NewViewHandler(home).PageOnly())
 

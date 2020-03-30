@@ -6,49 +6,30 @@
 		<label for="urgency-input" class="col-sm-3 col-form-label">Urgency</label>
 		<div class="col-sm-9">
 			<select class="form-control" name="urgency" id="urgency-input" required="required">
-				<option>Critical</option>
-				<option>Major</option>
-				<option selected>Normal</option>
-				<option>Minor</option>
+				<option value="critical">Critical (hint: try submitting this)</option>
+				<option value="major">Major</option>
+				<option selected value="normal">Normal</option>
+				<option value="minor">Minor</option>
 			</select>
 		</div>
 	</div>
 
 	<div class="form-group row">
-		<label for="serviceFormSelect" class="col-sm-3 col-form-label">Service</label>
+		<label for="description-textarea" class="col-sm-3 col-form-label">Description</label>
 		<div class="col-sm-9">
-			<select class="form-control" name="service" id="serviceFormSelect" required="required">
-				<option>Web Services</option>
-				<option>Workstation</option>
-				<option>Billing</option>
-			</select>
+			<textarea name="decription" id="description-textarea" cols="30" rows="10" class="form-control"></textarea>
 		</div>
 	</div>
 
-	<div class="form-group row">
-		<label for="customerFormSelect" class="col-sm-3 col-form-label">Customer</label>
-		<div class="col-sm-9">
-			<select class="form-control" name="customer" id="customerFormSelect" required="required">
-				<option>Customer A</option>
-				<option>Customer B</option>
-				<option>Customer C</option>
-			</select>
-		</div>
-	</div>
+
 
 	<div class="form-group row">
 		<label class="col-sm-3 col-form-label">Attachments</label>
 		<div class="col-sm-9">
-			<div class="input-group">
-				<div class="custom-file">
-					<input name="attachments" type="file" class="custom-file-input" id="inputGroupFile02" multiple>
-					<label class="custom-file-label" for="inputGroupFile02" aria-describedby="inputGroupFileAddon02">Choose file</label>
-				</div>
-				<div class="input-group-append">
-					<button treetop-submitter name="button" value="upload" type="button" formmethod="POST" formenctype="multipart/form-data" formaction="/test" class="input-group-text" id="inputGroupFileAddon02">Upload</button>
-				</div>
+			<div class="custom-file">
+				<input name="attachments" type="file" class="custom-file-input" id="inputGroupFile02" multiple>
+				<label class="custom-file-label" for="inputGroupFile02" aria-describedby="inputGroupFileAddon02">Choose file</label>
 			</div>
-
 		</div>
 	</div>
 
@@ -69,7 +50,8 @@
 			</div>
 		</div>
 	</div>
-	<div class="form-group row">
+	<div id="helpdesk-form-error" class="d-none"></div>
+	<div class="forim-group row">
 		<div class="col-sm-12 text-right">
 			<a href="/ticket" title="Clear form an start again" class="btn btn-muted">Reset</a>
 			<button type="submit" treetop-submitter formaction="/ticket/helpdesk/submit" formmethod="POST" class="btn btn-primary">Submit to Help Desk</button>

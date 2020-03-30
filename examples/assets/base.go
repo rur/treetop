@@ -34,18 +34,7 @@ var (
 		<div class="container">
 		{{ template "nav" .}}
 
-		{{ block "content" . }}
-		<div id="content">
-			<p class="text-center">↑ Choose a demo ↑</p>
-
-			<h1 class="mt-5">Treetop Examples</h1>
-
-			<p class="lead">
-				These examples demonstrate how full-page and template requests
-				can be combined to achieve various interactive controls.
-			</p>
-		</div>
-		{{ end }}
+		{{ template "content" . }}
 		</div>
 	</main>
 {{ block "treetop-config" . }}{{ end }}
