@@ -1,16 +1,15 @@
 <div id="form">
 
-    {{ template "assignee" .Assignee }}
+    {{ template "reported-by" .ReportedBy }}
 
 	<div class="form-group row">
-		<label for="ticketTypeFormSelect" class="col-sm-3 col-form-label">Priority</label>
+		<label for="urgency-input" class="col-sm-3 col-form-label">Urgency</label>
 		<div class="col-sm-9">
-			<select class="form-control" name="priority" id="priority" required="required">
+			<select class="form-control" name="urgency" id="urgency-input" required="required">
 				<option>Critical</option>
 				<option>Major</option>
 				<option selected>Normal</option>
 				<option>Minor</option>
-				<option>Wishlist</option>
 			</select>
 		</div>
 	</div>

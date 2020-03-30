@@ -1,0 +1,86 @@
+<fieldset id="reported-by" class="form-group" treetop-merge="update-child" data-update-child-id="helpdesk-reported-by-status">
+    <div id="form-reported-by" class="row">
+        <legend class="col-form-label col-sm-3 pt-0">Reported By</legend>
+        <div class="col-sm-9">
+            <div class="card mb-2">
+                <div class="card-body px-4">
+                    <h6 class="card-title">Select One:</h6>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="reported-by" id="reported-by_myself_input" value="myself"{{ if eq .ReportedBy "myself" }} checked{{ end }}  click-on-change="update-reported-by">
+                        <label class="form-check-label" for="reported-by_myself_input">
+                            This is my issue
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="reported-by" id="reported-by_customer_input" value="customer"{{ if eq .ReportedBy "customer" }} checked{{ end }}  click-on-change="update-reported-by">
+                        <label class="form-check-label" for="reported-by_customer_input">
+                            Reported by a customer
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="reported-by" id="reported-by_username_input" value="user-name"{{ if eq .ReportedBy "user-name" }} checked{{ end }}  click-on-change="update-reported-by">
+                        <label class="form-check-label" for="reported-by_username_input">
+                            Issue was reported by a team member
+                        </label>
+                    </div>
+                    {{/* submit button will update form when reported-by is changed */}}
+                    <button class="d-none" id="update-reported-by" treetop-submitter formnovalidate formaction="/ticket/helpdesk/update-reported-by"></button>
+                </div>
+
+
+                {{ if eq .ReportedBy "user-name" }}
+                <div class="card-footer" id="helpdesk-reported-by-status">
+                    {{ if .ReportedByUser }}
+                    <h6 class="my-3">
+                        <a treetop-link="/ticket/helpdesk/update-reported-by?reported-by=user-name" type="button" class="mr-2 text-primary">[x]</a>
+                        Reported by: <strong>{{ .ReportedByUser }}</strong>
+                    </h6>
+                    <input type="hidden" name="assigned-user" value="{{ .ReportedByUser }}">
+                    {{ else }}
+                    <div class="input-group mb-2">
+                        <input autofocus enter-submitter="reported-by-find-user" type="text" class="form-control" name="search-query">
+                        <div class="input-group-append"><button id="reported-by-find-user" class="btn"  treetop-submitter formnovalidate formaction="/ticket/helpdesk/find-reported-by">Find User</button></div>
+                    </div>
+                    <div id="find-reported-by">
+                        <p class="text-muted small">Enter a query to find a user</p>
+                        <input class="hide" required type="text" onkeydown="return false" name="assigned-user" value="">
+                    </div>
+                    {{ end }}
+                </div>
+                {{ end }}
+
+                {{ if eq .ReportedBy "customer" }}
+                <div id="helpdesk-reported-by-status" class="card-footer">
+                    <div class="">
+                        <label for="reported-by-customer-input">Customer Company Name</label>
+                        <select id="reported-by-customer-input" autofocus class="form-control" name="reported-by-customer" required>
+                            <option disabled value=""{{ if eq .ReportedByCustomer "" }} selected{{ end }}>-- choose one --</option>
+                            {{ range $index, $customer := .CustomerList }}
+                            <option value="{{ $customer }}"{{ if eq $.ReportedByCustomer $customer }} selected{{ end }}>{{ $customer }}</option>
+                            {{ end }}
+                        </select>
+                    </div>
+                    <div class="mt-4">
+                        <label for="customer-contact">Customer Contact <em>(optional)</em></label>
+                        <input type="text" id="customer-contact" class="form-control" name="customer-contact" value="{{ .CustomerContact }}">
+                    </div>
+
+                </div>
+                {{ end }}
+
+                {{ if eq .ReportedBy "myself" }}
+                <div id="helpdesk-reported-by-status" class="card-footer text-muted">
+                    <div class="my-2" role="alert">
+                        <strong>Note:</strong> Triage will be skipped for admin users
+                    </div>
+                </div>
+                {{ end }}
+
+                {{ if eq .ReportedBy "" }}
+                <div id="helpdesk-reported-by-status" class="d-none"></div>
+                {{ end }}
+
+            </div>
+        </div>
+    </div>
+</fieldset>

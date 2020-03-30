@@ -23,7 +23,7 @@ func Routes(m *http.ServeMux, exec treetop.ViewExecutor) {
 	ticketFormContent := baseView.NewDefaultSubView(
 		"content",
 		"examples/ticket/templates/content/ticketFormContent.html.tmpl",
-		ticketFormContentHandler,
+		ticketHandler,
 	)
 
 	// content -> form
@@ -33,18 +33,18 @@ func Routes(m *http.ServeMux, exec treetop.ViewExecutor) {
 		newHelpdeskTicketHandler,
 	)
 
-	// content -> form -> assignee
-	helpdeskAssignee := newHelpdeskTicket.NewDefaultSubView(
-		"assignee",
-		"examples/ticket/templates/content/form/assignee/helpdeskAssignee.html.tmpl",
-		helpdeskAssigneeHandler,
+	// content -> form -> reported-by
+	helpdeskReportedBy := newHelpdeskTicket.NewDefaultSubView(
+		"reported-by",
+		"examples/ticket/templates/content/form/reportedBy/helpdeskReportedBy.html.tmpl",
+		helpdeskReportedByHandler,
 	)
 
-	// content -> form -> assignee -> find-assignee
-	findHelpdeskAssignee := helpdeskAssignee.NewSubView(
-		"find-assignee",
-		"examples/ticket/templates/content/form/assignee/findAssignee/findHelpdeskAssignee.html.tmpl",
-		findHelpdeskAssigneeHandler,
+	// content -> form -> reported-by -> find-reported-by
+	findHelpdeskReportedBy := helpdeskReportedBy.NewSubView(
+		"find-reported-by",
+		"examples/ticket/templates/content/form/reportedBy/findReportedBy/findHelpdeskReportedBy.html.tmpl",
+		findTeamMemberHandler,
 	)
 	newSoftwareTicket := ticketFormContent.NewSubView(
 		"form",
@@ -64,10 +64,10 @@ func Routes(m *http.ServeMux, exec treetop.ViewExecutor) {
 		treetop.Noop,
 	)
 
-	m.Handle("/ticket/helpdesk/find-assignee",
-		exec.NewViewHandler(findHelpdeskAssignee).FragmentOnly())
-	m.Handle("/ticket/helpdesk/update-assignee",
-		exec.NewViewHandler(helpdeskAssignee).FragmentOnly())
+	m.Handle("/ticket/helpdesk/find-reported-by",
+		exec.NewViewHandler(findHelpdeskReportedBy).FragmentOnly())
+	m.Handle("/ticket/helpdesk/update-reported-by",
+		exec.NewViewHandler(helpdeskReportedBy).FragmentOnly())
 	m.Handle("/ticket/helpdesk/new",
 		exec.NewViewHandler(newHelpdeskTicket))
 	m.Handle("/ticket/software/new",

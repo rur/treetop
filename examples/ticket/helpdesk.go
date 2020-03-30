@@ -8,7 +8,7 @@ import (
 
 // newHelpdeskTicket (partial)
 // Extends: form
-// Method: *
+// Method: ANY
 // Doc: Form designed for creating helpdesk tickets
 func newHelpdeskTicketHandler(rsp treetop.Response, req *http.Request) interface{} {
 	if treetop.IsTemplateRequest(req) {
@@ -16,87 +16,61 @@ func newHelpdeskTicketHandler(rsp treetop.Response, req *http.Request) interface
 		rsp.ReplacePageURL(req.URL.String())
 	}
 	data := struct {
-		Assignee interface{}
+		ReportedBy interface{}
 	}{
-		Assignee: rsp.HandleSubView("assignee", req),
+		ReportedBy: rsp.HandleSubView("reported-by", req),
 	}
 	return data
 }
 
-// helpdeskAssignee (partial)
-// Extends: assignee
-// Method: *
-// Doc: Options for assigning someone to the help desk item, different options for admins
-func helpdeskAssigneeHandler(rsp treetop.Response, req *http.Request) interface{} {
+// helpdeskReportedBy (fragment)
+// Extends: reportedBy
+// Method: ANY
+// Doc: Options for notifying help desk of who reported the issue
+func helpdeskReportedByHandler(rsp treetop.Response, req *http.Request) interface{} {
 	query := req.URL.Query()
 	data := struct {
-		Assignee     string
-		AssignedUser string
-		FindAssignee interface{}
-		IsAdmin      bool
+		ReportedBy         string
+		ReportedByUser     string
+		ReportedByCustomer string
+		CustomerList       []string
+		CustomerContact    string
 	}{
-		Assignee:     query.Get("assignee"),
-		FindAssignee: rsp.HandleSubView("findassignee", req),
-		IsAdmin:      true,
+		ReportedBy: query.Get("reported-by"),
 	}
-	// allow-list approach to input validation with a default fallback
-	switch data.Assignee {
-	case "myself", "unassigned":
-		// ok!
+	// Use allow-list for input validation when possible
+	switch data.ReportedBy {
 	case "user-name":
-		// ok!
 		// Now parse extra input for this setting
-		data.AssignedUser = query.Get("assigned-user")
+		data.ReportedByUser = query.Get("resported-by-user")
+	case "customer":
+		// Would otherwise be loaded from a customer database
+		data.CustomerList = []string{
+			"Example Customer 0",
+			"Example Customer 1",
+			"Example Customer 2",
+			"Example Customer 3",
+			"Example Customer A",
+			"Example Customer B",
+			"Example Customer C",
+			"Example Customer D",
+			"Example Customer E",
+		}
+		if rBC := query.Get("reported-by-customer"); rBC != "" {
+			for _, cst := range data.CustomerList {
+				if cst == rBC {
+					// accept the input when it matches a known customer
+					data.ReportedByCustomer = rBC
+					break
+				}
+			}
+		}
+		data.CustomerContact = query.Get("customer-contact")
+	case "myself":
+		// no additional information required
 	default:
-		data.Assignee = "unassigned"
+		// default for empty or unrecognized input
+		data.ReportedBy = ""
 	}
-	return data
-}
-
-// findHelpdeskAssignee (partial)
-// Extends: findAssignee
-// Method: *
-// Doc: user supplied query string to select a user to assign to helpdesk ticket
-func findHelpdeskAssigneeHandler(rsp treetop.Response, req *http.Request) interface{} {
-	query := req.URL.Query()
-
-	data := struct {
-		Results     []string
-		QueryString string
-	}{
-		QueryString: query.Get("search-query"),
-	}
-
-	// For demo purposes, filter out any characters not in the latin alphabet.
-	// All other characters must be in an allowlist, otherwise the result set will be empty
-	filteredQuery := make([]byte, 0, len(data.QueryString))
-FILTER:
-	for _, codePoint := range data.QueryString {
-		if (codePoint >= 64 && codePoint <= 90) || (codePoint >= 97 && codePoint <= 122) {
-			filteredQuery = append(filteredQuery, byte(codePoint))
-			continue
-		}
-		switch codePoint {
-		case ' ', '-', '_', '.', '\t':
-			// allowed non latin alphabet character, skip for filter
-			continue
-		default:
-			filteredQuery = nil
-			break FILTER
-		}
-	}
-	if len(filteredQuery) == 0 {
-		return data
-	}
-
-	// For example purposes, vary number of results based
-	// on the number of characters in the input query.
-	for i := len(filteredQuery) - 1; i < 26; i++ {
-		data.Results = append(data.Results, "Example User "+string(i+65))
-		if len(data.Results) == 5 {
-			break
-		}
-	}
-
 	return data
 }

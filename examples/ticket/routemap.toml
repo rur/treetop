@@ -14,55 +14,55 @@ page = "ticket"
         name = "ticket-form-content"
         default = true
         path = "/ticket"
-        method = "any"
-        handler = "ticketFormContentHandler"
+        handler = "ticketHandler"
         template = "examples/ticket/templates/content/ticketFormContent.html.tmpl"
+        method = "any"
         doc = "Landing page for ticket wizard"
         [views.base.blocks.content.blocks]
 
           [[views.base.blocks.content.blocks.form]]
             name = "new-helpdesk-ticket"
             path = "/ticket/helpdesk/new"
-            method = "any"
             handler = "newHelpdeskTicketHandler"
             template = "examples/ticket/templates/content/form/newHelpdeskTicket.html.tmpl"
+            method = "any"
             doc = "Form designed for creating helpdesk tickets"
             [views.base.blocks.content.blocks.form.blocks]
 
-              [[views.base.blocks.content.blocks.form.blocks.assignee]]
-                name = "helpdesk-assignee"
-                path = "/ticket/helpdesk/update-assignee"
-                method = "any"
-                default = true
+              [[views.base.blocks.content.blocks.form.blocks.reported-by]]
+                name = "helpdesk-reported-by"
                 fragment = true
-                handler = "helpdeskAssigneeHandler"
-                template = "examples/ticket/templates/content/form/assignee/helpdeskAssignee.html.tmpl"
-                doc = "Options for assigning someone to the help desk item, different options for admins"
-                [views.base.blocks.content.blocks.form.blocks.assignee.blocks]
+                default = true
+                path = "/ticket/helpdesk/update-reported-by"
+                handler = "helpdeskReportedByHandler"
+                template = "examples/ticket/templates/content/form/reportedBy/helpdeskReportedBy.html.tmpl"
+                method = "any"
+                doc = "Options for notifying help desk of who reported the issue"
+                [views.base.blocks.content.blocks.form.blocks.reported-by.blocks]
 
-                  [[views.base.blocks.content.blocks.form.blocks.assignee.blocks.find-assignee]]
-                    name = "find-helpdesk-assignee"
+                  [[views.base.blocks.content.blocks.form.blocks.reported-by.blocks.find-reported-by]]
+                    name = "find-helpdesk-reported-by"
                     fragment = true
-                    handler = "findHelpdeskAssigneeHandler"
-                    path = "/ticket/helpdesk/find-assignee"
+                    path = "/ticket/helpdesk/find-reported-by"
+                    handler = "findTeamMemberHandler"
+                    template = "examples/ticket/templates/content/form/reportedBy/findReportedBy/findHelpdeskReportedBy.html.tmpl"
                     method = "any"
-                    template = "examples/ticket/templates/content/form/assignee/findAssignee/findHelpdeskAssignee.html.tmpl"
-                    doc = "user supplied query string to select a user to assign to helpdesk ticket"
+                    doc = "query string to find a user to select"
 
           [[views.base.blocks.content.blocks.form]]
             name = "new-software-ticket"
             path = "/ticket/software/new"
-            method = "any"
             handler = "newSoftwareTicketHandler"
             template = "examples/ticket/templates/content/form/newSoftwareTicket.html.tmpl"
+            method = "any"
             doc = "Form designed for creating software tickets"
 
           [[views.base.blocks.content.blocks.form]]
             name = "new-systems-ticket"
             path = "/ticket/systems/new"
-            method = "any"
             handler = "newSystemsTicketHandler"
             template = "examples/ticket/templates/content/form/newSystemsTicket.html.tmpl"
+            method = "any"
             doc = "Form designed for creating systems tickets"
 
       [[views.base.blocks.nav]]
