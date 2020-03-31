@@ -4,11 +4,14 @@
 
 ### A tool that creates request handlers for nested templates in Go
 
-HTML web applications typically share a lot of common structure between
+HTML web applications typically share a lot of structure between
 endpoints. The Go template library supports nested templates<sup>1</sup>.
-This is a powerful tool that HTML apps can use to reduce boilerplate. Treetop adds
-functions to the template hierarchy so that HTTP endpoints can be constructed from
+This is a powerful tool that HTML apps can use to reduce boilerplate. Treetop pairs
+a function with each template so that HTTP endpoints can be constructed for
 different page configurations.
+
+
+#### Template Hierarchy
 
 
                   BaseHandler(...)

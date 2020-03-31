@@ -9,7 +9,7 @@
     {{ if .Editing }}
     {{/* Editing Form */}}
     <form treetop action="/inline/{{ .Field }}" method="POST">
-        <textarea autofocus="" name="{{ .Field }}" class="form-control {{ if .ErrorMessage }}is-invalid{{ end }}" id="{{ .Field }}" rows="3">{{ .Value }}</textarea>
+        <textarea rows="9" autofocus="" name="{{ .Field }}" class="form-control {{ if .ErrorMessage }}is-invalid{{ end }}" id="{{ .Field }}" style="font-size: 1.2rem">{{ .Value }}</textarea>
 
         {{ if .ErrorMessage }}
         <div class="invalid-feedback">

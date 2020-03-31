@@ -2,35 +2,34 @@
 <div id="content">
 	<p class="text-center">↑ Choose a demo ↑</p>
 
-	<h3 class="mt-5"><em>&lt;template/&gt;</em> Request Demo</h3>
+	<h3 class="mt-5"><em>&lt;template&gt;</em> Request Demo</h3>
 
-	<p class="lead">A series of example apps that demonstrate the use of a template protocol to support modern web UX.</p>
+	<p class="lead">Example apps that explore the use of a <em>template protocol</em> for modern web UX.</p>
 
 	<h5 class="mt-5">What is a template request?</h5>
 
 	<p>
-		A convention that web links, forms and components can use, with XHR, to send a normal request and receive
-		an update for the current page instead of a new HTML document.
+		An HTTP request to render a HTML template to be applied to
+		the loaded webpage.
 	</p>
 
 	<h5 class="mt-4">Motivation</h5>
 
 	<p>
-		The goal is to allow a standard HTML web server to support basic interactivity
-		by extending the protocol that is already in use. This will
-		hopefully reduce the need for web apps to expand custom APIs to support
-		minor dynamic controls.
+		The goal is for conventional web servers to support basic interactivity.
+		This will make modern web apps less reliant on custom APIs for
+		simple dynamic controls.
 	</p>
 
-	<h5>The protocol</h5>
+	<h5 class="mt-4">The protocol</h5>
 
 	<p>
-		Using an <code>Accept</code><sup>[1]</sup> header, the client indicates to the web server that a template is
-		expected as a response. If implemented, a HTML template fragment will be sent in the response body.
+		An <code>Accept</code><sup>[1]</sup> header is used to indicate to the web server that the client
+		is expecting a template as a response. If implemented, a HTML template fragment will be sent in the response body.
 		That template will be applied to the requesting document using a find and replace strategy.
 	</p>
 
-	<pre class="alert alert-primary px-3 rounded"><code>&gt; GET /content_a HTTP/1.1
+	<pre class="alert alert-primary px-3 rounded py-4"><code>&gt; GET /content_a HTTP/1.1
   Accept: application/x.treetop-html-template+xml
 
 &lt; HTTP/1.1 200 OK
@@ -44,8 +43,10 @@
   &lt;/template&gt;</code>
 	</pre>
 
-	<p>That might seems too simple to be useful so the example apps were created to demonstrate
-	how common controls can be implemented using the protocol.</p>
+	<p>
+		That might seems too simple to be useful so these example apps were created to demonstrate
+		how various controls can be implemented using the protocol.
+	</p>
 
 	<h5 class="mt-4">Third-party libraries</h5>
 
@@ -58,7 +59,7 @@
 		web pages from nested templates. That library is used to implement the server-side handlers for the demo apps.
 	</p>
 
-	<div class="card mt-5 small text-muted">
+	<div class="card mt-5 small text-muted pb-5">
 		<div class="card-body">
 			<h6 class="card-title">Footnotes</h6>
 			<ol>
