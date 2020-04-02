@@ -7,12 +7,10 @@
 package ticket
 
 import (
-	"net/http"
-
 	"github.com/rur/treetop"
 )
 
-func Routes(m *http.ServeMux, exec treetop.ViewExecutor) {
+func Routes(m Mux, exec treetop.ViewExecutor) {
 
 	baseView := treetop.NewView(
 		"local://base.html",
@@ -46,6 +44,13 @@ func Routes(m *http.ServeMux, exec treetop.ViewExecutor) {
 		"examples/ticket/templates/content/form/reportedBy/findReportedBy/findHelpdeskReportedBy.html.tmpl",
 		findTeamMemberHandler,
 	)
+
+	// content -> form -> upload-file-list
+	uploadedHelpdeskFiles := newHelpdeskTicket.NewDefaultSubView(
+		"upload-file-list",
+		"examples/ticket/templates/content/form/uploadFileList/uploadedHelpdeskFiles.html.tmpl",
+		uploadedHelpdeskFilesHandler,
+	)
 	newSoftwareTicket := ticketFormContent.NewSubView(
 		"form",
 		"examples/ticket/templates/content/form/newSoftwareTicket.html.tmpl",
@@ -64,17 +69,18 @@ func Routes(m *http.ServeMux, exec treetop.ViewExecutor) {
 		treetop.Noop,
 	)
 
-	m.Handle("/ticket/helpdesk/find-reported-by",
+	m.HandleGET("/ticket/helpdesk/find-reported-by",
 		exec.NewViewHandler(findHelpdeskReportedBy).FragmentOnly())
-	m.Handle("/ticket/helpdesk/update-reported-by",
+	m.HandleGET("/ticket/helpdesk/update-reported-by",
 		exec.NewViewHandler(helpdeskReportedBy).FragmentOnly())
-	m.Handle("/ticket/helpdesk/new",
+	m.HandlePOST("/ticket/helpdesk/upload-attachment",
+		exec.NewViewHandler(uploadedHelpdeskFiles).FragmentOnly())
+	m.HandleGET("/ticket/helpdesk/new",
 		exec.NewViewHandler(newHelpdeskTicket))
-	m.Handle("/ticket/software/new",
+	m.HandleGET("/ticket/software/new",
 		exec.NewViewHandler(newSoftwareTicket))
-	m.Handle("/ticket/systems/new",
+	m.HandleGET("/ticket/systems/new",
 		exec.NewViewHandler(newSystemsTicket))
-	m.Handle("/ticket",
+	m.HandleGET("/ticket",
 		exec.NewViewHandler(ticketFormContent))
-
 }

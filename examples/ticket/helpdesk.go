@@ -8,7 +8,7 @@ import (
 
 // newHelpdeskTicket (partial)
 // Extends: form
-// Method: ANY
+// Method: GET
 // Doc: Form designed for creating helpdesk tickets
 func newHelpdeskTicketHandler(rsp treetop.Response, req *http.Request) interface{} {
 	if treetop.IsTemplateRequest(req) {
@@ -16,16 +16,18 @@ func newHelpdeskTicketHandler(rsp treetop.Response, req *http.Request) interface
 		rsp.ReplacePageURL(req.URL.String())
 	}
 	data := struct {
-		ReportedBy interface{}
+		ReportedBy     interface{}
+		UploadFileList interface{}
 	}{
-		ReportedBy: rsp.HandleSubView("reported-by", req),
+		ReportedBy:     rsp.HandleSubView("reported-by", req),
+		UploadFileList: rsp.HandleSubView("upload-file-list", req),
 	}
 	return data
 }
 
 // helpdeskReportedBy (fragment)
 // Extends: reportedBy
-// Method: ANY
+// Method: GET
 // Doc: Options for notifying help desk of who reported the issue
 func helpdeskReportedByHandler(rsp treetop.Response, req *http.Request) interface{} {
 	query := req.URL.Query()
@@ -71,6 +73,19 @@ func helpdeskReportedByHandler(rsp treetop.Response, req *http.Request) interfac
 	default:
 		// default for empty or unrecognized input
 		data.ReportedBy = ""
+	}
+	return data
+}
+
+// uploadedHelpdeskFiles (fragment)
+// Extends: uploadFileList
+// Method: POST
+// Doc: Load a list of uploaded files, save to storage and return metadata to the form
+func uploadedHelpdeskFilesHandler(rsp treetop.Response, req *http.Request) interface{} {
+	data := struct {
+		HandlerInfo string
+	}{
+		HandlerInfo: "uploadedHelpdeskFiles",
 	}
 	return data
 }

@@ -32,8 +32,10 @@
                 <div class="card-footer" id="helpdesk-reported-by-status">
                     {{ if .ReportedByUser }}
                     <h6 class="my-3">
-                        <a treetop-link="/ticket/helpdesk/update-reported-by?reported-by=user-name" type="button" class="mr-2 text-primary">[x]</a>
                         Reported by: <strong>{{ .ReportedByUser }}</strong>
+                        <button  treetop-link="/ticket/helpdesk/update-reported-by?reported-by=user-name" type="button" class="close" aria-label="remove">
+                            <span aria-hidden="true">×</span>
+                        </button>
                     </h6>
                     <input type="hidden" name="reported-by-user" value="{{ .ReportedByUser }}">
                     {{ else }}

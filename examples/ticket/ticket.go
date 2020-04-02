@@ -49,7 +49,7 @@ func sanitizeSummary(s string) string {
 	return strings.TrimSpace(wsRegex.ReplaceAllString(s, " "))
 }
 
-// Method: ANY
+// Method: GET
 // Doc: search the database for a list of users matching a query string
 func findTeamMemberHandler(rsp treetop.Response, req *http.Request) interface{} {
 	query := req.URL.Query()

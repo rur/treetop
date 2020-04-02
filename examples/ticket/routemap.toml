@@ -16,7 +16,7 @@ page = "ticket"
         path = "/ticket"
         handler = "ticketHandler"
         template = "examples/ticket/templates/content/ticketFormContent.html.tmpl"
-        method = "any"
+        method = "GET"
         doc = "Landing page for ticket wizard"
         [views.base.blocks.content.blocks]
 
@@ -25,7 +25,7 @@ page = "ticket"
             path = "/ticket/helpdesk/new"
             handler = "newHelpdeskTicketHandler"
             template = "examples/ticket/templates/content/form/newHelpdeskTicket.html.tmpl"
-            method = "any"
+            method = "GET"
             doc = "Form designed for creating helpdesk tickets"
             [views.base.blocks.content.blocks.form.blocks]
 
@@ -36,7 +36,7 @@ page = "ticket"
                 path = "/ticket/helpdesk/update-reported-by"
                 handler = "helpdeskReportedByHandler"
                 template = "examples/ticket/templates/content/form/reportedBy/helpdeskReportedBy.html.tmpl"
-                method = "any"
+                method = "GET"
                 doc = "Options for notifying help desk of who reported the issue"
                 [views.base.blocks.content.blocks.form.blocks.reported-by.blocks]
 
@@ -46,15 +46,26 @@ page = "ticket"
                     path = "/ticket/helpdesk/find-reported-by"
                     handler = "findTeamMemberHandler"
                     template = "examples/ticket/templates/content/form/reportedBy/findReportedBy/findHelpdeskReportedBy.html.tmpl"
-                    method = "any"
+                    method = "GET"
                     doc = "query string to find a user to select"
+
+
+              [[views.base.blocks.content.blocks.form.blocks.upload-file-list]]
+                name = "uploaded-helpdesk-files"
+                fragment = true
+                default = true
+                path = "/ticket/helpdesk/upload-attachment"
+                handler = "uploadedHelpdeskFilesHandler"
+                template = "examples/ticket/templates/content/form/uploadFileList/uploadedHelpdeskFiles.html.tmpl"
+                method = "POST"
+                doc = "Load a list of uploaded files, save to storage and return metadata to the form"
 
           [[views.base.blocks.content.blocks.form]]
             name = "new-software-ticket"
             path = "/ticket/software/new"
             handler = "newSoftwareTicketHandler"
             template = "examples/ticket/templates/content/form/newSoftwareTicket.html.tmpl"
-            method = "any"
+            method = "GET"
             doc = "Form designed for creating software tickets"
 
           [[views.base.blocks.content.blocks.form]]
@@ -62,7 +73,7 @@ page = "ticket"
             path = "/ticket/systems/new"
             handler = "newSystemsTicketHandler"
             template = "examples/ticket/templates/content/form/newSystemsTicket.html.tmpl"
-            method = "any"
+            method = "GET"
             doc = "Form designed for creating systems tickets"
 
       [[views.base.blocks.nav]]

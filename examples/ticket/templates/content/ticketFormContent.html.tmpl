@@ -102,6 +102,22 @@
 							clickElem.click()
 						}
 					})
+				},
+
+				'remove-me': function (el) {
+					// designate a child element that will cause this elemnt to be
+					// removed from the DOM
+					const removeQuery = el.getAttribute("remove-me")
+					if (!removeQuery) {
+						return
+					}
+					const removeBtn = el.querySelector(removeQuery)
+					if (!removeBtn) {
+						return
+					}
+					removeBtn.addEventListener("click", () => {
+						treetop.unmount(el);
+					});
 				}
 			},
 

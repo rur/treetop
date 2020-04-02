@@ -4,12 +4,12 @@
 
 	<h3 class="mt-5"><em>&lt;template&gt;</em> Request Demo</h3>
 
-	<p class="lead">Example apps that explore the use of a <em>template protocol</em> for modern web UX.</p>
+	<p class="lead">Example apps that use a <em>template protocol</em> for modern web UX.</p>
 
 	<h5 class="mt-5">What is a template request?</h5>
 
 	<p>
-		An HTTP request to render a HTML template to be applied to
+		An web request that results in a HTML template being applied to update
 		the loaded webpage.
 	</p>
 
@@ -29,7 +29,7 @@
 		That template will be applied to the requesting document using a find and replace strategy.
 	</p>
 
-	<pre class="alert alert-primary px-3 rounded py-4"><code>&gt; GET /content_a HTTP/1.1
+	<pre class="alert alert-secondary rounded p-4 border-secondary"><code>&gt; GET /content_a HTTP/1.1
   Accept: application/x.treetop-html-template+xml
 
 &lt; HTTP/1.1 200 OK

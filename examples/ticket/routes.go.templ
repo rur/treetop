@@ -1,11 +1,9 @@
 package ticket
 
 import (
-	"net/http"
-
 	"github.com/rur/treetop"
 )
 
-func Routes(m *http.ServeMux, exec treetop.ViewExecutor) {
+func Routes(m Mux, exec treetop.ViewExecutor) {
 	{{ block "routes" . }}{{ end }}
 }
