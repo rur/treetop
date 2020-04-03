@@ -55,7 +55,7 @@
 			 */
 			mountAttr: {
 
-				"autofocus": (emt) => {
+				'autofocus': (emt) => {
 					// autofocus attribute component will cause an input element
 					// to be focused and have the cursor placed at the end of the input.
 					emt.focus()
@@ -96,8 +96,7 @@
 					if (!clickID) {
 						return
 					}
-					el.addEventListener("change", () => {
-						if (el.type === 'file' && el.files.length == 0) return
+					el.addEventListener("change", function (evt) {
 						const clickElem = document.getElementById(clickID)
 						if (clickElem instanceof HTMLElement) {
 							clickElem.click()
@@ -119,6 +118,26 @@
 					removeBtn.addEventListener("click", () => {
 						treetop.unmount(el);
 					});
+				},
+
+				'limit-upload-file-mb': function (el) {
+					// Prevent files larger than a specified size from being selected
+					// by the file input.
+					if (!(el instanceof HTMLInputElement) || el.type !== "file") return;
+
+					const maxMB = parseInt(el.getAttribute("limit-upload-file-mb"), 10)
+					if (!maxMB || maxMB < 0) return
+					const maxBytes = maxMB*1024*1024
+					el.addEventListener("change", function (evt) {
+						for (let i = 0; i < el.files.length; i++) {
+							if (el.files[i].size > maxBytes) {
+								alert("File '" + el.files[i].name + "' is larger than max size of " + maxMB + "MB")
+								el.value = ""
+								evt.stopImmediatePropagation()
+								return false;
+							}
+						}
+					})
 				}
 			},
 
@@ -133,7 +152,7 @@
 			 */
 			merge: {
 
-				"update-child": (nue, old) => {
+				'update-child': (nue, old) => {
 					// Having received an update for an element, try only updating a child element.
 					// The "data-update-child-id" attribute value will supply an identifier to find
 					// the corresponding child elements.
@@ -153,15 +172,11 @@
 					treetop.updateElement(nue, old)
 				},
 
-				"dedup-append": (nue, old) => {
+				'dedup-append': (nue, old) => {
 					// append children of new element to existing
 					// replacing any existing children elements with matching IDs
-					//
-					// nb. copy children to an array beacuse adding template elements to
-					//     the DOM will remove them the template element child list
-					const children = Array.from(nue.children)
-					for (let i = 0; i < children.length; i++) {
-						const child = children[i]
+					for (let i = 0; i < nue.children.length; i++) {
+						const child = nue.children[i]
 						if (child.id) {
 							const existing = old.querySelector("#" + child.id)
 							if (existing)  {

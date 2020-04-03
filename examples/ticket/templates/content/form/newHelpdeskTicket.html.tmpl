@@ -24,8 +24,8 @@
 	<div class="form-group row">
 		<label class="col-sm-3 col-form-label">Attachments</label>
 		<div class="col-sm-9">
-			<div class="custom-file mb-2">
-				<input name="file-upload" type="file" class="custom-file-input" id="inputGroupFile02" multiple click-on-change="upload-selected-attachment">
+			<div class="custom-file mb-2" click-on-change="upload-selected-attachment">
+				<input name="file-upload" type="file" class="custom-file-input" id="inputGroupFile02" multiple limit-upload-file-mb="1MB">
 				<label class="custom-file-label" for="inputGroupFile02" aria-describedby="inputGroupFileAddon02">Choose file</label>
 			</div>
 			<button class="d-none" id="upload-selected-attachment" treetop-submitter formnovalidate formmethod="POST" formenctype="multipart/form-data" formaction="/ticket/helpdesk/upload-attachment"></button>

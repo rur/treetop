@@ -9,16 +9,15 @@
 	<h5 class="mt-5">What is a template request?</h5>
 
 	<p>
-		An web request that results in a HTML template being applied to update
-		the loaded webpage.
+		A HTTP request from a page link, web form or component to fetch an HTML template
+		as an update for the current page.
 	</p>
 
 	<h5 class="mt-4">Motivation</h5>
 
 	<p>
-		The goal is for conventional web servers to support basic interactivity.
-		This will make modern web apps less reliant on custom APIs for
-		simple dynamic controls.
+		The goal is for a greater level of interactivity to be supported through the conventional protocol.
+		This will help reduce the reliance on custom APIs for basic dynamic controls.
 	</p>
 
 	<h5 class="mt-4">The protocol</h5>
@@ -29,7 +28,7 @@
 		That template will be applied to the requesting document using a find and replace strategy.
 	</p>
 
-	<pre class="alert alert-secondary rounded p-4 border-secondary"><code>&gt; GET /content_a HTTP/1.1
+	<pre class="alert alert-secondary p-4"><code>&gt; GET /content_a HTTP/1.1
   Accept: application/x.treetop-html-template+xml
 
 &lt; HTTP/1.1 200 OK
