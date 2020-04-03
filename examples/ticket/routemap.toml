@@ -49,13 +49,19 @@ page = "ticket"
                     method = "GET"
                     doc = "query string to find a user to select"
 
+              [[views.base.blocks.content.blocks.form.blocks.upload-file-list]]
+                name = "attachment-file-list"
+                fragment = true
+                default = true
+                handler = "helpdeskAttachmentFileListHandler"
+                template = "examples/ticket/templates/content/form/uploadFileList/uploadedHelpdeskFiles.html.tmpl"
+                doc = "Default helpdesk attachment file list template handler, parse file info from query string"
 
               [[views.base.blocks.content.blocks.form.blocks.upload-file-list]]
                 name = "uploaded-helpdesk-files"
                 fragment = true
-                default = true
                 path = "/ticket/helpdesk/upload-attachment"
-                handler = "uploadedHelpdeskFilesHandler"
+                handler = "uploadedFilesHandler"
                 template = "examples/ticket/templates/content/form/uploadFileList/uploadedHelpdeskFiles.html.tmpl"
                 method = "POST"
                 doc = "Load a list of uploaded files, save to storage and return metadata to the form"

@@ -97,6 +97,7 @@
 						return
 					}
 					el.addEventListener("change", () => {
+						if (el.type === 'file' && el.files.length == 0) return
 						const clickElem = document.getElementById(clickID)
 						if (clickElem instanceof HTMLElement) {
 							clickElem.click()
@@ -105,7 +106,7 @@
 				},
 
 				'remove-me': function (el) {
-					// designate a child element that will cause this elemnt to be
+					// designate a child element that will cause this element to be
 					// removed from the DOM
 					const removeQuery = el.getAttribute("remove-me")
 					if (!removeQuery) {
@@ -150,6 +151,27 @@
 					}
 					// fall back on standard element swap
 					treetop.updateElement(nue, old)
+				},
+
+				"dedup-append": (nue, old) => {
+					// append children of new element to existing
+					// replacing any existing children elements with matching IDs
+					//
+					// nb. copy children to an array beacuse adding template elements to
+					//     the DOM will remove them the template element child list
+					const children = Array.from(nue.children)
+					for (let i = 0; i < children.length; i++) {
+						const child = children[i]
+						if (child.id) {
+							const existing = old.querySelector("#" + child.id)
+							if (existing)  {
+								treetop.updateElement(child, existing)
+								continue
+							}
+						}
+						// append child to existing DOM node
+						treetop.mountChild(child, old)
+					}
 				}
 			}
 		};

@@ -6,10 +6,9 @@
 sigint_handler()
 {
   kill -- -$PID
-  exit
 }
 
-trap sigint_handler SIGINT
+trap sigint_handler 0
 
 while true; do
   set -x

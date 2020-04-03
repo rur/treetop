@@ -1,6 +1,7 @@
 package ticket
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/rur/treetop"
@@ -77,15 +78,23 @@ func helpdeskReportedByHandler(rsp treetop.Response, req *http.Request) interfac
 	return data
 }
 
-// uploadedHelpdeskFiles (fragment)
-// Extends: uploadFileList
-// Method: POST
-// Doc: Load a list of uploaded files, save to storage and return metadata to the form
-func uploadedHelpdeskFilesHandler(rsp treetop.Response, req *http.Request) interface{} {
+// Doc: Default helpdesk attachment file list template handler,
+//      parse file info from query string
+func helpdeskAttachmentFileListHandler(rsp treetop.Response, req *http.Request) interface{} {
+	// load file info from query
+	query := req.URL.Query()
 	data := struct {
-		HandlerInfo string
-	}{
-		HandlerInfo: "uploadedHelpdeskFiles",
+		Files []*FileInfo
+	}{}
+
+	for _, enc := range query["attachment"] {
+		info := &FileInfo{}
+		if err := info.UnmarshalBase64([]byte(enc)); err != nil {
+			// skip it
+			log.Println(err)
+		} else {
+			data.Files = append(data.Files, info)
+		}
 	}
 	return data
 }

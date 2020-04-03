@@ -46,10 +46,15 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 	)
 
 	// content -> form -> upload-file-list
-	uploadedHelpdeskFiles := newHelpdeskTicket.NewDefaultSubView(
+	_ = newHelpdeskTicket.NewDefaultSubView(
 		"upload-file-list",
 		"examples/ticket/templates/content/form/uploadFileList/uploadedHelpdeskFiles.html.tmpl",
-		uploadedHelpdeskFilesHandler,
+		helpdeskAttachmentFileListHandler,
+	)
+	uploadedHelpdeskFiles := newHelpdeskTicket.NewSubView(
+		"upload-file-list",
+		"examples/ticket/templates/content/form/uploadFileList/uploadedHelpdeskFiles.html.tmpl",
+		uploadedFilesHandler,
 	)
 	newSoftwareTicket := ticketFormContent.NewSubView(
 		"form",
@@ -83,4 +88,5 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 		exec.NewViewHandler(newSystemsTicket))
 	m.HandleGET("/ticket",
 		exec.NewViewHandler(ticketFormContent))
+
 }
