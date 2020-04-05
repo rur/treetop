@@ -29,6 +29,15 @@ page = "ticket"
             doc = "Form designed for creating helpdesk tickets"
             [views.base.blocks.content.blocks.form.blocks]
 
+              [[views.base.blocks.content.blocks.form.blocks.form-message]]
+                name = "submit-help-desk-ticket"
+                path = "/ticket/helpdesk/submit"
+                fragment = true
+                handler = "submitHelpDeskTicketHandler"
+                template = "examples/ticket/templates/content/form/formMessage/submitHelpDeskTicket.html.tmpl"
+                method = "POST"
+                doc = "process creation of a new help desk ticket"
+
               [[views.base.blocks.content.blocks.form.blocks.reported-by]]
                 name = "helpdesk-reported-by"
                 fragment = true

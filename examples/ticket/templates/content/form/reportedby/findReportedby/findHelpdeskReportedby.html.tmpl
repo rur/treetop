@@ -3,7 +3,7 @@
 	<p class="text-muted mt-3 mb-2 font-italic">Select a user:</p>
 	<div class="list-group">
 		{{ range $index, $result := .Results }}
-		<button type="button" treetop-submitter formaction="/ticket/helpdesk/update-reported-by" name="resported-by-user" value="{{ $result }}" formnovalidate class="list-group-item list-group-item-action">{{ $result }}</button>
+		<button type="button" treetop-submitter formaction="/ticket/helpdesk/update-reported-by" name="reported-by-user" value="{{ $result }}" formnovalidate class="list-group-item list-group-item-action">{{ $result }}</button>
 		{{ end }}
 	</div>
 

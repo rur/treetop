@@ -6,6 +6,7 @@
 sigint_handler()
 {
   kill -- -$PID
+  exit
 }
 
 trap sigint_handler 0

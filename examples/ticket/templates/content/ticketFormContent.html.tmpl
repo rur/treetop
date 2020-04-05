@@ -55,13 +55,13 @@
 			 */
 			mountAttr: {
 
-				'autofocus': (emt) => {
+				'autofocus': function (emt) {
 					// autofocus attribute component will cause an input element
 					// to be focused and have the cursor placed at the end of the input.
 					emt.focus()
-					// move cursor to the end of the input.
-					// Note, this is buggy but non-essential
+
 					setTimeout(function(){
+						// move cursor to the end of the input, this is buggy but non-essential
 						if (emt.type != "email") {
 							emt.selectionStart = emt.selectionEnd = 10000;
 						} else {
@@ -152,7 +152,7 @@
 			 */
 			merge: {
 
-				'update-child': (nue, old) => {
+				'update-child': function (nue, old) {
 					// Having received an update for an element, try only updating a child element.
 					// The "data-update-child-id" attribute value will supply an identifier to find
 					// the corresponding child elements.
@@ -172,7 +172,7 @@
 					treetop.updateElement(nue, old)
 				},
 
-				'dedup-append': (nue, old) => {
+				'dedup-append': function (nue, old) {
 					// append children of new element to existing
 					// replacing any existing children elements with matching IDs
 					for (let i = 0; i < nue.children.length; i++) {
@@ -188,6 +188,12 @@
 						treetop.mountChild(child, old)
 					}
 				}
+			},
+			onNetworkError: function (xhr) {
+				alert("Network Error, check your connection.")
+			},
+			onUnsupported: function (xhr) {
+				alert("Unexpected response following a template request, check network inspector for details.")
 			}
 		};
 </script>

@@ -15,10 +15,8 @@ func Setup(mux *http.ServeMux) {
 	exec := &treetop.DeveloperExecutor{
 		ViewExecutor: &treetop.FileExecutor{
 			KeyedString: map[string]string{
-				"local://base.html":       assets.BaseHTML,
-				"local://nav.html":        assets.NavHTML(assets.TicketsNav),
-				"local://landing.html":    `<p id="message"><i>Give me someone to say hello to!</i></p>`,
-				"local://hide-notes.html": `<div id="notes" class="hide"></div>`,
+				"local://base.html": assets.BaseHTML,
+				"local://nav.html":  assets.NavHTML(assets.TicketsNav),
 			},
 		},
 	}

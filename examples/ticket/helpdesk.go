@@ -3,8 +3,15 @@ package ticket
 import (
 	"log"
 	"net/http"
+	"net/url"
 
 	"github.com/rur/treetop"
+)
+
+const (
+	formMessageInfo = iota
+	formMessageWarning
+	formMessageError
 )
 
 // newHelpdeskTicket (partial)
@@ -19,9 +26,13 @@ func newHelpdeskTicketHandler(rsp treetop.Response, req *http.Request) interface
 	data := struct {
 		ReportedBy     interface{}
 		UploadFileList interface{}
+		FormMessage    interface{}
+		Description    string
 	}{
 		ReportedBy:     rsp.HandleSubView("reported-by", req),
 		UploadFileList: rsp.HandleSubView("upload-file-list", req),
+		FormMessage:    rsp.HandleSubView("form-message", req),
+		Description:    req.URL.Query().Get("description"),
 	}
 	return data
 }
@@ -45,7 +56,7 @@ func helpdeskReportedByHandler(rsp treetop.Response, req *http.Request) interfac
 	switch data.ReportedBy {
 	case "user-name":
 		// Now parse extra input for this setting
-		data.ReportedByUser = query.Get("resported-by-user")
+		data.ReportedByUser = query.Get("reported-by-user")
 	case "customer":
 		// Would otherwise be loaded from a customer database
 		data.CustomerList = []string{
@@ -96,5 +107,42 @@ func helpdeskAttachmentFileListHandler(rsp treetop.Response, req *http.Request) 
 			data.Files = append(data.Files, info)
 		}
 	}
+	return data
+}
+
+// submitHelpDeskTicket (partial)
+// Extends: formMessage
+// Method: POST
+// Doc: process creation of a new help desk ticket
+func submitHelpDeskTicketHandler(rsp treetop.Response, req *http.Request) interface{} {
+	// If all inputs are valid this handler will redirect the web browser
+	// either to the newly created ticket or to a blank form.
+	//
+	// If creation cannot proceed for any reason, this endpoint will render
+	// a form message HTML framgent with an alert level: info, warning or error
+	data := struct {
+		Level   int
+		Message string
+	}{
+		Level: formMessageInfo,
+	}
+
+	if err := req.ParseForm(); err != nil {
+		rsp.Status(http.StatusBadRequest)
+		data.Level = formMessageError
+		data.Message = "Failed to read form data, try again or contact support."
+		return data
+	}
+
+	if treetop.IsTemplateRequest(req) {
+		newURL, _ := url.Parse("/ticket/helpdesk/new")
+		q := req.PostForm
+		q.Del("file-upload")
+		newURL.RawQuery = q.Encode()
+		newURL.Fragment = "form-message"
+		// replace existing browser history entry with current URL
+		rsp.DesignatePageURL(newURL.String())
+	}
+
 	return data
 }

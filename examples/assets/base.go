@@ -27,10 +27,17 @@ var (
 		overflow: hidden;
 		clip: rect(1px, 1px, 1px, 1px);
 	}
+	.network-inspector {
+		position: absolute;
+		right: 0px;
+		transform: rotate(90deg);
+		top: 50vh;
+	}
 	</style>
 </head>
 <body>
 	<main role="main" class="mt-2">
+		<div class="network-inspector d-none d-lg-block text-muted">↑ Expand your Network Inspector ↑</div>
 		<div class="container">
 		{{ template "nav" .}}
 

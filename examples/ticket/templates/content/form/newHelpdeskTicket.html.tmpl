@@ -17,7 +17,7 @@
 	<div class="form-group row">
 		<label for="description-textarea" class="col-sm-3 col-form-label">Description</label>
 		<div class="col-sm-9">
-			<textarea name="decription" id="description-textarea" cols="30" rows="10" class="form-control"></textarea>
+			<textarea name="description" id="description-textarea" cols="30" rows="10" class="form-control">{{ .Description }}</textarea>
 		</div>
 	</div>
 
@@ -51,7 +51,9 @@
 			</div>
 		</div>
 	</div>
-	<div id="helpdesk-form-error" class="d-none"></div>
+
+	{{ block "form-message" .FormMessage }}<div id="form-message" class="d-none"></div>{{ end }}
+
 	<div class="forim-group row py-3">
 		<div class="col-sm-12 text-right">
 			<a href="/ticket" title="Clear form an start again" class="btn btn-muted">Reset</a>

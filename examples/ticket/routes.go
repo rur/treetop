@@ -31,6 +31,13 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 		newHelpdeskTicketHandler,
 	)
 
+	// content -> form -> form-message
+	submitHelpDeskTicket := newHelpdeskTicket.NewSubView(
+		"form-message",
+		"examples/ticket/templates/content/form/formMessage/submitHelpDeskTicket.html.tmpl",
+		submitHelpDeskTicketHandler,
+	)
+
 	// content -> form -> reported-by
 	helpdeskReportedBy := newHelpdeskTicket.NewDefaultSubView(
 		"reported-by",
@@ -74,6 +81,8 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 		treetop.Noop,
 	)
 
+	m.HandlePOST("/ticket/helpdesk/submit",
+		exec.NewViewHandler(submitHelpDeskTicket).FragmentOnly())
 	m.HandleGET("/ticket/helpdesk/find-reported-by",
 		exec.NewViewHandler(findHelpdeskReportedBy).FragmentOnly())
 	m.HandleGET("/ticket/helpdesk/update-reported-by",
