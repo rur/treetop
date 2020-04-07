@@ -4,26 +4,26 @@
 
 	<h3 class="mt-5"><em>&lt;template&gt;</em> Request Demo</h3>
 
-	<p class="lead">Example apps that use a <strong>template protocol</strong> for modern web UX.</p>
+	<p class="lead">Example apps that use a <strong>template protocol</strong> as a technique for modern web UX.</p>
 
 	<h5 class="mt-5">What is a template request?</h5>
 
 	<p>
-		A HTTP request from a web link, form or component to fetch an HTML template
-		as an update for the current page.
+		An HTTP request that results in a content fragment<sup>[1]</sup> being fetched and applied to the loaded web page.
+		It is triggered from a web link, form, button or other JS component embedded in the requesting page.
 	</p>
 
 	<h5 class="mt-4">Motivation</h5>
 
 	<p>
-		The goal is for a greater level of interactivity to be supported through the conventional web protocol.
-		This will help reduce the reliance on custom APIs for basic dynamic controls.
+		The goal is for HTML web servers to support basic interactivity with an extension of the conventional
+		web protocol. This will help reduce the reliance on custom APIs for common dynamic controls.
 	</p>
 
-	<h5 class="mt-4">The protocol</h5>
+	<h5 class="mt-4">The protocol used here</h5>
 
 	<p>
-		An <code>Accept</code><sup>[1]</sup> header is used to indicate to the web server that the client
+		An <code>Accept</code><sup>[2]</sup> header indicates to the web server that the client
 		is expecting a template as a response. If implemented, a HTML template fragment will be sent in the response body.
 		That template will be applied to the requesting document using a find and replace strategy.
 	</p>
@@ -47,11 +47,17 @@
 		how various controls can be implemented using the protocol.
 	</p>
 
+	<h6>The Network Inspector</h6>
+	<p>
+		This site was laid out for the network inspector to be expanded to the right side (or left)
+		of your web browser window. The examples will make more sense if you are monitoring the network log.
+	</p>
+
 	<h5 class="mt-4">Third-party libraries</h5>
 
 	<p>
 		As you might have already guessed, this page and all demo apps use the <a href="">Bootstrap Component Library</a>.
-		Styling and markup is intended to be as familiar and conventional as possible<sup>[2]</sup>.
+		Styling and markup is intended to be as familiar and conventional as possible<sup>[3]</sup>.
 	</p>
 	<p>
 		The protocol described here was developed along with the <a href="">Treetop library</a>, a Go package for building HTML
@@ -62,7 +68,8 @@
 		<div class="p-4">
 			<h6 class="mb-2">Footnotes</h6>
 			<ol class="mb-4">
-				<li><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Content_negotiation" target="_blank">HTTP content negotiation</a> - MDN</li>
+				<li><a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template" target="_blank">The Content Template element (MDN)</a> was included in the HTML5 spec.</li>
+				<li><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Content_negotiation" target="_blank">HTTP content negotiation (MDN)</a> using a custom MIME type and custom response headers.</li>
 				<li>Suggestions for improvements to markup and CSS are very welcome, visit <a href="https://github.com/rur/treetop">GitHub Treetop</a></li>
 			</ol>
 		</div>
