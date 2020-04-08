@@ -1,4 +1,4 @@
-## [0.3.1] - 2020-03-27
+## [0.3.1] - 2020-04-07
 
 ### New Features
 
@@ -8,6 +8,7 @@
 ### Bugfix
 
 - Template cache not used/not working when constructing template in file executors
+- Files not being closed properly in FS executor
 
 
 ## [0.3.0] - 2020-03-10
