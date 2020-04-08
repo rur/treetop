@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"io"
 	"os"
-	"text/template/parse"
 )
 
 // FileExecutor loads view templates as a path from a template file.
 type FileExecutor struct {
-	Funcs template.FuncMap
-	exec  Executor
+	Funcs       template.FuncMap
+	KeyedString map[string]string
+	exec        Executor
 }
 
 // NewViewHandler creates a ViewHandler from a View endpoint definition treating
@@ -34,7 +35,6 @@ func (fe *FileExecutor) constructTemplate(view *View) (*template.Template, error
 		return nil, nil
 	}
 	var out *template.Template
-	cache := make(map[string]*parse.Tree)
 	buffer := new(bytes.Buffer)
 
 	queue := viewQueue{}
@@ -42,6 +42,12 @@ func (fe *FileExecutor) constructTemplate(view *View) (*template.Template, error
 
 	for !queue.empty() {
 		v, _ := queue.next()
+		for _, sub := range v.SubViews {
+			if sub != nil {
+				queue.add(sub)
+			}
+		}
+
 		var t *template.Template
 		if out == nil {
 			out = template.New(v.Defines).Funcs(fe.Funcs)
@@ -50,9 +56,14 @@ func (fe *FileExecutor) constructTemplate(view *View) (*template.Template, error
 			t = out.New(v.Defines)
 		}
 
-		if tree, ok := cache[v.Template]; ok {
-			t.AddParseTree(v.Defines, tree)
-		} else {
+		var (
+			templateString string
+			foundKey       bool
+		)
+		if fe.KeyedString != nil {
+			templateString, foundKey = fe.KeyedString[v.Template]
+		}
+		if !foundKey {
 			buffer.Reset()
 			file, err := os.Open(v.Template)
 			if err != nil {
@@ -61,26 +72,32 @@ func (fe *FileExecutor) constructTemplate(view *View) (*template.Template, error
 					v.Template, err.Error(),
 				)
 			}
-			_, err = buffer.ReadFrom(file)
+
+			templateString, err = readStringAndClose(buffer, file)
 			if err != nil {
 				return nil, fmt.Errorf(
 					"Failed to read contents of template file '%s', error %s",
 					v.Template, err.Error(),
 				)
 			}
-			_, err = t.Parse(buffer.String())
-			if err != nil {
-				return nil, fmt.Errorf(
-					"Failed to parse contents of template file '%s', error %s",
-					v.Template, err.Error(),
-				)
-			}
 		}
-		for _, sub := range v.SubViews {
-			if sub != nil {
-				queue.add(sub)
-			}
+		_, err := t.Parse(templateString)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"Failed to parse contents of template file '%s', error %s",
+				v.Template, err.Error(),
+			)
 		}
 	}
 	return out, nil
+}
+
+// readStringAndClose ensures that the supplied read closer is closed
+func readStringAndClose(buffer *bytes.Buffer, rc io.ReadCloser) (string, error) {
+	defer rc.Close()
+	_, err := buffer.ReadFrom(rc)
+	if err != nil {
+		return "", err
+	}
+	return buffer.String(), nil
 }

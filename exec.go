@@ -81,7 +81,7 @@ func (ex *Executor) NewViewHandler(view *View, includes ...*View) ViewHandler {
 		Page:             page,
 		Partial:          part,
 		Includes:         incls,
-		IncludeTemplates: make([]*template.Template, len(incls)),
+		IncludeTemplates: make([]Template, len(incls)),
 	}
 
 	if t, err := ex.NewTemplate(page); err != nil {

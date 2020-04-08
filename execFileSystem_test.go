@@ -105,17 +105,17 @@ func TestFileSystemExecutor_NewViewHandler(t *testing.T) {
 			},
 		},
 		{
-			name: "malformed file",
+			name: "missingFunc file",
 			getHandler: func(exec ViewExecutor) ViewHandler {
-				return exec.NewViewHandler(NewView("malformed.html", Noop))
+				return exec.NewViewHandler(NewView("missingFunc.html", Noop))
 			},
 			expectPage:     "Not Acceptable\n",
 			expectTemplate: "Not Acceptable\n",
 			expectErrors: []string{
-				`Failed to parse contents of template file 'malformed.html', ` +
-					`error template: :2: function "functhatdoesnexist" not defined`,
-				`Failed to parse contents of template file 'malformed.html', ` +
-					`error template: :2: function "functhatdoesnexist" not defined`,
+				`Failed to parse contents of template file 'missingFunc.html', ` +
+					`error template: :2: function "func_that_does_not_exist" not defined`,
+				`Failed to parse contents of template file 'missingFunc.html', ` +
+					`error template: :2: function "func_that_does_not_exist" not defined`,
 			},
 		},
 		{
@@ -240,5 +240,56 @@ func TestFileSystemExecutor_FuncMap(t *testing.T) {
 	</div>
 	`)) {
 		t.Errorf("Expecting title case, got\n%s", gotPage)
+	}
+}
+
+func TestFileSystemExecutor_KeyedString(t *testing.T) {
+	exec := FileSystemExecutor{
+		FS: http.Dir("testdata"),
+		KeyedString: map[string]string{
+			"local://titles.html": `<h1>{{ . }}</h1>`,
+		},
+	}
+	v := NewView("local://titles.html", Constant("Test Title"))
+	h := exec.NewViewHandler(v)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, mockRequest("/some/path", "*/*"))
+	gotPage := stripIndent(sDumpBody(rec))
+	if gotPage != stripIndent(strings.TrimSpace("<h1>Test Title</h1>")) {
+		t.Errorf("Expecting title case, got\n%s", gotPage)
+	}
+}
+
+func TestFileSystemExecutor_UsingSameTemplate(t *testing.T) {
+	exec := FileSystemExecutor{
+		FS: http.Dir("testdata"),
+		KeyedString: map[string]string{
+			"local://common.html": `<h1>Common {{ . }}</h1>`,
+		},
+	}
+	v := NewView("base.html", func(rsp Response, req *http.Request) interface{} {
+		return struct {
+			Content interface{}
+			PS      interface{}
+		}{
+			Content: rsp.HandleSubView("content", req),
+			PS:      rsp.HandleSubView("ps", req),
+		}
+	})
+	v.NewDefaultSubView("content", "local://common.html", Constant("Content Data"))
+	v.NewDefaultSubView("ps", "local://common.html", Constant("Postscript Data"))
+	h := exec.NewViewHandler(v)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, mockRequest("/some/path", "*/*"))
+	gotPage := strings.TrimSpace(stripIndent(sDumpBody(rec)))
+	expectPage := strings.TrimSpace(stripIndent(`
+	<html><body>
+	<h1>Common Content Data</h1>
+
+	<h1>Common Postscript Data</h1>
+	</body></html>
+	`))
+	if gotPage != expectPage {
+		t.Errorf("Expecting\n%s\ngot\n%s", expectPage, gotPage)
 	}
 }

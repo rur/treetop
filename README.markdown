@@ -2,16 +2,16 @@
 
 # Treetop
 
-## Hierarchical Web Handlers
+### A tool that creates request handlers for nested templates in Go
 
-Treetop is a tool for constructing HTTP handlers for nested templates.
+HTML web applications typically share a lot of structure between
+endpoints. The Go template library supports nested templates<sup>1</sup>.
+This is a powerful tool that HTML apps can use to reduce boilerplate. Treetop pairs
+a function with each template so that HTTP endpoints can be constructed for
+different page configurations.
 
-HTML apps typically have a lot of common structure shared between endpoints.
-Nested templates supported in Go<sup>1</sup> can be used to reduce
-HTML boilerplate. Treetop Views match a function with each template so that
-many endpoints can be constructed for different page configurations.
 
-_Example of a basic hierarchy showing content A and B sharing the same 'base' template_
+#### Template Hierarchy
 
 
                   BaseHandler(...)
@@ -28,8 +28,10 @@ _Example of a basic hierarchy showing content A and B sharing the same 'base' te
     | <div id="content">...</… |        | <div id="content">...</… |
     |__________________________|        |__________________________|
 
-The code below extends this example. It binds the routes `"/content_a"` and `"/content_b"` with two
-handlers that share the same base, nav and sidebar templates.
+_Basic example of a page hierarchy showing content A and B sharing the same 'base' template_
+
+The code below is an extension of this example. It binds the routes `"/content_a"` and `"/content_b"` with two
+handlers that share the same "base", "nav" and "sidebar" templates.
 
     base := treetop.NewView("base.html", BaseHandler)
     nav := base.NewSubView("nav", "nav.html", NavHandler)
@@ -90,7 +92,7 @@ A [Treetop Client Library](https://github.com/rur/treetop-client) is available.
 It sends template requests using XHR and applies fragments to the DOM with a simple
 find and replace mechanism.
 
-Hot-swapping can be used to improve user experience in several way <sup>[docs needed]</sup>.
+Hot-swapping can be used to improve user experience in several ways <sup>[docs needed]</sup>.
 See examples for more details.
 
 ## Example
@@ -145,7 +147,7 @@ Data is subsequently passed down within the template like so,
 ### Hijacking the Response
 
 The `treetop.Response` type implements `http.ResponseWriter`. Any handler can halt the executor and
-take full responsibility for the response by using one of the write methods of that interface<sup>2</sup>.
+take full responsibility for the response by using one of the 'Write' methods of that interface<sup>2</sup>. This is a common and useful practice making things like error messages and redirects possible.
 
 ## Response Writer
 

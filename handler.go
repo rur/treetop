@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"html/template"
 	"io"
 	"log"
 	"net/http"
@@ -57,14 +56,19 @@ var (
 		"treetop template handler: server cannot produce a response matching the list of acceptable values")
 )
 
+// Template is an interface so that the concrete template implementation can be changed
+type Template interface {
+	ExecuteTemplate(io.Writer, string, interface{}) error
+}
+
 // TemplateHandler implements the treetop.ViewHandler interface for endpoints that support the treetop protocol
 type TemplateHandler struct {
 	Page             *View
-	PageTemplate     *template.Template
+	PageTemplate     Template
 	Partial          *View
-	PartialTemplate  *template.Template
+	PartialTemplate  Template
 	Includes         []*View
-	IncludeTemplates []*template.Template
+	IncludeTemplates []Template
 	// optional developer defined error handler
 	ServeTemplateError func(error, Response, *http.Request)
 }
@@ -181,7 +185,7 @@ func (h *TemplateHandler) serveTemplateRequest(resp *ResponseWrapper, req *http.
 	var (
 		views = append([]*View{h.Partial}, h.Includes...)
 		data  = make([]interface{}, len(views))
-		tmpls = append([]*template.Template{h.PartialTemplate}, h.IncludeTemplates...)
+		tmpls = append([]Template{h.PartialTemplate}, h.IncludeTemplates...)
 	)
 
 	// call handler for partial and each postscript view. Collect template data.
