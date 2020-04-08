@@ -76,14 +76,14 @@ func (fe *FileSystemExecutor) constructTemplate(view *View) (*template.Template,
 					v.Template, err.Error(),
 				)
 			}
-			_, err = buffer.ReadFrom(file)
+
+			templateString, err = readStringAndClose(buffer, file)
 			if err != nil {
 				return nil, fmt.Errorf(
 					"Failed to read contents of template file '%s', error %s",
 					v.Template, err.Error(),
 				)
 			}
-			templateString = buffer.String()
 		}
 
 		_, err := t.Parse(templateString)
