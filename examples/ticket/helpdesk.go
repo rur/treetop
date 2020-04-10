@@ -1,17 +1,13 @@
 package ticket
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
 
 	"github.com/rur/treetop"
-)
-
-const (
-	formMessageInfo = iota
-	formMessageWarning
-	formMessageError
+	"github.com/rur/treetop/examples/ticket/inputs"
 )
 
 // newHelpdeskTicket (partial)
@@ -38,7 +34,7 @@ func newHelpdeskTicketHandler(rsp treetop.Response, req *http.Request) interface
 }
 
 // helpdeskReportedBy (fragment)
-// Extends: reportedBy
+// Extends: reported-by
 // Method: GET
 // Doc: Options for notifying help desk of who reported the issue
 func helpdeskReportedByHandler(rsp treetop.Response, req *http.Request) interface{} {
@@ -89,17 +85,20 @@ func helpdeskReportedByHandler(rsp treetop.Response, req *http.Request) interfac
 	return data
 }
 
+// helpdeskAttachmentFileListHandler decoded URL query encoded attachment file info
+// Extends: attachment-file-list
+// Method: GET
 // Doc: Default helpdesk attachment file list template handler,
 //      parse file info from query string
 func helpdeskAttachmentFileListHandler(rsp treetop.Response, req *http.Request) interface{} {
 	// load file info from query
 	query := req.URL.Query()
 	data := struct {
-		Files []*FileInfo
+		Files []*inputs.FileInfo
 	}{}
 
 	for _, enc := range query["attachment"] {
-		info := &FileInfo{}
+		info := &inputs.FileInfo{}
 		if err := info.UnmarshalBase64([]byte(enc)); err != nil {
 			// skip it
 			log.Println(err)
@@ -110,11 +109,32 @@ func helpdeskAttachmentFileListHandler(rsp treetop.Response, req *http.Request) 
 	return data
 }
 
+const (
+	formMessageInfo = iota
+	formMessageWarning
+	formMessageError
+)
+
 // submitHelpDeskTicket (partial)
 // Extends: formMessage
 // Method: POST
 // Doc: process creation of a new help desk ticket
 func submitHelpDeskTicketHandler(rsp treetop.Response, req *http.Request) interface{} {
+	var redirected bool
+	defer func() {
+		if !redirected && treetop.IsTemplateRequest(req) && len(req.PostForm) > 0 {
+			// quality-of-life improvement, replace browser URL to include latest
+			// form state so that a refresh will preserve inputs
+			newURL, _ := url.Parse("/ticket/helpdesk/new")
+			q := req.PostForm
+			q.Del("file-upload")
+			newURL.RawQuery = q.Encode()
+			newURL.Fragment = "form-message"
+			// replace existing browser history entry with current URL
+			rsp.ReplacePageURL(newURL.String())
+		}
+	}()
+
 	// If all inputs are valid this handler will redirect the web browser
 	// either to the newly created ticket or to a blank form.
 	//
@@ -123,6 +143,7 @@ func submitHelpDeskTicketHandler(rsp treetop.Response, req *http.Request) interf
 	data := struct {
 		Level   int
 		Message string
+		Title   string
 	}{
 		Level: formMessageInfo,
 	}
@@ -130,19 +151,72 @@ func submitHelpDeskTicketHandler(rsp treetop.Response, req *http.Request) interf
 	if err := req.ParseForm(); err != nil {
 		rsp.Status(http.StatusBadRequest)
 		data.Level = formMessageError
+		data.Title = "Request Error"
 		data.Message = "Failed to read form data, try again or contact support."
 		return data
 	}
+	ticket := inputs.HelpdeskTicketFromQuery(req.PostForm)
 
-	if treetop.IsTemplateRequest(req) {
-		newURL, _ := url.Parse("/ticket/helpdesk/new")
-		q := req.PostForm
-		q.Del("file-upload")
-		newURL.RawQuery = q.Encode()
-		newURL.Fragment = "form-message"
-		// replace existing browser history entry with current URL
-		rsp.DesignatePageURL(newURL.String())
+	// validation rules for creating a new Help Desk ticket
+	// NOTE, Do not take client-side validation for granted
+	if ticket.Summary == "" {
+		data.Level = formMessageWarning
+		data.Title = "Missing input"
+		data.Message = "Ticket title is required"
+		return data
+	}
+	switch ticket.ReportedBy {
+	case "user-name":
+		if ticket.ReportedByUser == "" {
+			data.Level = formMessageWarning
+			data.Title = "Missing input"
+			data.Message = "Please sepecify which user reported the issue"
+			return data
+		}
+	case "customer":
+		if ticket.CustomerContact == "" {
+			data.Level = formMessageWarning
+			data.Title = "Missing input"
+			data.Message = "Please sepecify which customer reported the issue"
+			return data
+		}
+	case "":
+		if ticket.CustomerContact == "" {
+			data.Level = formMessageWarning
+			data.Title = "Missing input"
+			data.Message = "Please sepecify for whom this issue is being reported"
+			return data
+		}
+	}
+	if ticket.Urgency == "" {
+		data.Level = formMessageWarning
+		data.Title = "Invalid input"
+		data.Message = fmt.Sprintf("Invalid ticket urgency value '%s'",
+			req.PostForm.Get("urgency"))
+		return data
 	}
 
+	// ticket is valid redirect to preview endpoint
+	previewURL := url.URL{
+		Path:     "/ticket/helpdesk/preview",
+		RawQuery: ticket.RawQuery(),
+	}
+	treetop.Redirect(rsp, req, previewURL.String(), http.StatusSeeOther)
+	redirected = true
+	return nil
+}
+
+// previewHelpdeskTicket (partial)
+// Extends: content
+// Method: GET
+// Doc: Show preview of help desk ticket, no database so take details form query params
+func previewHelpdeskTicketHandler(rsp treetop.Response, req *http.Request) interface{} {
+	data := struct {
+		Ticket *inputs.HelpDeskTicket
+	}{
+		// generally this would be loaded from a database but for the demo
+		// we are only previewing from URL parameters
+		Ticket: inputs.HelpdeskTicketFromQuery(req.URL.Query()),
+	}
 	return data
 }

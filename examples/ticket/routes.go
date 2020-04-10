@@ -18,6 +18,11 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 	)
 
 	// content
+	previewHelpdeskTicket := baseView.NewSubView(
+		"content",
+		"examples/ticket/templates/content/previewHelpdeskTicket.html.tmpl",
+		previewHelpdeskTicketHandler,
+	)
 	ticketFormContent := baseView.NewDefaultSubView(
 		"content",
 		"examples/ticket/templates/content/ticketFormContent.html.tmpl",
@@ -81,6 +86,8 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 		treetop.Noop,
 	)
 
+	m.HandleGET("/ticket/helpdesk/preview",
+		exec.NewViewHandler(previewHelpdeskTicket))
 	m.HandlePOST("/ticket/helpdesk/submit",
 		exec.NewViewHandler(submitHelpDeskTicket).FragmentOnly())
 	m.HandleGET("/ticket/helpdesk/find-reported-by",

@@ -1,6 +1,21 @@
 <div id="form-message">
-    <div class="alert alert-warning">
-    	<h6 class="alert-title">Not Implemented</h6>
-    	<p class="alert-body">Creating a new Help Desk ticket has not been implemented yet</p>
-    </div>
+	{{ if eq .Level 0 }}
+	<div class="alert alert-info">
+		<h6 class="alert-title">{{ .Title }}</h6>
+		<p class="alert-body">{{ .Message }}</p>
+	</div>
+	{{ end }}
+	{{ if eq .Level 1 }}
+	<div class="alert alert-warning">
+		<h6 class="alert-title">{{ .Title }}</h6>
+		<p class="alert-body">{{ .Message }}</p>
+	</div>
+	{{ end }}
+	{{ if eq .Level 2 }}
+	<div class="alert alert-danger">
+		<h6 class="alert-title">{{ .Title }}</h6>
+		<p class="alert-body">{{ .Message }}</p>
+	</div>
+	{{ end }}
+
 </div>

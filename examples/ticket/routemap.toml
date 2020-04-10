@@ -11,6 +11,14 @@ page = "ticket"
     [views.base.blocks]
 
       [[views.base.blocks.content]]
+        name = "preview-helpdesk-ticket"
+        path = "/ticket/helpdesk/preview"
+        handler = "previewHelpdeskTicketHandler"
+        template = "examples/ticket/templates/content/previewHelpdeskTicket.html.tmpl"
+        method = "GET"
+        doc = "Show preview of help desk ticket, no database so take details form query params"
+
+      [[views.base.blocks.content]]
         name = "ticket-form-content"
         default = true
         path = "/ticket"
@@ -31,8 +39,8 @@ page = "ticket"
 
               [[views.base.blocks.content.blocks.form.blocks.form-message]]
                 name = "submit-help-desk-ticket"
-                path = "/ticket/helpdesk/submit"
                 fragment = true
+                path = "/ticket/helpdesk/submit"
                 handler = "submitHelpDeskTicketHandler"
                 template = "examples/ticket/templates/content/form/formMessage/submitHelpDeskTicket.html.tmpl"
                 method = "POST"

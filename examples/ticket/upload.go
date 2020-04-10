@@ -2,54 +2,20 @@ package ticket
 
 import (
 	"crypto/sha1"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 
 	"github.com/rur/treetop"
+	"github.com/rur/treetop/examples/ticket/inputs"
 )
-
-type FileInfo struct {
-	SHA1    string
-	Name    string
-	Size    string
-	Encoded string
-}
-
-func (fi *FileInfo) MarshalBase64() ([]byte, error) {
-	vals := url.Values{}
-	vals.Set("sha1", fi.SHA1)
-	vals.Set("name", fi.Name)
-	vals.Set("size", fi.Size)
-	return []byte(base64.StdEncoding.EncodeToString([]byte(vals.Encode()))), nil
-}
-
-func (fi *FileInfo) UnmarshalBase64(in []byte) error {
-	query := make([]byte, len(in))
-	count, err := base64.StdEncoding.Decode(query, in)
-	if err != nil {
-		return err
-	}
-	query = query[:count]
-	vals, err := url.ParseQuery(string(query))
-	if err != nil {
-		return err
-	}
-	fi.SHA1 = vals.Get("sha1")
-	fi.Name = vals.Get("name")
-	fi.Size = vals.Get("size")
-	fi.Encoded = string(in)
-	return nil
-}
 
 // Method: POST
 // Doc: Load a list of uploaded files, save to storage and return metadata
 func uploadedFilesHandler(rsp treetop.Response, req *http.Request) interface{} {
 	data := struct {
-		Files []*FileInfo
+		Files []*inputs.FileInfo
 	}{}
 
 	if err := req.ParseMultipartForm(1024 * 1024 * 16 /*16 MiB*/); err != nil {
@@ -59,7 +25,7 @@ func uploadedFilesHandler(rsp treetop.Response, req *http.Request) interface{} {
 	}
 
 	for _, fh := range req.MultipartForm.File["file-upload"] {
-		info := FileInfo{
+		info := inputs.FileInfo{
 			Name: fh.Filename,
 		}
 		if fh.Size < 2048 {

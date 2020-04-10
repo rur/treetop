@@ -8,6 +8,10 @@ import (
 	"github.com/rur/treetop"
 )
 
+var (
+	wsRegex = regexp.MustCompile(`\s+`)
+)
+
 // -------------------------
 // ticket Block Handlers
 // -------------------------
@@ -23,7 +27,7 @@ func ticketHandler(rsp treetop.Response, req *http.Request) interface{} {
 		Dept    string
 		Form    interface{}
 	}{
-		Summary: sanitizeSummary(query.Get("summary")),
+		Summary: strings.TrimSpace(wsRegex.ReplaceAllString(query.Get("summary"), " ")),
 		Form:    rsp.HandleSubView("form", req),
 	}
 	// validate department and redirect if necessary
@@ -38,15 +42,6 @@ func ticketHandler(rsp treetop.Response, req *http.Request) interface{} {
 		return nil
 	}
 	return data
-}
-
-var (
-	wsRegex = regexp.MustCompile(`\s+`)
-)
-
-// remove redundant whitespace from a string that is to be used as a visual summary
-func sanitizeSummary(s string) string {
-	return strings.TrimSpace(wsRegex.ReplaceAllString(s, " "))
 }
 
 // Method: GET
