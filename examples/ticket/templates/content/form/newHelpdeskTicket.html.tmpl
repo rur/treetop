@@ -30,7 +30,7 @@
 			</div>
 			<button class="d-none" id="upload-selected-attachment" treetop-submitter formnovalidate formmethod="POST" formenctype="multipart/form-data" formaction="/ticket/helpdesk/upload-attachment"></button>
 
-			{{/* required */}}{{ template "attachment-list" .UploadFileList }}
+			{{/* required */}}{{ template "attachment-list" .AttachmentList }}
 		</div>
 	</div>
 
@@ -38,7 +38,7 @@
 
 	<div class="forim-group row py-3">
 		<div class="col-sm-12 text-right">
-			<a href="/ticket" title="Clear form an start again" class="btn btn-muted">Reset</a>
+			<a href="/ticket" title="Clear form an start again" class="btn btn-muted">Reset Form</a>
 			<button type="submit" treetop-submitter formaction="/ticket/helpdesk/submit" formmethod="POST" class="btn btn-primary">Submit to Help Desk</button>
 		</div>
 	</div>

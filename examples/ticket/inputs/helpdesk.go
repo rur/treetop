@@ -59,6 +59,7 @@ func HelpdeskTicketFromQuery(query url.Values) *HelpDeskTicket {
 
 func (t *HelpDeskTicket) RawQuery() string {
 	query := url.Values{}
+	query.Set("department", "helpdesk")
 	query.Set("summary", t.Summary)
 	query.Set("reported-by", t.ReportedBy)
 	query.Set("reported-by-user", t.ReportedByUser)

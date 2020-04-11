@@ -21,12 +21,12 @@ func NewHelpdeskTicketHandler(rsp treetop.Response, req *http.Request) interface
 	}
 	data := struct {
 		ReportedBy     interface{}
-		UploadFileList interface{}
+		AttachmentList interface{}
 		FormMessage    interface{}
 		Description    string
 	}{
 		ReportedBy:     rsp.HandleSubView("reported-by", req),
-		UploadFileList: rsp.HandleSubView("upload-file-list", req),
+		AttachmentList: rsp.HandleSubView("attachment-list", req),
 		FormMessage:    rsp.HandleSubView("form-message", req),
 		Description:    req.URL.Query().Get("description"),
 	}
@@ -214,11 +214,16 @@ func SubmitHelpDeskTicketHandler(rsp treetop.Response, req *http.Request) interf
 // Doc: Show preview of help desk ticket, no database so take details form query params
 func PreviewHelpdeskTicketHandler(rsp treetop.Response, req *http.Request) interface{} {
 	data := struct {
-		Ticket *inputs.HelpDeskTicket
+		EditLink string
+		Ticket   *inputs.HelpDeskTicket
 	}{
 		// generally this would be loaded from a database but for the demo
 		// we are only previewing from URL parameters
 		Ticket: inputs.HelpdeskTicketFromQuery(req.URL.Query()),
 	}
+	formURL := url.URL{}
+	formURL.Path = "/ticket/helpdesk/new"
+	formURL.RawQuery = req.URL.Query().Encode()
+	data.EditLink = formURL.String()
 	return data
 }
