@@ -80,3 +80,16 @@ func mustParseURL(path string) *url.URL {
 	}
 	return u
 }
+
+// issuePreview (partial)
+// Extends: content
+// Method: GET
+// Doc: Content wrapper around preview for different ticket type
+func IssuePreviewHandler(rsp treetop.Response, req *http.Request) interface{} {
+	data := struct {
+		Preview interface{}
+	}{
+		Preview: rsp.HandleSubView("preview", req),
+	}
+	return data
+}

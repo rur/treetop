@@ -11,12 +11,19 @@ page = "ticket"
     [views.base.blocks]
 
       [[views.base.blocks.content]]
-        name = "preview-helpdesk-ticket"
-        path = "/ticket/helpdesk/preview"
-        handler = "handlers.PreviewHelpdeskTicketHandler"
-        template = "examples/ticket/templates/content/previewHelpdeskTicket.html.tmpl"
-        method = "GET"
-        doc = "Show preview of help desk ticket, no database so take details form query params"
+        name = "issue-preview"
+        handler = "handlers.IssuePreviewHandler"
+        template = "examples/ticket/templates/content/issuePreview.html.tmpl"
+        doc = "Content wrapper around preview for different ticket type"
+        [views.base.blocks.content.blocks]
+
+          [[views.base.blocks.content.blocks.preview]]
+            name = "preview-helpdesk-ticket"
+            path = "/ticket/helpdesk/preview"
+            handler = "handlers.PreviewHelpdeskTicketHandler"
+            template = "examples/ticket/templates/content/previewHelpdeskTicket.html.tmpl"
+            method = "GET"
+            doc = "Show preview of help desk ticket, no database so take details form query params"
 
       [[views.base.blocks.content]]
         name = "ticket-form-content"

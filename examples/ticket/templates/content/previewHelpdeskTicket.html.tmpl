@@ -1,53 +1,46 @@
-<div id="content">
-	<hr>
-	<div class="container">
-		<h3 class="mb-3">Ticket Preview</h3>
-		<p>This is a preview of the issue information created by the form</p>
-		<div id="ticket-preview">
-			<div class="card mb-4">
-				<h5 class="card-header">Help Desk Ticket <strong class="badge badge-success float-right">HLP_###</strong></h5>
-				<div class="card-body">
-					<div class="media mb-3">
-						<div class="rounded-circle bg-secondary p-2 text-center text-white" style="width: 2.5rem; height: 2.5rem;"> ? </div>
-						<div class="media-body ml-3">
-						<h4 class="mb-1 mt-0">{{ .Ticket.Summary }}</h4>
-						{{ if eq .Ticket.Urgency "critical" }}<span class="badge badge-danger">Critical</span>{{ end }}
-						{{ if eq .Ticket.Urgency "major" }}<span class="badge badge-warning">Major</span>{{ end }}
-						{{ if eq .Ticket.Urgency "normal" }}<span class="badge badge-primary">Normal</span>{{ end }}
-						{{ if eq .Ticket.Urgency "minor" }}<span class="badge badge-info">Minor</span>{{ end }}
-						</div>
-					</div>
-
-					<hr>
-
-					<h5>Description</h5>
-					{{ if .Ticket.Description }}
-					<blockquote class="blockquote">
-						<pre style="white-space: pre-wrap;" class="small ml-3 pb-3 mb-4">{{ .Ticket.Description }}</pre>
-					</blockquote>
-
-					{{ else }}
-					<p class="text-muted">[ no description ]</p>
-					{{ end }}
-
-					{{ if .Ticket.Attachments }}
-
-					<hr>
-
-					<h5 class="mt-3">Attachments</h5>
-					{{ range $index, $file := .Ticket.Attachments }}
-					<div id="attachment-{{ $file.SHA1 }}" class="media px-2 mt-3 mb-3">
-						<svg class="mr-2 text-muted" xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
-						<div class="media-body">
-							<h6 class="mt-0 mb-1">{{ $file.Name }}</h6>
-							<div>{{ $file.Size }}</div>
-						</div>
-					</div>
-					{{ end }}
-					{{ end }}
-
+<div id="preview">
+	<div class="card mb-4">
+		<h5 class="card-header">Help Desk Ticket <strong class="badge badge-success float-right">HLP_###</strong></h5>
+		<div class="card-body">
+			<div class="media mb-3">
+				<div class="rounded-circle bg-secondary p-2 text-center text-white" style="width: 2.5rem; height: 2.5rem;"> ? </div>
+				<div class="media-body ml-3">
+				<h4 class="mb-1 mt-0">{{ .Ticket.Summary }}</h4>
+				{{ if eq .Ticket.Urgency "critical" }}<span class="badge badge-danger">Critical</span>{{ end }}
+				{{ if eq .Ticket.Urgency "major" }}<span class="badge badge-warning">Major</span>{{ end }}
+				{{ if eq .Ticket.Urgency "normal" }}<span class="badge badge-primary">Normal</span>{{ end }}
+				{{ if eq .Ticket.Urgency "minor" }}<span class="badge badge-info">Minor</span>{{ end }}
 				</div>
 			</div>
+
+			<hr>
+
+			<h5>Description</h5>
+			{{ if .Ticket.Description }}
+			<blockquote class="blockquote">
+				<pre style="white-space: pre-wrap;" class="small ml-3 pb-3 mb-4">{{ .Ticket.Description }}</pre>
+			</blockquote>
+
+			{{ else }}
+			<p class="text-muted">[ no description ]</p>
+			{{ end }}
+
+			{{ if .Ticket.Attachments }}
+
+			<hr>
+
+			<h5 class="mt-3">Attachments</h5>
+			{{ range $index, $file := .Ticket.Attachments }}
+			<div id="attachment-{{ $file.SHA1 }}" class="media px-2 mt-3 mb-3">
+				<svg class="mr-2 text-muted" xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+				<div class="media-body">
+					<h6 class="mt-0 mb-1">{{ $file.Name }}</h6>
+					<div>{{ $file.Size }}</div>
+				</div>
+			</div>
+			{{ end }}
+			{{ end }}
+
 		</div>
 	</div>
 </div>

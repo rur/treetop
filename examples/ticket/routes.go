@@ -19,11 +19,20 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 	)
 
 	// content
-	previewHelpdeskTicket := baseView.NewSubView(
+	issuePreview := baseView.NewSubView(
 		"content",
+		"examples/ticket/templates/content/issuePreview.html.tmpl",
+		handlers.IssuePreviewHandler,
+	)
+
+	// content -> preview
+	previewHelpdeskTicket := issuePreview.NewSubView(
+		"preview",
 		"examples/ticket/templates/content/previewHelpdeskTicket.html.tmpl",
 		handlers.PreviewHelpdeskTicketHandler,
 	)
+
+	// content
 	ticketFormContent := baseView.NewDefaultSubView(
 		"content",
 		"examples/ticket/templates/content/ticketFormContent.html.tmpl",
