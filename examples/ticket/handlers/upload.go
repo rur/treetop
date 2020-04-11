@@ -1,4 +1,4 @@
-package ticket
+package handlers
 
 import (
 	"crypto/sha1"
@@ -13,7 +13,7 @@ import (
 
 // Method: POST
 // Doc: Load a list of uploaded files, save to storage and return metadata
-func uploadedFilesHandler(rsp treetop.Response, req *http.Request) interface{} {
+func UploadedFilesHandler(rsp treetop.Response, req *http.Request) interface{} {
 	data := struct {
 		Files []*inputs.FileInfo
 	}{}

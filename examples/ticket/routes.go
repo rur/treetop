@@ -8,6 +8,7 @@ package ticket
 
 import (
 	"github.com/rur/treetop"
+	"github.com/rur/treetop/examples/ticket/handlers"
 )
 
 func Routes(m Mux, exec treetop.ViewExecutor) {
@@ -21,62 +22,62 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 	previewHelpdeskTicket := baseView.NewSubView(
 		"content",
 		"examples/ticket/templates/content/previewHelpdeskTicket.html.tmpl",
-		previewHelpdeskTicketHandler,
+		handlers.PreviewHelpdeskTicketHandler,
 	)
 	ticketFormContent := baseView.NewDefaultSubView(
 		"content",
 		"examples/ticket/templates/content/ticketFormContent.html.tmpl",
-		ticketHandler,
+		handlers.TicketHandler,
 	)
 
 	// content -> form
 	newHelpdeskTicket := ticketFormContent.NewSubView(
 		"form",
 		"examples/ticket/templates/content/form/newHelpdeskTicket.html.tmpl",
-		newHelpdeskTicketHandler,
+		handlers.NewHelpdeskTicketHandler,
+	)
+
+	// content -> form -> attachment-list
+	_ = newHelpdeskTicket.NewDefaultSubView(
+		"attachment-list",
+		"examples/ticket/templates/content/form/attachmentList/uploadedHelpdeskFiles.html.tmpl",
+		handlers.HelpdeskAttachmentFileListHandler,
+	)
+	uploadedHelpdeskFiles := newHelpdeskTicket.NewSubView(
+		"attachment-list",
+		"examples/ticket/templates/content/form/attachmentList/uploadedHelpdeskFiles.html.tmpl",
+		handlers.UploadedFilesHandler,
 	)
 
 	// content -> form -> form-message
 	submitHelpDeskTicket := newHelpdeskTicket.NewSubView(
 		"form-message",
 		"examples/ticket/templates/content/form/formMessage/submitHelpDeskTicket.html.tmpl",
-		submitHelpDeskTicketHandler,
+		handlers.SubmitHelpDeskTicketHandler,
 	)
 
 	// content -> form -> reported-by
 	helpdeskReportedBy := newHelpdeskTicket.NewDefaultSubView(
 		"reported-by",
 		"examples/ticket/templates/content/form/reportedBy/helpdeskReportedBy.html.tmpl",
-		helpdeskReportedByHandler,
+		handlers.HelpdeskReportedByHandler,
 	)
 
 	// content -> form -> reported-by -> find-reported-by
 	findHelpdeskReportedBy := helpdeskReportedBy.NewSubView(
 		"find-reported-by",
 		"examples/ticket/templates/content/form/reportedBy/findReportedBy/findHelpdeskReportedBy.html.tmpl",
-		findTeamMemberHandler,
-	)
-
-	// content -> form -> upload-file-list
-	_ = newHelpdeskTicket.NewDefaultSubView(
-		"upload-file-list",
-		"examples/ticket/templates/content/form/uploadFileList/uploadedHelpdeskFiles.html.tmpl",
-		helpdeskAttachmentFileListHandler,
-	)
-	uploadedHelpdeskFiles := newHelpdeskTicket.NewSubView(
-		"upload-file-list",
-		"examples/ticket/templates/content/form/uploadFileList/uploadedHelpdeskFiles.html.tmpl",
-		uploadedFilesHandler,
+		handlers.FindTeamMemberHandler,
 	)
 	newSoftwareTicket := ticketFormContent.NewSubView(
 		"form",
 		"examples/ticket/templates/content/form/newSoftwareTicket.html.tmpl",
-		newSoftwareTicketHandler,
+		handlers.NewSoftwareTicketHandler,
 	)
 	newSystemsTicket := ticketFormContent.NewSubView(
 		"form",
 		"examples/ticket/templates/content/form/newSystemsTicket.html.tmpl",
-		newSystemsTicketHandler,
+		handlers.NewSystemsTicketHandler,
 	)
 
 	// nav
@@ -88,14 +89,14 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 
 	m.HandleGET("/ticket/helpdesk/preview",
 		exec.NewViewHandler(previewHelpdeskTicket))
+	m.HandlePOST("/ticket/helpdesk/upload-attachment",
+		exec.NewViewHandler(uploadedHelpdeskFiles).FragmentOnly())
 	m.HandlePOST("/ticket/helpdesk/submit",
 		exec.NewViewHandler(submitHelpDeskTicket).FragmentOnly())
 	m.HandleGET("/ticket/helpdesk/find-reported-by",
 		exec.NewViewHandler(findHelpdeskReportedBy).FragmentOnly())
 	m.HandleGET("/ticket/helpdesk/update-reported-by",
 		exec.NewViewHandler(helpdeskReportedBy).FragmentOnly())
-	m.HandlePOST("/ticket/helpdesk/upload-attachment",
-		exec.NewViewHandler(uploadedHelpdeskFiles).FragmentOnly())
 	m.HandleGET("/ticket/helpdesk/new",
 		exec.NewViewHandler(newHelpdeskTicket))
 	m.HandleGET("/ticket/software/new",

@@ -1,4 +1,4 @@
-package ticket
+package handlers
 
 import (
 	"net/http"
@@ -10,7 +10,7 @@ import (
 // Extends: form
 // Method: GET
 // Doc: Form designed for creating software tickets
-func newSoftwareTicketHandler(rsp treetop.Response, req *http.Request) interface{} {
+func NewSoftwareTicketHandler(rsp treetop.Response, req *http.Request) interface{} {
 	if treetop.IsTemplateRequest(req) {
 		// replace existing browser history entry with current URL
 		rsp.ReplacePageURL(req.URL.String())

@@ -1,4 +1,4 @@
-package ticket
+package handlers
 
 import (
 	"net/http"
@@ -10,7 +10,7 @@ import (
 // Extends: form
 // Method: GET
 // Doc: Form designed for creating systems tickets
-func newSystemsTicketHandler(rsp treetop.Response, req *http.Request) interface{} {
+func NewSystemsTicketHandler(rsp treetop.Response, req *http.Request) interface{} {
 	data := struct {
 		HandlerInfo string
 	}{

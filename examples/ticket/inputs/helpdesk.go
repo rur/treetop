@@ -14,7 +14,7 @@ type HelpDeskTicket struct {
 	ReportedByUser     string
 	CustomerContact    string
 	Urgency            string
-	Descirption        string
+	Description        string
 	Attachments        []*FileInfo
 }
 
@@ -26,13 +26,14 @@ func HelpdeskTicketFromQuery(query url.Values) *HelpDeskTicket {
 		ReportedBy:      query.Get("reported-by"),
 		CustomerContact: query.Get("customer-contact"),
 		Urgency:         query.Get("urgency"),
-		Descirption:     query.Get("descirption"),
+		Description:     query.Get("description"),
 	}
 
 	switch ticket.ReportedBy {
 	case "user-name":
 		ticket.ReportedByUser = strings.TrimSpace(query.Get("reported-by-user"))
 	case "customer":
+		ticket.ReportedByCustomer = strings.TrimSpace(query.Get("reported-by-customer"))
 		ticket.CustomerContact = strings.TrimSpace(query.Get("customer-contact"))
 	case "myself":
 	default:
@@ -63,7 +64,7 @@ func (t *HelpDeskTicket) RawQuery() string {
 	query.Set("reported-by", t.ReportedBy)
 	query.Set("customer-contact", t.CustomerContact)
 	query.Set("urgency", t.Urgency)
-	query.Set("descirption", t.Descirption)
+	query.Set("description", t.Description)
 	for _, att := range t.Attachments {
 		enc, err := att.MarshalBase64()
 		if err != nil {

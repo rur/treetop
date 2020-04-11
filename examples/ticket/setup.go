@@ -2,10 +2,10 @@ package ticket
 
 import (
 	"net/http"
-	"net/url"
 
 	"github.com/rur/treetop"
 	"github.com/rur/treetop/examples/assets"
+	"github.com/rur/treetop/examples/ticket/handlers"
 )
 
 // Setup register routes for /view example endpoint
@@ -25,47 +25,11 @@ func Setup(mux *http.ServeMux) {
 	Routes(Mux{ServeMux: mux}, exec)
 
 	// add endpoint for regular http request handler
-	mux.HandleFunc("/ticket/get-form", formDepartmentRedirectHandler)
+	mux.HandleFunc("/ticket/get-form", handlers.FormDepartmentRedirectHandler)
 
 	if errs := exec.FlushErrors(); len(errs) != 0 {
 		panic(errs.Error())
 	}
-}
-
-// formDepartmentRedirectHandler will issue a redirect to the correct form path based upon the value
-// of the department query parameter. If not recognized it directs browser to ticket landing page.
-func formDepartmentRedirectHandler(w http.ResponseWriter, req *http.Request) {
-	var (
-		redirect *url.URL
-		query    = req.URL.Query()
-	)
-	switch dpt := query.Get("department"); dpt {
-	case "helpdesk":
-		redirect = mustParseURL("/ticket/helpdesk/new")
-
-	case "software":
-		redirect = mustParseURL("/ticket/software/new")
-
-	case "systems":
-		redirect = mustParseURL("/ticket/systems/new")
-
-	default:
-		query.Del("department")
-		redirect = mustParseURL("/ticket")
-	}
-
-	redirect.RawQuery = query.Encode()
-
-	http.Redirect(w, req, redirect.String(), http.StatusSeeOther)
-}
-
-// for use with hard coded urls
-func mustParseURL(path string) *url.URL {
-	u, err := url.Parse(path)
-	if err != nil {
-		panic(err)
-	}
-	return u
 }
 
 // Mux type adds a HandleGET and HandlePOST method to the standard http mux

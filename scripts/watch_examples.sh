@@ -15,7 +15,7 @@ while true; do
   set -x
   setsid go run ./examples &
   PID=$!
-  fswatch -1 examples/**/*.go
+  fswatch -1 `find ./examples -name '*.go' -print`
   # the negative PID is necessary to kill subprocesses
   # see https://unix.stackexchange.com/questions/124127/kill-all-descendant-processes
   kill -- -$PID
