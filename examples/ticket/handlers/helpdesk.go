@@ -50,7 +50,7 @@ func HelpdeskReportedByHandler(rsp treetop.Response, req *http.Request) interfac
 	}
 	// Use allow-list for input validation when possible
 	switch data.ReportedBy {
-	case "user-name":
+	case "team-member":
 		// Now parse extra input for this setting
 		data.ReportedByUser = query.Get("reported-by-user")
 	case "customer":
@@ -166,7 +166,7 @@ func SubmitHelpDeskTicketHandler(rsp treetop.Response, req *http.Request) interf
 		return data
 	}
 	switch ticket.ReportedBy {
-	case "user-name":
+	case "team-member":
 		if ticket.ReportedByUser == "" {
 			rsp.Status(http.StatusBadRequest)
 			data.Level = formMessageWarning

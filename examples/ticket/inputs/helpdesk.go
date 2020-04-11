@@ -22,15 +22,14 @@ type HelpDeskTicket struct {
 // Note, unicode normalization omitted for brevity
 func HelpdeskTicketFromQuery(query url.Values) *HelpDeskTicket {
 	ticket := &HelpDeskTicket{
-		Summary:         strings.TrimSpace(query.Get("summary")),
-		ReportedBy:      query.Get("reported-by"),
-		CustomerContact: query.Get("customer-contact"),
-		Urgency:         query.Get("urgency"),
-		Description:     query.Get("description"),
+		Summary:     strings.TrimSpace(query.Get("summary")),
+		ReportedBy:  query.Get("reported-by"),
+		Urgency:     query.Get("urgency"),
+		Description: query.Get("description"),
 	}
 
 	switch ticket.ReportedBy {
-	case "user-name":
+	case "team-member":
 		ticket.ReportedByUser = strings.TrimSpace(query.Get("reported-by-user"))
 	case "customer":
 		ticket.ReportedByCustomer = strings.TrimSpace(query.Get("reported-by-customer"))
@@ -62,6 +61,8 @@ func (t *HelpDeskTicket) RawQuery() string {
 	query := url.Values{}
 	query.Set("summary", t.Summary)
 	query.Set("reported-by", t.ReportedBy)
+	query.Set("reported-by-user", t.ReportedByUser)
+	query.Set("reported-by-customer", t.ReportedByCustomer)
 	query.Set("customer-contact", t.CustomerContact)
 	query.Set("urgency", t.Urgency)
 	query.Set("description", t.Description)

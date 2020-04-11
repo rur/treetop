@@ -18,7 +18,7 @@
                         </label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="reported-by" id="reported-by_username_input" required value="user-name"{{ if eq .ReportedBy "user-name" }} checked{{ end }}  click-on-change="update-reported-by">
+                        <input class="form-check-input" type="radio" name="reported-by" id="reported-by_username_input" required value="team-member"{{ if eq .ReportedBy "team-member" }} checked{{ end }}  click-on-change="update-reported-by">
                         <label class="form-check-label" for="reported-by_username_input">
                             Issue was reported by a team member
                         </label>
@@ -28,12 +28,12 @@
                 </div>
 
 
-                {{ if eq .ReportedBy "user-name" }}
+                {{ if eq .ReportedBy "team-member" }}
                 <div class="card-footer" id="helpdesk-reported-by-status">
                     {{ if .ReportedByUser }}
                     <h6 class="my-3">
                         Reported by: <strong>{{ .ReportedByUser }}</strong>
-                        <button  treetop-link="/ticket/helpdesk/update-reported-by?reported-by=user-name" type="button" class="close" aria-label="remove">
+                        <button  treetop-link="/ticket/helpdesk/update-reported-by?reported-by=team-member" type="button" class="close" aria-label="remove">
                             <span aria-hidden="true">×</span>
                         </button>
                     </h6>
