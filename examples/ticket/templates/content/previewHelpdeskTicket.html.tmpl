@@ -13,16 +13,9 @@
 				</div>
 			</div>
 
-			<div class="text-right mb-3">
-				<div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
-					<a href="{{ .EditLink }}" class="btn btn-outline-secondary">Edit</a>
-					<button type="button" class="btn btn-outline-secondary">Delete</button>
-				</div>
-			</div>
-
-			<div class="container border py-3 mb-4 bg-light">
+			<div class="container border py-3 mb-3 bg-light">
 				<div class="row">
-					<div class="col-md-3 text-muted mb-3">
+					<div class="col-sm-3 text-muted mb-3">
 					Reported by:
 					</div>
 					<div class="col">
@@ -37,6 +30,9 @@
 				</div>
 			</div>
 
+			<div class="text-right mb-3">
+				<a href="{{ .EditLink }}" class="btn btn-outline-secondary">Edit</a>
+			</div>
 
 			<h5>Description</h5>
 			{{ if .Ticket.Description }}

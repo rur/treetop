@@ -19,16 +19,19 @@ func NewHelpdeskTicketHandler(rsp treetop.Response, req *http.Request) interface
 		// replace existing browser history entry with current URL
 		rsp.ReplacePageURL(req.URL.String())
 	}
+	query := req.URL.Query()
 	data := struct {
 		ReportedBy     interface{}
 		AttachmentList interface{}
 		FormMessage    interface{}
 		Description    string
+		Urgency        string
 	}{
 		ReportedBy:     rsp.HandleSubView("reported-by", req),
 		AttachmentList: rsp.HandleSubView("attachment-list", req),
 		FormMessage:    rsp.HandleSubView("form-message", req),
-		Description:    req.URL.Query().Get("description"),
+		Description:    query.Get("description"),
+		Urgency:        query.Get("urgency"),
 	}
 	return data
 }
