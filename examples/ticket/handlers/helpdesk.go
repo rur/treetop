@@ -144,9 +144,10 @@ func SubmitHelpDeskTicketHandler(rsp treetop.Response, req *http.Request) interf
 	// If creation cannot proceed for any reason, this endpoint will render
 	// a form message HTML framgent with an alert level: info, warning or error
 	data := struct {
-		Level   int
-		Message string
-		Title   string
+		Level           int
+		Message         string
+		Title           string
+		ConfirmCritical bool
 	}{
 		Level: formMessageInfo,
 	}
@@ -198,6 +199,11 @@ func SubmitHelpDeskTicketHandler(rsp treetop.Response, req *http.Request) interf
 		data.Title = "Invalid input"
 		data.Message = fmt.Sprintf("Invalid ticket urgency value '%s'",
 			req.PostForm.Get("urgency"))
+		return data
+	}
+
+	if ticket.Urgency == "critical" && req.PostForm.Get("confirm-critical") != "yes" {
+		data.ConfirmCritical = true
 		return data
 	}
 

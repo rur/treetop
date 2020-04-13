@@ -2,14 +2,15 @@
 	<div class="card mb-4">
 		<h5 class="card-header">Help Desk Ticket <strong class="badge badge-secondary float-right">HLP_###</strong></h5>
 		<div class="card-body">
+			<a href="{{ .EditLink }}" class="ml-3 float-right btn btn-sm btn-outline-secondary">Edit</a>
 
-			<div class="media">
+			<div class="media mb-3">
 				{{ if eq .Ticket.Urgency "critical" }}<span class="badge badge-danger mt-2 mr-3">Critical</span>{{ end }}
 				{{ if eq .Ticket.Urgency "major" }}<span class="badge badge-warning mt-2 mr-3">Major</span>{{ end }}
 				{{ if eq .Ticket.Urgency "normal" }}<span class="badge badge-primary mt-2 mr-3">Normal</span>{{ end }}
 				{{ if eq .Ticket.Urgency "minor" }}<span class="badge badge-info mt-2 mr-3">Minor</span>{{ end }}
 				<div class="media-body">
-					<h4 class="mb-3">{{ .Ticket.Summary }}</h4>
+					<h4 class="mb-3">{{ .Ticket.Summary }} </h4>
 				</div>
 			</div>
 
@@ -28,10 +29,6 @@
 						</div>
 					</div>
 				</div>
-			</div>
-
-			<div class="text-right mb-3">
-				<a href="{{ .EditLink }}" class="btn btn-outline-secondary">Edit</a>
 			</div>
 
 			<h5>Description</h5>

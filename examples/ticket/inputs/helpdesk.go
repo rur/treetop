@@ -25,7 +25,7 @@ func HelpdeskTicketFromQuery(query url.Values) *HelpDeskTicket {
 		Summary:     strings.TrimSpace(query.Get("summary")),
 		ReportedBy:  query.Get("reported-by"),
 		Urgency:     query.Get("urgency"),
-		Description: query.Get("description"),
+		Description: strings.TrimSpace(query.Get("description")),
 	}
 
 	switch ticket.ReportedBy {

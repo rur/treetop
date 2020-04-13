@@ -89,7 +89,8 @@ func (srv *cookieServer) bind(hdl formDataHandlerFunc) treetop.ViewHandlerFunc {
 			//
 			// Note: This is the similar to an 'unauthenticated' path. In that case
 			//       a redirect might be more appropriate.
-			data = getDefaultFormData()
+			fdata := defaultFormData
+			data = &fdata
 			err := setCookieFormData(rsp, data)
 			if err != nil {
 				http.Error(

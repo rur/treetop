@@ -1,20 +1,34 @@
-<div id="form-message">
+<div id="form-message" class="row justify-content-end">
+	{{ if .Message }}
 	{{ if eq .Level 0 }}
-	<div class="alert alert-info">
-		<h6 class="alert-title">{{ .Title }}</h6>
-		<p class="alert-body">{{ .Message }}</p>
+	<div class="alert alert-info col-sm-9">
+		<h6 class="alert-heading">{{ .Title }}</h6>
+		<p>{{ .Message }}</p>
 	</div>
 	{{ end }}
 	{{ if eq .Level 1 }}
-	<div class="alert alert-warning">
-		<h6 class="alert-title">{{ .Title }}</h6>
-		<p class="alert-body">{{ .Message }}</p>
+	<div class="alert alert-warning col-sm-9">
+		<h6 class="alert-heading">{{ .Title }}</h6>
+		<p>{{ .Message }}</p>
 	</div>
 	{{ end }}
 	{{ if eq .Level 2 }}
-	<div class="alert alert-danger">
-		<h6 class="alert-title">{{ .Title }}</h6>
-		<p class="alert-body">{{ .Message }}</p>
+	<div class="alert alert-danger col-sm-9">
+		<h6 class="alert-heading">{{ .Title }}</h6>
+		<p>{{ .Message }}</p>
+	</div>
+	{{ end }}
+	{{ end }}
+
+	{{ if .ConfirmCritical }}
+	<div class="alert alert-warning col-sm-9">
+		<h6 class="alert-heading">Critical Ticket</h6>
+		<p>Please review the <a href="http://www.example.com" target="_blank" class="alert-link">operating guidelines</a> before flagging your ticket as <em>critical</em>.</p>
+		<hr>
+		<div class="form-group form-check">
+			<input type="checkbox" class="form-check-input" id="confirmCritical" name="confirm-critical" value="yes">
+			<label class="form-check-label" for="confirmCritical">I have read the guidelines</label>
+		</div>
 	</div>
 	{{ end }}
 

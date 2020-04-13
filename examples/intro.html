@@ -4,7 +4,7 @@
 
 	<h3 class="mt-5"><em>&lt;template&gt;</em> Request Demo</h3>
 
-	<p class="lead">Example apps that use a <strong>template protocol</strong> for modern web UX.</p>
+	<p class="lead">Experimental apps that use a <strong>template protocol</strong> for modern web UX.</p>
 
 	<h5 class="mt-5">What is a template request?</h5>
 
@@ -47,21 +47,23 @@
 		how various controls can be implemented using the protocol.
 	</p>
 
-	<h6>The Network Inspector</h6>
+	<h6>What is 'treetop'?</h6>
 	<p>
-		This site was laid out for the network inspector to be expanded to the right side (or left)
-		of your web browser window. The examples will make more sense if you are monitoring the network log.
+		This specific protocol was developed along with the <a href="https://github.com/rur/treetop" target="_blank">Treetop library</a>,
+		a Go package for building web pages from nested templates.
 	</p>
 
-	<h5 class="mt-4">Third-party libraries</h5>
+	<h5>The Network Inspector</h5>
+	<p>
+		This site is laid out to accommodate a network inspector<sup>[3]</sup> expanded to the right or left of the web browser window.
+		The examples will make more sense if you are monitoring the network log.
+	</p>
+
+	<h5 class="mt-4">Markup and Styles</h5>
 
 	<p>
-		As you might have already guessed, this page and all demo apps use the <a href="">Bootstrap Component Library</a>.
-		Styling and markup is intended to be as familiar and conventional as possible<sup>[3]</sup>.
-	</p>
-	<p>
-		The protocol described here was developed along with the <a href="">Treetop library</a>, a Go package for building HTML
-		web pages from nested templates. That library is used to implement the server-side handlers for the demo apps.
+		As you might have guessed, this page and all demo apps use the <a href="">Bootstrap Component Library</a>.
+		Styling and markup is intended to be as familiar and conventional as possible<sup>[4]</sup>.
 	</p>
 
 	<div class="border-top mt-5 small text-muted pb-5">
@@ -70,6 +72,7 @@
 			<ol class="mb-4">
 				<li><a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template" target="_blank">The Content Template element (MDN)</a> was included in the HTML5 spec.</li>
 				<li><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Content_negotiation" target="_blank">HTTP content negotiation (MDN)</a> using a custom MIME type and custom response headers.</li>
+				<li>Network inspector docs: <a target="_blank" href="https://developers.google.com/web/tools/chrome-devtools/network/reference">Chrome</a>, <a target="_blank" href="https://developer.apple.com/safari/tools/">Safari</a>, <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor">Firefox</a>, <a target="_blank" href="https://docs.microsoft.com/en-us/microsoft-edge/devtools-guide/network">Edge</a></li>
 				<li>Suggestions for improvements to markup and CSS are very welcome, visit <a href="https://github.com/rur/treetop">GitHub Treetop</a></li>
 			</ol>
 		</div>

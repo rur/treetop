@@ -6,7 +6,7 @@
 		<label for="urgency-input" class="col-sm-3 col-form-label">Urgency</label>
 		<div class="col-sm-9">
 			<select class="form-control" name="urgency" id="urgency-input" required="required">
-				<option {{ if eq .Urgency "critical" }}selected {{ end }}value="critical">Critical (hint: try submitting this)</option>
+				<option {{ if eq .Urgency "critical" }}selected {{ end }}value="critical">Critical (requires immediate attention!)</option>
 				<option {{ if eq .Urgency "major" }}selected {{ end }}value="major">Major</option>
 				<option {{ if eq .Urgency "normal" }}selected {{ end }}value="normal">Normal</option>
 				<option {{ if eq .Urgency "minor" }}selected {{ end }}value="minor">Minor</option>
@@ -17,7 +17,10 @@
 	<div class="form-group row">
 		<label for="description-textarea" class="col-sm-3 col-form-label">Description</label>
 		<div class="col-sm-9">
-			<textarea name="description" id="description-textarea" cols="30" rows="10" class="form-control">{{ .Description }}</textarea>
+			<textarea name="description" id="description-textarea" cols="30" rows="10" class="form-control">{{ if .Description }}{{ .Description }}{{ else -}}
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.{{end}}</textarea>
 		</div>
 	</div>
 
