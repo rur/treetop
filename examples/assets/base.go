@@ -45,6 +45,22 @@ var (
 		</div>
 	</main>
 {{ block "treetop-config" . }}{{ end }}
+<script>
+document.addEventListener("treetopstart", function () {
+	document.body.classList.add("active-request");
+});
+document.addEventListener("treetopcomplete", function () {
+	document.body.classList.remove("active-request");
+});
+</script>
+<style>
+	body.active-request {
+		cursor: wait;
+	}
+	body.active-request #content {
+		pointer-events: none;
+	}
+</style>
 <script src="/treetop.js" async></script>
 </body>
 </html>
