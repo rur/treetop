@@ -173,10 +173,11 @@
 				},
 
 				'dedup-append': function (nue, old) {
+					const nueChildren = Array.from(nue.children)
 					// append children of new element to existing
 					// replacing any existing children elements with matching IDs
-					for (let i = 0; i < nue.children.length; i++) {
-						const child = nue.children[i]
+					for (let i = 0; i < nueChildren.length; i++) {
+						const child = nueChildren[i]
 						if (child.id) {
 							const existing = old.querySelector("#" + child.id)
 							if (existing)  {
