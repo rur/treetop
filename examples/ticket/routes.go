@@ -25,6 +25,13 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 		handlers.IssuePreviewHandler,
 	)
 
+	// content -> notes
+	_ = issuePreview.NewDefaultSubView(
+		"notes",
+		"examples/ticket/templates/content/notes.html.tmpl",
+		treetop.Noop,
+	)
+
 	// content -> preview
 	previewHelpdeskTicket := issuePreview.NewSubView(
 		"preview",
@@ -63,6 +70,13 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 		"form-message",
 		"examples/ticket/templates/content/form/formMessage/submitHelpDeskTicket.html.tmpl",
 		handlers.SubmitHelpDeskTicketHandler,
+	)
+
+	// content -> form -> notes
+	_ = newHelpdeskTicket.NewDefaultSubView(
+		"notes",
+		"examples/ticket/templates/content/notes.html.tmpl",
+		treetop.Noop,
 	)
 
 	// content -> form -> reported-by

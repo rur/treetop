@@ -2,15 +2,11 @@
 	<hr>
 	<div class="container">
 		<h3 class="mb-3">Example Ticket</h3>
-		<p>This is a preview of the issue information created by the form</p>
+		<p>This is a preview of the issue information created by the form (see <a href="#notes">notes</a>)</p>
 
 		{{ template "preview" .Preview }}
 
-		<div class="mt-5 border rounded bg-light text-muted p-3 small mb-3">
-			<h6 class="muted">Notes:</h6>
-			<ul class="list-group list-group-flush">
-				<li class="list-group-item bg-light"><strong>TODO</strong> Add notes to this page</li>
-			</ul>
-		</div>
+		{{ template "notes" .Notes }}
+
 	</div>
 </div>

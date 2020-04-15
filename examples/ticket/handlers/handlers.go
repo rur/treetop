@@ -27,6 +27,7 @@ func TicketHandler(rsp treetop.Response, req *http.Request) interface{} {
 		Summary string
 		Dept    string
 		Form    interface{}
+		Notes   interface{}
 	}{
 		Summary: strings.TrimSpace(wsRegex.ReplaceAllString(query.Get("summary"), " ")),
 		Form:    rsp.HandleSubView("form", req),
@@ -88,8 +89,10 @@ func mustParseURL(path string) *url.URL {
 func IssuePreviewHandler(rsp treetop.Response, req *http.Request) interface{} {
 	data := struct {
 		Preview interface{}
+		Notes   interface{}
 	}{
 		Preview: rsp.HandleSubView("preview", req),
+		Notes:   rsp.HandleSubView("notes", req),
 	}
 	return data
 }

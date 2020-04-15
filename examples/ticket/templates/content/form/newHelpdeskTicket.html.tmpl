@@ -1,4 +1,4 @@
-<div id="form" class="mb-5 pb-5">
+<div id="form" class="mb-5">
 
 	{{/* required */}}{{ template "reported-by" .ReportedBy }}
 
@@ -39,10 +39,12 @@ Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliqu
 
 	{{ block "form-message" .FormMessage }}<div id="form-message" class="d-none"></div>{{ end }}
 
-	<div class="forim-group row py-3">
+	<div class="forim-group row py-3 mb-4">
 		<div class="col-sm-12 text-right">
 			<a href="/ticket" title="Clear form an start again" class="btn btn-muted">Reset Form</a>
 			<button type="submit" treetop-submitter formaction="/ticket/helpdesk/submit" formmethod="POST" class="btn btn-primary">Submit to Help Desk</button>
 		</div>
 	</div>
+
+	{{ template "notes" .Notes }}
 </div>

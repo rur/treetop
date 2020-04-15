@@ -17,6 +17,12 @@ page = "ticket"
         doc = "Content wrapper around preview for different ticket type"
         [views.base.blocks.content.blocks]
 
+          [[views.base.blocks.content.blocks.notes]]
+            name = "preview-notes"
+            default = true
+            handler = "treetop.Noop"
+            template = "examples/ticket/templates/content/notes.html.tmpl"
+
           [[views.base.blocks.content.blocks.preview]]
             name = "preview-helpdesk-ticket"
             path = "/ticket/helpdesk/preview"
@@ -43,6 +49,13 @@ page = "ticket"
             method = "GET"
             doc = "Form designed for creating helpdesk tickets"
             [views.base.blocks.content.blocks.form.blocks]
+
+              [[views.base.blocks.content.blocks.form.blocks.notes]]
+                name = "new-helpdesk-notes"
+                default = true
+                handler = "treetop.Noop"
+                template = "examples/ticket/templates/content/notes.html.tmpl"
+                doc = "Show this when helpdesk form is loaded"
 
               [[views.base.blocks.content.blocks.form.blocks.attachment-list]]
                 name = "attachment-file-list"

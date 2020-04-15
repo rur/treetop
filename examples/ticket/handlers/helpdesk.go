@@ -24,6 +24,7 @@ func NewHelpdeskTicketHandler(rsp treetop.Response, req *http.Request) interface
 		ReportedBy     interface{}
 		AttachmentList interface{}
 		FormMessage    interface{}
+		Notes          interface{}
 		Description    string
 		Urgency        string
 	}{
@@ -32,6 +33,7 @@ func NewHelpdeskTicketHandler(rsp treetop.Response, req *http.Request) interface
 		FormMessage:    rsp.HandleSubView("form-message", req),
 		Description:    query.Get("description"),
 		Urgency:        query.Get("urgency"),
+		Notes:          rsp.HandleSubView("notes", req),
 	}
 	return data
 }
