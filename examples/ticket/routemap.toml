@@ -58,11 +58,11 @@ page = "ticket"
                 doc = "Show this when helpdesk form is loaded"
 
               [[views.base.blocks.content.blocks.form.blocks.attachment-list]]
-                name = "attachment-file-list"
+                name = "helpdesk-attachment-file-list"
                 fragment = true
                 default = true
-                handler = "handlers.HelpdeskAttachmentFileListHandler"
-                template = "examples/ticket/templates/content/form/attachmentList/uploadedHelpdeskFiles.html.tmpl"
+                handler = "handlers.AttachmentFileListHandler"
+                template = "examples/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl"
                 doc = "Default helpdesk attachment file list template handler, parse file info from query string"
 
               [[views.base.blocks.content.blocks.form.blocks.attachment-list]]
@@ -70,7 +70,7 @@ page = "ticket"
                 fragment = true
                 path = "/ticket/helpdesk/upload-attachment"
                 handler = "handlers.UploadedFilesHandler"
-                template = "examples/ticket/templates/content/form/attachmentList/uploadedHelpdeskFiles.html.tmpl"
+                template = "examples/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl"
                 method = "POST"
                 doc = "Load a list of uploaded files, save to storage and return metadata to the form"
 
@@ -110,6 +110,40 @@ page = "ticket"
             template = "examples/ticket/templates/content/form/newSoftwareTicket.html.tmpl"
             method = "GET"
             doc = "Form designed for creating software tickets"
+            [views.base.blocks.content.blocks.form.blocks]
+
+              [[views.base.blocks.content.blocks.form.blocks.notes]]
+                name = "new-software-notes"
+                default = true
+                handler = "treetop.Noop"
+                template = "examples/ticket/templates/content/notes.html.tmpl"
+                doc = "Show this when software form is loaded"
+
+              [[views.base.blocks.content.blocks.form.blocks.attachment-list]]
+                name = "software-attachment-file-list"
+                fragment = true
+                default = true
+                handler = "handlers.AttachmentFileListHandler"
+                template = "examples/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl"
+                doc = "Default software attachment file list template handler, parse file info from query string"
+
+              [[views.base.blocks.content.blocks.form.blocks.attachment-list]]
+                name = "uploaded-software-files"
+                fragment = true
+                path = "/ticket/software/upload-attachment"
+                handler = "handlers.UploadedFilesHandler"
+                template = "examples/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl"
+                method = "POST"
+                doc = "Load a list of uploaded files, save to storage and return metadata to the form"
+
+              [[views.base.blocks.content.blocks.form.blocks.form-message]]
+                name = "submit-software-ticket"
+                fragment = true
+                path = "/ticket/software/submit"
+                handler = "handlers.SubmitSoftwareTicketHandler"
+                template = "examples/ticket/templates/content/form/formMessage/submitSoftwareTicket.html.tmpl"
+                method = "POST"
+                doc = "process creation of a new software ticket"
 
           [[views.base.blocks.content.blocks.form]]
             name = "new-systems-ticket"

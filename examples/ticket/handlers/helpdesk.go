@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 
@@ -86,30 +85,6 @@ func HelpdeskReportedByHandler(rsp treetop.Response, req *http.Request) interfac
 	default:
 		// default for empty or unrecognized input
 		data.ReportedBy = ""
-	}
-	return data
-}
-
-// helpdeskAttachmentFileListHandler decoded URL query encoded attachment file info
-// Extends: attachment-file-list
-// Method: GET
-// Doc: Default helpdesk attachment file list template handler,
-//      parse file info from query string
-func HelpdeskAttachmentFileListHandler(rsp treetop.Response, req *http.Request) interface{} {
-	// load file info from query
-	query := req.URL.Query()
-	data := struct {
-		Files []*inputs.FileInfo
-	}{}
-
-	for _, enc := range query["attachment"] {
-		info := &inputs.FileInfo{}
-		if err := info.UnmarshalBase64([]byte(enc)); err != nil {
-			// skip it
-			log.Println(err)
-		} else {
-			data.Files = append(data.Files, info)
-		}
 	}
 	return data
 }

@@ -1,60 +1,48 @@
-<div id="form">
+<div id="form" class="mb-5">
+
 	<div class="form-group row">
-		<label for="ticketTypeFormSelect" class="col-sm-3 col-form-label">Issue Type</label>
+		<label for="issue-type-input" class="col-sm-3 col-form-label">Type</label>
 		<div class="col-sm-9">
-			<select class="form-control" name="ticket-type" id="ticketTypeFormSelect" required="required">
-				<option>Task</option>
-				<option>Bug</option>
-				<option>Epic</option>
-				<option>Wish List</option>
+			<select class="form-control" name="issue-type" id="issue-type-input" required="required">
+				<option {{ if eq .IssueType "bug" }}selected {{ end }}value="bug">Bug</option>
+				<option {{ if eq .IssueType "enhancement" }}selected {{ end }}value="enhancement">Enhancement</option>
+				<option {{ if eq .IssueType "task" }}selected {{ end }}value="task">Task</option>
+				<option {{ if eq .IssueType "wishlist" }}selected {{ end }}value="wishlist">Wishlist</option>
 			</select>
 		</div>
 	</div>
 
-    {{ block "assignee" .Assignee }}
-    <div class="alert alert-danger">
-    	<h5 class="alert-header">Assignee Not Implemented</h5>
-    	<p class="mb-0">This field has not yet been implemented</p>
-    </div>
-    {{ end }}
+	<div class="form-group row">
+		<label for="description-textarea" class="col-sm-3 col-form-label">Description</label>
+		<div class="col-sm-9">
+			<textarea name="description" id="description-textarea" cols="30" rows="10" class="form-control">{{ if .Description }}{{ .Description }}{{ else -}}
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.{{end}}</textarea>
+		</div>
+	</div>
 
 	<div class="form-group row">
 		<label class="col-sm-3 col-form-label">Attachments</label>
 		<div class="col-sm-9">
-			<div class="input-group">
-				<div class="custom-file">
-					<input name="attachments" type="file" class="custom-file-input" id="inputGroupFile02" multiple>
-					<label class="custom-file-label" for="inputGroupFile02" aria-describedby="inputGroupFileAddon02">Choose file</label>
-				</div>
-				<div class="input-group-append">
-					<button treetop-submitter name="button" value="upload" type="button" formmethod="POST" formenctype="multipart/form-data" formaction="/test" class="input-group-text" id="inputGroupFileAddon02">Upload</button>
-				</div>
+			<div class="custom-file mb-2" click-on-change="upload-selected-attachment">
+				<input name="file-upload" type="file" class="custom-file-input" id="inputGroupFile02" multiple limit-upload-file-mb="1MB">
+				<label class="custom-file-label" for="inputGroupFile02" aria-describedby="inputGroupFileAddon02">Choose file</label>
 			</div>
+			<button class="d-none" id="upload-selected-attachment" treetop-submitter formnovalidate formmethod="POST" formenctype="multipart/form-data" formaction="/ticket/software/upload-attachment"></button>
 
+			{{/* required */}}{{ template "attachment-list" .AttachmentList }}
 		</div>
 	</div>
 
-	<div class="form-group row">
-		<div class="col-sm-3">After</div>
-		<div class="col-sm-9">
-			<div class="form-check">
-				<input class="form-check-input" type="radio" name="after" id="after2" value="view-ticket" checked>
-				<label class="form-check-label" for="after2">
-					View newly created issue
-				</label>
-			</div>
-			<div class="form-check">
-				<input class="form-check-input" type="radio" name="after" id="after1" value="create-another">
-				<label class="form-check-label" for="after1">
-					Create another ticket
-				</label>
-			</div>
-		</div>
-	</div>
-	<div class="form-group row">
+	{{ block "form-message" .FormMessage }}<div id="form-message" class="d-none"></div>{{ end }}
+
+	<div class="forim-group row py-3 mb-4">
 		<div class="col-sm-12 text-right">
-			<a href="/ticket/software/new" title="Clear form an start again" class="btn btn-muted">Reset</a>
-			<button type="submit" class="btn btn-primary">Create Ticket</button>
+			<a href="/ticket" title="Clear form an start again" class="btn btn-muted">Reset Form</a>
+			<button type="submit" treetop-submitter formaction="/ticket/software/submit" formmethod="POST" class="btn btn-primary">Create Software Issue</button>
 		</div>
 	</div>
+
+	{{ template "notes" .Notes }}
 </div>

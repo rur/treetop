@@ -59,3 +59,27 @@ func UploadedFilesHandler(rsp treetop.Response, req *http.Request) interface{} {
 	}
 	return data
 }
+
+// AttachmentFileListHandler decoded URL query encoded attachment file info
+// Extends: attachment-file-list
+// Method: GET
+// Doc: Default software attachment file list template handler,
+//      parse file info from query string
+func AttachmentFileListHandler(rsp treetop.Response, req *http.Request) interface{} {
+	// load file info from query
+	query := req.URL.Query()
+	data := struct {
+		Files []*inputs.FileInfo
+	}{}
+
+	for _, enc := range query["attachment"] {
+		info := &inputs.FileInfo{}
+		if err := info.UnmarshalBase64([]byte(enc)); err != nil {
+			// skip it
+			log.Println(err)
+		} else {
+			data.Files = append(data.Files, info)
+		}
+	}
+	return data
+}

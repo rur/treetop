@@ -56,12 +56,12 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 	// content -> form -> attachment-list
 	_ = newHelpdeskTicket.NewDefaultSubView(
 		"attachment-list",
-		"examples/ticket/templates/content/form/attachmentList/uploadedHelpdeskFiles.html.tmpl",
-		handlers.HelpdeskAttachmentFileListHandler,
+		"examples/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl",
+		handlers.AttachmentFileListHandler,
 	)
 	uploadedHelpdeskFiles := newHelpdeskTicket.NewSubView(
 		"attachment-list",
-		"examples/ticket/templates/content/form/attachmentList/uploadedHelpdeskFiles.html.tmpl",
+		"examples/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl",
 		handlers.UploadedFilesHandler,
 	)
 
@@ -97,6 +97,32 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 		"examples/ticket/templates/content/form/newSoftwareTicket.html.tmpl",
 		handlers.NewSoftwareTicketHandler,
 	)
+
+	// content -> form -> attachment-list
+	_ = newSoftwareTicket.NewDefaultSubView(
+		"attachment-list",
+		"examples/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl",
+		handlers.AttachmentFileListHandler,
+	)
+	uploadedSoftwareFiles := newSoftwareTicket.NewSubView(
+		"attachment-list",
+		"examples/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl",
+		handlers.UploadedFilesHandler,
+	)
+
+	// content -> form -> form-message
+	submitSoftwareTicket := newSoftwareTicket.NewSubView(
+		"form-message",
+		"examples/ticket/templates/content/form/formMessage/submitSoftwareTicket.html.tmpl",
+		handlers.SubmitSoftwareTicketHandler,
+	)
+
+	// content -> form -> notes
+	_ = newSoftwareTicket.NewDefaultSubView(
+		"notes",
+		"examples/ticket/templates/content/notes.html.tmpl",
+		treetop.Noop,
+	)
 	newSystemsTicket := ticketFormContent.NewSubView(
 		"form",
 		"examples/ticket/templates/content/form/newSystemsTicket.html.tmpl",
@@ -122,6 +148,10 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 		exec.NewViewHandler(helpdeskReportedBy).FragmentOnly())
 	m.HandleGET("/ticket/helpdesk/new",
 		exec.NewViewHandler(newHelpdeskTicket))
+	m.HandlePOST("/ticket/software/upload-attachment",
+		exec.NewViewHandler(uploadedSoftwareFiles).FragmentOnly())
+	m.HandlePOST("/ticket/software/submit",
+		exec.NewViewHandler(submitSoftwareTicket).FragmentOnly())
 	m.HandleGET("/ticket/software/new",
 		exec.NewViewHandler(newSoftwareTicket))
 	m.HandleGET("/ticket/systems/new",
