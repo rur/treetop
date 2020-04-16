@@ -86,11 +86,11 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 		handlers.HelpdeskReportedByHandler,
 	)
 
-	// content -> form -> reported-by -> find-reported-by
-	findHelpdeskReportedBy := helpdeskReportedBy.NewSubView(
-		"find-reported-by",
-		"examples/ticket/templates/content/form/reportedBy/findReportedBy/findHelpdeskReportedBy.html.tmpl",
-		handlers.FindTeamMemberHandler,
+	// content -> form -> reported-by -> find-user
+	findHelpdeskReportedBy := helpdeskReportedBy.NewDefaultSubView(
+		"find-user",
+		"examples/ticket/templates/content/controls/findUser.html.tmpl",
+		handlers.GetFindUserHandler("reported-by-user", "/ticket/helpdesk/update-reported-by"),
 	)
 	newSoftwareTicket := ticketFormContent.NewSubView(
 		"form",

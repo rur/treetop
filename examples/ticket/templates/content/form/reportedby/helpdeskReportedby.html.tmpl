@@ -43,10 +43,9 @@
                         <input autofocus enter-submitter="reported-by-find-user" type="text" class="form-control" name="search-query">
                         <div class="input-group-append"><button id="reported-by-find-user" class="btn"  treetop-submitter formnovalidate formaction="/ticket/helpdesk/find-reported-by">Find User</button></div>
                     </div>
-                    <div id="find-reported-by">
-                        <p class="text-muted small">Enter a query to find a user</p>
-                        <input class="hide" required type="text" onkeydown="return false" name="reported-by-user" value="">
-                    </div>
+
+                    {{ template "find-user" .FindUser }}
+
                     {{ end }}
                 </div>
                 {{ end }}

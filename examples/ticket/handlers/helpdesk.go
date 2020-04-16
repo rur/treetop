@@ -47,6 +47,7 @@ func HelpdeskReportedByHandler(rsp treetop.Response, req *http.Request) interfac
 		ReportedBy         string
 		ReportedByUser     string
 		ReportedByCustomer string
+		FindUser           interface{}
 		CustomerList       []string
 		CustomerContact    string
 	}{
@@ -57,6 +58,7 @@ func HelpdeskReportedByHandler(rsp treetop.Response, req *http.Request) interfac
 	case "team-member":
 		// Now parse extra input for this setting
 		data.ReportedByUser = query.Get("reported-by-user")
+		data.FindUser = rsp.HandleSubView("find-user", req)
 	case "customer":
 		// Would otherwise be loaded from a customer database
 		data.CustomerList = []string{

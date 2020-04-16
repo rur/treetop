@@ -94,12 +94,13 @@ page = "ticket"
                 doc = "Options for notifying help desk of who reported the issue"
                 [views.base.blocks.content.blocks.form.blocks.reported-by.blocks]
 
-                  [[views.base.blocks.content.blocks.form.blocks.reported-by.blocks.find-reported-by]]
+                  [[views.base.blocks.content.blocks.form.blocks.reported-by.blocks.find-user]]
                     name = "find-helpdesk-reported-by"
                     fragment = true
+                    default = true
                     path = "/ticket/helpdesk/find-reported-by"
-                    handler = "handlers.FindTeamMemberHandler"
-                    template = "examples/ticket/templates/content/form/reportedBy/findReportedBy/findHelpdeskReportedBy.html.tmpl"
+                    handler = "handlers.GetFindUserHandler(\"reported-by-user\", \"/ticket/helpdesk/update-reported-by\")"
+                    template = "examples/ticket/templates/content/controls/findUser.html.tmpl"
                     method = "GET"
                     doc = "query string to find a user to select"
 
