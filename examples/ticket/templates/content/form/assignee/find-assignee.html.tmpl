@@ -1,0 +1,24 @@
+<div id="find-user">
+	{{ if .Results }}
+	<p class="text-muted mt-3 mb-2 font-italic">Select a user:</p>
+	<div class="list-group">
+		{{ range $index, $result := .Results }}
+		{{ if $result.Selected }}
+		<button type="button" treetop-submitter formaction="/ticket/software/update-assignee" name="remove-assignee" value="{{ $result.Name }}" formnovalidate class="list-group-item list-group-item-action text-danger">{{ $result.Name }} <span class="float-right" aria-hidden="true">× remove</span></button>
+		{{ else }}
+		<button type="button" treetop-submitter formaction="/ticket/software/update-assignee" name="add-assignee" value="{{ $result.Name }}" formnovalidate class="list-group-item list-group-item-action">{{ $result.Name }}</button>
+		{{ end }}
+
+		{{ end }}
+	</div>
+
+	{{ else }}
+	{{ if .QueryString }}
+	<p class="text-muted">No users found for query '{{ .QueryString }}'</p>
+	{{ else }}
+	<p class="text-muted">Type a name of find a user.</p>
+	{{ end }}
+	{{ end }}
+    <input class="hide" required type="text" onkeydown="return false" value="">
+	<div class="mt-2 text-right"><button treetop-submitter formnovalidate formaction="/ticket/software/update-assignee" type="button" class="btn" ><span aria-hidden="true">×</span> Cancel</button></div>
+</div>

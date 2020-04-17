@@ -123,11 +123,56 @@ func SoftwareAssigneeHandler(rsp treetop.Response, req *http.Request) interface{
 	if addAssignee := query.Get("add-assignee"); addAssignee != "" {
 		for _, user := range data.Assignees {
 			if addAssignee == user {
-				// already added, return to template here
-				return data
+				// already added, nothing to add
+				goto CheckRemove
 			}
 		}
 		data.Assignees = append(data.Assignees, addAssignee)
 	}
+CheckRemove:
+	if removeAssignee := query.Get("remove-assignee"); removeAssignee != "" {
+		for i, user := range data.Assignees {
+			if removeAssignee == user {
+				data.Assignees = append(data.Assignees[0:i], data.Assignees[i+1:]...)
+				// no need to keep looking
+				break
+			}
+		}
+	}
+	return data
+}
+
+// SoftwareFineAssigneeHandler (fragment)
+// Extends: reported-by
+// Method: GET
+// Doc: Options for notifying help desk of who reported the issue
+func SoftwareFindAssigneeHandler(rsp treetop.Response, req *http.Request) interface{} {
+	query := req.URL.Query()
+
+	type SearchResult struct {
+		Name     string
+		Selected bool
+	}
+
+	data := struct {
+		Results     []SearchResult
+		QueryString string
+	}{
+		QueryString: query.Get("search-query"),
+	}
+
+	selected := make(map[string]struct{})
+	for _, user := range query["assignees"] {
+		selected[user] = struct{}{}
+	}
+
+	for _, result := range inputs.SearchForUser(data.QueryString) {
+		_, ok := selected[result]
+		data.Results = append(data.Results, SearchResult{
+			Name:     result,
+			Selected: ok,
+		})
+	}
+
 	return data
 }

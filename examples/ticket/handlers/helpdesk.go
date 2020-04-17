@@ -91,6 +91,19 @@ func HelpdeskReportedByHandler(rsp treetop.Response, req *http.Request) interfac
 	return data
 }
 
+// Method: GET
+// Doc: search the database for a list of users matching a query string
+func FindReportedByUserHandler(rsp treetop.Response, req *http.Request) interface{} {
+	query := req.URL.Query()
+	return struct {
+		Results     []string
+		QueryString string
+	}{
+		QueryString: query.Get("search-query"),
+		Results:     inputs.SearchForUser(query.Get("search-query")),
+	}
+}
+
 const (
 	formMessageInfo = iota
 	formMessageWarning

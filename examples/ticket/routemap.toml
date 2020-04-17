@@ -99,8 +99,8 @@ page = "ticket"
                     fragment = true
                     default = true
                     path = "/ticket/helpdesk/find-reported-by"
-                    handler = "handlers.GetFindUserHandler(\"reported-by-user\", \"/ticket/helpdesk/update-reported-by\")"
-                    template = "examples/ticket/templates/content/controls/findUser.html.tmpl"
+                    handler =  "handlers.FindReportedByUserHandler"
+                    template = "examples/ticket/templates/content/form/reportedBy/findReportedByUser.html.tmpl"
                     method = "GET"
                     doc = "query string to find a user to select"
 
@@ -126,7 +126,7 @@ page = "ticket"
                 fragment = true
                 path = "/ticket/software/update-assignee"
                 handler = "handlers.SoftwareAssigneeHandler"
-                template = "examples/ticket/templates/content/form/assignee.html.tmpl"
+                template = "examples/ticket/templates/content/form/assignee/assignee-input.html.tmpl"
                 doc = "Select multiple users as assignees"
                 [views.base.blocks.content.blocks.form.blocks.assignee.blocks]
 
@@ -135,8 +135,8 @@ page = "ticket"
                     fragment = true
                     default = true
                     path = "/ticket/software/find-assignee"
-                    handler = "handlers.GetFindUserHandler(\"add-assignee\", \"/ticket/software/update-assignee\")"
-                    template = "examples/ticket/templates/content/controls/findUser.html.tmpl"
+                    handler = "handlers.SoftwareFindAssigneeHandler"
+                    template = "examples/ticket/templates/content/form/assignee/find-assignee.html.tmpl"
                     method = "GET"
                     doc = "query string to find a user to select"
 

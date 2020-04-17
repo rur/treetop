@@ -89,8 +89,8 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 	// content -> form -> reported-by -> find-user
 	findHelpdeskReportedBy := helpdeskReportedBy.NewDefaultSubView(
 		"find-user",
-		"examples/ticket/templates/content/controls/findUser.html.tmpl",
-		handlers.GetFindUserHandler("reported-by-user", "/ticket/helpdesk/update-reported-by"),
+		"examples/ticket/templates/content/form/reportedBy/findReportedByUser.html.tmpl",
+		handlers.FindReportedByUserHandler,
 	)
 	newSoftwareTicket := ticketFormContent.NewSubView(
 		"form",
@@ -101,15 +101,15 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 	// content -> form -> assignee
 	viewSoftwareAssignee := newSoftwareTicket.NewDefaultSubView(
 		"assignee",
-		"examples/ticket/templates/content/form/assignee.html.tmpl",
+		"examples/ticket/templates/content/form/assignee/assignee-input.html.tmpl",
 		handlers.SoftwareAssigneeHandler,
 	)
 
 	// content -> form -> assignee -> find-user
 	findSoftwareAssignee := viewSoftwareAssignee.NewDefaultSubView(
 		"find-user",
-		"examples/ticket/templates/content/controls/findUser.html.tmpl",
-		handlers.GetFindUserHandler("add-assignee", "/ticket/software/update-assignee"),
+		"examples/ticket/templates/content/form/assignee/find-assignee.html.tmpl",
+		handlers.SoftwareFindAssigneeHandler,
 	)
 
 	// content -> form -> attachment-list
