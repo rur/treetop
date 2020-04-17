@@ -1,0 +1,36 @@
+<fieldset id="assignee" class="form-group">
+    <div class="row mb-2">
+        <legend class="col-form-label col-sm-3 pt-0">Assignees</legend>
+        <div class="col-sm-9">
+            <div class="border rounded bg-light p-3">
+                <p class="small mb-2"><strong>Assign up to 10 people to this issue</strong></p>
+                <div class="input-group mb-2">
+                    <input enter-submitter="assignee-find-user" type="text" class="form-control" name="search-query">
+                    <div class="input-group-append"><button id="assignee-find-user" class="btn"  treetop-submitter formnovalidate formaction="/ticket/software/find-assignee">Find User</button></div>
+                </div>
+
+                <div id="find-user" class="mb-2">
+                    {{ if .Assignees }}
+                    <div><button treetop-link="/ticket/software/update-assignee" type="button" class="btn" >
+                        <span aria-hidden="true">×</span> Clear assignee(s)
+                    </button></div>
+                    {{ else }}
+                    <input class="hide" required type="text" onkeydown="return false" name="assignees" value="">
+                    {{ end }}
+                    {{ range $index, $user := .Assignees }}
+                    <div class="media p-2">
+                        <div class="rounded-circle bg-secondary p-1 text-center text-white" style="width: 2rem; height: 2rem;"> ? </div>
+                        <div class="media-body ml-3">
+                        <h6 class="my-1">{{ $user }}</h6>
+                        </div>
+                    </div>
+                    {{ end }}
+                </div>
+
+                {{ range $index, $user := .Assignees }}
+                <input type="hidden" name="assignees" value="{{ $user }}">
+                {{ end }}
+            </div>
+        </div>
+    </div>
+</fieldset>

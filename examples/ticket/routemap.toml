@@ -114,11 +114,31 @@ page = "ticket"
             [views.base.blocks.content.blocks.form.blocks]
 
               [[views.base.blocks.content.blocks.form.blocks.notes]]
-                name = "new-software-notes"
+                name = "view-software-notes"
                 default = true
                 handler = "treetop.Noop"
                 template = "examples/ticket/templates/content/notes.html.tmpl"
                 doc = "Show this when software form is loaded"
+
+              [[views.base.blocks.content.blocks.form.blocks.assignee]]
+                name = "view-software-assignee"
+                default = true
+                fragment = true
+                path = "/ticket/software/update-assignee"
+                handler = "handlers.SoftwareAssigneeHandler"
+                template = "examples/ticket/templates/content/form/assignee.html.tmpl"
+                doc = "Select multiple users as assignees"
+                [views.base.blocks.content.blocks.form.blocks.assignee.blocks]
+
+                  [[views.base.blocks.content.blocks.form.blocks.assignee.blocks.find-user]]
+                    name = "find-software-assignee"
+                    fragment = true
+                    default = true
+                    path = "/ticket/software/find-assignee"
+                    handler = "handlers.GetFindUserHandler(\"add-assignee\", \"/ticket/software/update-assignee\")"
+                    template = "examples/ticket/templates/content/controls/findUser.html.tmpl"
+                    method = "GET"
+                    doc = "query string to find a user to select"
 
               [[views.base.blocks.content.blocks.form.blocks.attachment-list]]
                 name = "software-attachment-file-list"

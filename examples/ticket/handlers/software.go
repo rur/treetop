@@ -22,6 +22,7 @@ func NewSoftwareTicketHandler(rsp treetop.Response, req *http.Request) interface
 		AttachmentList interface{}
 		FormMessage    interface{}
 		Notes          interface{}
+		Assignee       interface{}
 		Description    string
 		IssueType      string
 	}{
@@ -30,6 +31,7 @@ func NewSoftwareTicketHandler(rsp treetop.Response, req *http.Request) interface
 		Description:    query.Get("description"),
 		IssueType:      query.Get("issue-type"),
 		Notes:          rsp.HandleSubView("notes", req),
+		Assignee:       rsp.HandleSubView("assignee", req),
 	}
 	return data
 }
@@ -101,4 +103,31 @@ func SubmitSoftwareTicketHandler(rsp treetop.Response, req *http.Request) interf
 	treetop.Redirect(rsp, req, previewURL.String(), http.StatusSeeOther)
 	redirected = true
 	return nil
+}
+
+// SoftwareAssigneeHandler (fragment)
+// Extends: reported-by
+// Method: GET
+// Doc: Options for notifying help desk of who reported the issue
+func SoftwareAssigneeHandler(rsp treetop.Response, req *http.Request) interface{} {
+	query := req.URL.Query()
+	data := struct {
+		Assignees []string
+		FindUser  interface{}
+	}{
+		Assignees: query["assignees"],
+	}
+	if len(data.Assignees) >= 10 {
+		return data
+	}
+	if addAssignee := query.Get("add-assignee"); addAssignee != "" {
+		for _, user := range data.Assignees {
+			if addAssignee == user {
+				// already added, return to template here
+				return data
+			}
+		}
+		data.Assignees = append(data.Assignees, addAssignee)
+	}
+	return data
 }

@@ -98,6 +98,20 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 		handlers.NewSoftwareTicketHandler,
 	)
 
+	// content -> form -> assignee
+	viewSoftwareAssignee := newSoftwareTicket.NewDefaultSubView(
+		"assignee",
+		"examples/ticket/templates/content/form/assignee.html.tmpl",
+		handlers.SoftwareAssigneeHandler,
+	)
+
+	// content -> form -> assignee -> find-user
+	findSoftwareAssignee := viewSoftwareAssignee.NewDefaultSubView(
+		"find-user",
+		"examples/ticket/templates/content/controls/findUser.html.tmpl",
+		handlers.GetFindUserHandler("add-assignee", "/ticket/software/update-assignee"),
+	)
+
 	// content -> form -> attachment-list
 	_ = newSoftwareTicket.NewDefaultSubView(
 		"attachment-list",
@@ -148,6 +162,10 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 		exec.NewViewHandler(helpdeskReportedBy).FragmentOnly())
 	m.HandleGET("/ticket/helpdesk/new",
 		exec.NewViewHandler(newHelpdeskTicket))
+	m.HandleGET("/ticket/software/find-assignee",
+		exec.NewViewHandler(findSoftwareAssignee).FragmentOnly())
+	m.HandleGET("/ticket/software/update-assignee",
+		exec.NewViewHandler(viewSoftwareAssignee).FragmentOnly())
 	m.HandlePOST("/ticket/software/upload-attachment",
 		exec.NewViewHandler(uploadedSoftwareFiles).FragmentOnly())
 	m.HandlePOST("/ticket/software/submit",
