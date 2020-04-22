@@ -9,7 +9,7 @@ import (
 // SoftwareTicket is the model for a helpdesk ticket
 type SoftwareTicket struct {
 	Summary     string
-	Assignee    string
+	Assignees   []string
 	IssueType   string
 	Description string
 	Attachments []*FileInfo
@@ -20,7 +20,7 @@ type SoftwareTicket struct {
 func SoftwareTicketFromQuery(query url.Values) *SoftwareTicket {
 	ticket := &SoftwareTicket{
 		Summary:     strings.TrimSpace(query.Get("summary")),
-		Assignee:    query.Get("assignee"),
+		Assignees:   query["assignees"],
 		IssueType:   query.Get("issue-type"),
 		Description: strings.TrimSpace(query.Get("description")),
 	}
@@ -48,6 +48,9 @@ func (t *SoftwareTicket) RawQuery() string {
 	query.Set("department", "software")
 	query.Set("summary", t.Summary)
 	query.Set("issue-type", t.IssueType)
+	for _, assignee := range t.Assignees {
+		query.Add("assignees", assignee)
+	}
 	query.Set("description", t.Description)
 	for _, att := range t.Attachments {
 		enc, err := att.MarshalBase64()

@@ -88,13 +88,6 @@ func SubmitSoftwareTicketHandler(rsp treetop.Response, req *http.Request) interf
 		return data
 	}
 
-	if true {
-		data.Level = formMessageWarning
-		data.Title = "Not Implemented"
-		data.Message = "Software form has not yet been implemented!"
-		return data
-	}
-
 	// ticket is valid redirect to preview endpoint
 	previewURL := url.URL{
 		Path:     "/ticket/software/preview",
@@ -174,5 +167,25 @@ func SoftwareFindAssigneeHandler(rsp treetop.Response, req *http.Request) interf
 		})
 	}
 
+	return data
+}
+
+// PreviewSoftwareTicketHandler (partial)
+// Extends: content
+// Method: GET
+// Doc: Show preview of software ticket, no database so take details form query params
+func PreviewSoftwareTicketHandler(rsp treetop.Response, req *http.Request) interface{} {
+	data := struct {
+		EditLink string
+		Ticket   *inputs.SoftwareTicket
+	}{
+		// generally this would be loaded from a database but for the demo
+		// we are only previewing from URL parameters
+		Ticket: inputs.SoftwareTicketFromQuery(req.URL.Query()),
+	}
+	formURL := url.URL{}
+	formURL.Path = "/ticket/software/new"
+	formURL.RawQuery = req.URL.Query().Encode()
+	data.EditLink = formURL.String()
 	return data
 }

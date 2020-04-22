@@ -24,6 +24,14 @@ page = "ticket"
             template = "examples/ticket/templates/content/notes.html.tmpl"
 
           [[views.base.blocks.content.blocks.preview]]
+            name = "preview-software-ticket"
+            path = "/ticket/software/preview"
+            handler = "handlers.PreviewSoftwareTicketHandler"
+            template = "examples/ticket/templates/content/previewSoftwareTicket.html.tmpl"
+            method = "GET"
+            doc = "Show preview of help desk ticket, no database so take details form query params"
+
+          [[views.base.blocks.content.blocks.preview]]
             name = "preview-helpdesk-ticket"
             path = "/ticket/helpdesk/preview"
             handler = "handlers.PreviewHelpdeskTicketHandler"
@@ -49,13 +57,6 @@ page = "ticket"
             method = "GET"
             doc = "Form designed for creating helpdesk tickets"
             [views.base.blocks.content.blocks.form.blocks]
-
-              [[views.base.blocks.content.blocks.form.blocks.notes]]
-                name = "new-helpdesk-notes"
-                default = true
-                handler = "treetop.Noop"
-                template = "examples/ticket/templates/content/notes.html.tmpl"
-                doc = "Show this when helpdesk form is loaded"
 
               [[views.base.blocks.content.blocks.form.blocks.attachment-list]]
                 name = "helpdesk-attachment-file-list"
@@ -83,6 +84,13 @@ page = "ticket"
                 method = "POST"
                 doc = "process creation of a new help desk ticket"
 
+              [[views.base.blocks.content.blocks.form.blocks.notes]]
+                name = "new-helpdesk-notes"
+                default = true
+                handler = "treetop.Noop"
+                template = "examples/ticket/templates/content/notes.html.tmpl"
+                doc = "Show this when helpdesk form is loaded"
+
               [[views.base.blocks.content.blocks.form.blocks.reported-by]]
                 name = "helpdesk-reported-by"
                 fragment = true
@@ -99,7 +107,7 @@ page = "ticket"
                     fragment = true
                     default = true
                     path = "/ticket/helpdesk/find-reported-by"
-                    handler =  "handlers.FindReportedByUserHandler"
+                    handler = "handlers.FindReportedByUserHandler"
                     template = "examples/ticket/templates/content/form/reportedBy/findReportedByUser.html.tmpl"
                     method = "GET"
                     doc = "query string to find a user to select"
@@ -113,17 +121,10 @@ page = "ticket"
             doc = "Form designed for creating software tickets"
             [views.base.blocks.content.blocks.form.blocks]
 
-              [[views.base.blocks.content.blocks.form.blocks.notes]]
-                name = "view-software-notes"
-                default = true
-                handler = "treetop.Noop"
-                template = "examples/ticket/templates/content/notes.html.tmpl"
-                doc = "Show this when software form is loaded"
-
               [[views.base.blocks.content.blocks.form.blocks.assignee]]
                 name = "view-software-assignee"
-                default = true
                 fragment = true
+                default = true
                 path = "/ticket/software/update-assignee"
                 handler = "handlers.SoftwareAssigneeHandler"
                 template = "examples/ticket/templates/content/form/assignee/assignee-input.html.tmpl"
@@ -165,6 +166,13 @@ page = "ticket"
                 template = "examples/ticket/templates/content/form/formMessage/submitSoftwareTicket.html.tmpl"
                 method = "POST"
                 doc = "process creation of a new software ticket"
+
+              [[views.base.blocks.content.blocks.form.blocks.notes]]
+                name = "view-software-notes"
+                default = true
+                handler = "treetop.Noop"
+                template = "examples/ticket/templates/content/notes.html.tmpl"
+                doc = "Show this when software form is loaded"
 
           [[views.base.blocks.content.blocks.form]]
             name = "new-systems-ticket"
