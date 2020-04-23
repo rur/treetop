@@ -181,6 +181,40 @@ page = "ticket"
             template = "examples/ticket/templates/content/form/newSystemsTicket.html.tmpl"
             method = "GET"
             doc = "Form designed for creating systems tickets"
+            [views.base.blocks.content.blocks.form.blocks]
+
+              [[views.base.blocks.content.blocks.form.blocks.attachment-list]]
+                name = "systems-attachment-file-list"
+                fragment = true
+                default = true
+                handler = "handlers.AttachmentFileListHandler"
+                template = "examples/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl"
+                doc = "Default systems attachment file list template handler, parse file info from query string"
+
+              [[views.base.blocks.content.blocks.form.blocks.attachment-list]]
+                name = "uploaded-systems-files"
+                fragment = true
+                path = "/ticket/systems/upload-attachment"
+                handler = "handlers.UploadedFilesHandler"
+                template = "examples/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl"
+                method = "POST"
+                doc = "Load a list of uploaded files, save to storage and return metadata to the form"
+
+              [[views.base.blocks.content.blocks.form.blocks.form-message]]
+                name = "submit-systems-ticket"
+                fragment = true
+                path = "/ticket/systems/submit"
+                handler = "handlers.SubmitSystemsTicketHandler"
+                template = "examples/ticket/templates/content/form/formMessage/submitSystemsTicket.html.tmpl"
+                method = "POST"
+                doc = "process creation of a new systems ticket"
+
+              [[views.base.blocks.content.blocks.form.blocks.notes]]
+                name = "view-systems-notes"
+                default = true
+                handler = "treetop.Noop"
+                template = "examples/ticket/templates/content/notes.html.tmpl"
+                doc = "Show this when systems form is loaded"
 
       [[views.base.blocks.nav]]
         name = "demo-nav"

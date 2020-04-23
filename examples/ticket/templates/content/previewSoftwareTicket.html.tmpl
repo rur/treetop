@@ -20,14 +20,19 @@
 					Assignee{{ if gt (len .Ticket.Assignees) 1 }}(s){{ end }}:
 					</div>
 					<div class="col">
-						{{ range $index, $assignee := .Ticket.Assignees }}
-						<div class="media mb-2">
-							<div class="rounded-circle bg-secondary p-2 text-center text-white" style="width: 2.5rem; height: 2.5rem;"> ? </div>
-							<div class="media-body ml-3">
-							<h6 class="mb-1 mt-0">{{ $assignee }}</h6>
-							</div>
-						</div>
-						{{ end }}
+						<ul class="list-group list-group-flush">
+							{{ range $index, $assignee := .Ticket.Assignees }}
+							<li class="list-group-item bg-transparent">
+								<div class="media">
+									<div class="rounded-circle bg-secondary p-2 text-center text-white" style="width: 2.5rem; height: 2.5rem;"> ? </div>
+									<div class="media-body ml-3">
+									<h6 class="mb-1 mt-0">{{ $assignee }}</h6>
+									<p class="mb-0 small text-muted">Software Developer</p>
+									</div>
+								</div>
+							</li>
+							{{ end }}
+						</ul>
 					</div>
 				</div>
 			</div>

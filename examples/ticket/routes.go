@@ -148,6 +148,32 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 		handlers.NewSystemsTicketHandler,
 	)
 
+	// content -> form -> attachment-list
+	_ = newSystemsTicket.NewDefaultSubView(
+		"attachment-list",
+		"examples/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl",
+		handlers.AttachmentFileListHandler,
+	)
+	uploadedSystemsFiles := newSystemsTicket.NewSubView(
+		"attachment-list",
+		"examples/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl",
+		handlers.UploadedFilesHandler,
+	)
+
+	// content -> form -> form-message
+	submitSystemsTicket := newSystemsTicket.NewSubView(
+		"form-message",
+		"examples/ticket/templates/content/form/formMessage/submitSystemsTicket.html.tmpl",
+		handlers.SubmitSystemsTicketHandler,
+	)
+
+	// content -> form -> notes
+	_ = newSystemsTicket.NewDefaultSubView(
+		"notes",
+		"examples/ticket/templates/content/notes.html.tmpl",
+		treetop.Noop,
+	)
+
 	// nav
 	_ = baseView.NewDefaultSubView(
 		"nav",
@@ -179,6 +205,10 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 		exec.NewViewHandler(submitSoftwareTicket).FragmentOnly())
 	m.HandleGET("/ticket/software/new",
 		exec.NewViewHandler(newSoftwareTicket))
+	m.HandlePOST("/ticket/systems/upload-attachment",
+		exec.NewViewHandler(uploadedSystemsFiles).FragmentOnly())
+	m.HandlePOST("/ticket/systems/submit",
+		exec.NewViewHandler(submitSystemsTicket).FragmentOnly())
 	m.HandleGET("/ticket/systems/new",
 		exec.NewViewHandler(newSystemsTicket))
 	m.HandleGET("/ticket",
