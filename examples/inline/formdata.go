@@ -81,7 +81,7 @@ func (fd *FormData) UnmarshalBase64(in []byte) error {
 var defaultFormData = FormData{
 	FirstName: "Theodore H.",
 	LastName:  "Fakeman",
-	Email:     "theodore.h.fake@example.com",
+	Email:     "test@example.com",
 	Country:   "United States",
 	Description: `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed ` +
 		`do eiusmod tempor incididunt ut labore et dolore magna aliqua.` + "\n\n" +

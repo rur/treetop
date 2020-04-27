@@ -200,6 +200,24 @@ page = "ticket"
                 method = "POST"
                 doc = "Load a list of uploaded files, save to storage and return metadata to the form"
 
+              [[views.base.blocks.content.blocks.form.blocks.component-tags]]
+                name = "systems-component-tags-input-group"
+                fragment = true
+                default = true
+                path = "/ticket/systems/update-tags"
+                handler = "handlers.SystemsComponentTagsInputGroupHandler"
+                template = "examples/ticket/templates/content/form/componentTags/systemsComponentTagsInputGroup.html.tmpl"
+                doc = "Load form input group for the component tags selector"
+                [views.base.blocks.content.blocks.form.blocks.component-tags.blocks]
+
+                  [[views.base.blocks.content.blocks.form.blocks.component-tags.blocks.tag-search]]
+                    name = "systems-component-tag-search"
+                    fragment = true
+                    path = "/ticket/systems/find-tag"
+                    handler = "handlers.SystemsComponentTagSearchHandler"
+                    template = "examples/ticket/templates/content/form/componentTags/systemsComponentTagSearch.html.tmpl"
+                    doc = "fuzzy match query to available systems component tags"
+
               [[views.base.blocks.content.blocks.form.blocks.form-message]]
                 name = "submit-systems-ticket"
                 fragment = true

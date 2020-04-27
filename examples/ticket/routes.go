@@ -160,6 +160,20 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 		handlers.UploadedFilesHandler,
 	)
 
+	// content -> form -> component-tags
+	systemsComponentTagsInputGroup := newSystemsTicket.NewDefaultSubView(
+		"component-tags",
+		"examples/ticket/templates/content/form/componentTags/systemsComponentTagsInputGroup.html.tmpl",
+		handlers.SystemsComponentTagsInputGroupHandler,
+	)
+
+	// content -> form -> component-tags -> tag-search
+	systemsComponentTagSearch := systemsComponentTagsInputGroup.NewSubView(
+		"tag-search",
+		"examples/ticket/templates/content/form/componentTags/systemsComponentTagSearch.html.tmpl",
+		handlers.SystemsComponentTagSearchHandler,
+	)
+
 	// content -> form -> form-message
 	submitSystemsTicket := newSystemsTicket.NewSubView(
 		"form-message",
@@ -207,6 +221,10 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 		exec.NewViewHandler(newSoftwareTicket))
 	m.HandlePOST("/ticket/systems/upload-attachment",
 		exec.NewViewHandler(uploadedSystemsFiles).FragmentOnly())
+	m.HandleGET("/ticket/systems/find-tag",
+		exec.NewViewHandler(systemsComponentTagSearch).FragmentOnly())
+	m.HandleGET("/ticket/systems/update-tags",
+		exec.NewViewHandler(systemsComponentTagsInputGroup).FragmentOnly())
 	m.HandlePOST("/ticket/systems/submit",
 		exec.NewViewHandler(submitSystemsTicket).FragmentOnly())
 	m.HandleGET("/ticket/systems/new",

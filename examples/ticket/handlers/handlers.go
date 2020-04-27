@@ -62,6 +62,11 @@ func FormDepartmentRedirectHandler(w http.ResponseWriter, req *http.Request) {
 
 	case "systems":
 		redirect = mustParseURL("/ticket/systems/new")
+		if len(query["tags"]) == 0 {
+			// just for the demo, make sure systems form has at least one tag
+			query.Add("tags", "Example Tag 1")
+			query.Add("tags", "Example Tag 2")
+		}
 
 	default:
 		query.Del("department")

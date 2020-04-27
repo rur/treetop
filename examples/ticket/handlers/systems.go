@@ -20,10 +20,12 @@ func NewSystemsTicketHandler(rsp treetop.Response, req *http.Request) interface{
 	query := req.URL.Query()
 	data := struct {
 		AttachmentList interface{}
+		ComponentTags  interface{}
 		FormMessage    interface{}
 		Notes          interface{}
 		Description    string
 	}{
+		ComponentTags:  rsp.HandleSubView("component-tags", req),
 		AttachmentList: rsp.HandleSubView("attachment-list", req),
 		FormMessage:    rsp.HandleSubView("form-message", req),
 		Description:    query.Get("description"),
@@ -117,5 +119,64 @@ func PreviewSystemsTicketHandler(rsp treetop.Response, req *http.Request) interf
 	formURL.Path = "/ticket/systems/new"
 	formURL.RawQuery = req.URL.Query().Encode()
 	data.EditLink = formURL.String()
+	return data
+}
+
+// SystemsComponentTagsInputGroup (fragment)
+// Extends: componentTags
+// Method: GET
+// Doc: Load form input group for the component tags selector
+func SystemsComponentTagsInputGroupHandler(rsp treetop.Response, req *http.Request) interface{} {
+	query := req.URL.Query()
+	data := struct {
+		Tags      []string
+		TagSearch interface{}
+		AutoFocus bool
+	}{
+		TagSearch: rsp.HandleSubView("tag-search", req),
+		Tags:      query["tags"],
+	}
+
+	if add := query.Get("add-tag"); add != "" {
+		data.AutoFocus = true
+		for _, t := range data.Tags {
+			if t == add {
+				goto Next
+			}
+		}
+		data.Tags = append(data.Tags, add)
+	}
+Next:
+
+	return data
+}
+
+// SystemsComponentTagSearch (fragment)
+// Extends: tagSearch
+// Method: GET
+// Doc: fuzzy match query to available systems component tags
+func SystemsComponentTagSearchHandler(rsp treetop.Response, req *http.Request) interface{} {
+	query := req.URL.Query()
+	existingTags := make(map[string]struct{})
+	for _, t := range query["tags"] {
+		existingTags[t] = struct{}{}
+	}
+	data := struct {
+		Query   string
+		Results []string
+	}{
+		Query: query.Get("tag-query"),
+	}
+	placeHolder := []string{
+		"Example Tag A",
+		"Example Tag B",
+		"Example Tag C",
+		"Example Tag D",
+	}
+	for _, p := range placeHolder {
+		if _, ok := existingTags[p]; !ok {
+			data.Results = append(data.Results, p)
+		}
+	}
 	return data
 }

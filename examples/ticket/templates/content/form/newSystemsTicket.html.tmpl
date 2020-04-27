@@ -1,43 +1,6 @@
 <div id="form" class="mb-5">
 
-	<div class="form-group row">
-		<label for="tags-input" class="col-sm-3 col-form-label">Components/Tags</label>
-		<div class="col-sm-9 position-relative">
-			<div class="px-3 py-2 border d-flex flex-wrap rounded" click-on-input="find-tag-submitter">
-				<span remove-me=".remove-tag" class="rounded px-2 py-1 bg-light border border-primary text-primary small mt-1 mb-1 mr-1">desktop 1
-					<a class="remove-tag pointer ml-1" aria-label="Remove tag"><span aria-hidden="true">×</span></a><input type="hidden" name="tags" value="desktop 1"></span>
-				<span remove-me=".remove-tag" class="rounded px-2 py-1 bg-light border border-primary text-primary small mt-1 mb-1 mr-1">desktop 2
-					<a class="remove-tag pointer ml-1" aria-label="Remove tag"><span aria-hidden="true">×</span></a><input type="hidden" name="tags" value="desktop 2"></span>
-				<span remove-me=".remove-tag" class="rounded px-2 py-1 bg-light border border-primary text-primary small mt-1 mb-1 mr-1">desktop 3
-					<a class="remove-tag pointer ml-1" aria-label="Remove tag"><span aria-hidden="true">×</span></a><input type="hidden" name="tags" value="desktop 3"></span>
-				<span remove-me=".remove-tag" class="rounded px-2 py-1 bg-light border border-primary text-primary small mt-1 mb-1 mr-1">desktop 4
-					<a class="remove-tag pointer ml-1" aria-label="Remove tag"><span aria-hidden="true">×</span></a><input type="hidden" name="tags" value="desktop 4"></span>
-				<span remove-me=".remove-tag" class="rounded px-2 py-1 bg-light border border-primary text-primary small mt-1 mb-1 mr-1">desktop 5
-					<a class="remove-tag pointer ml-1" aria-label="Remove tag"><span aria-hidden="true">×</span></a><input type="hidden" name="tags" value="desktop 5"></span>
-				<span remove-me=".remove-tag" class="rounded px-2 py-1 bg-light border border-primary text-primary small mt-1 mb-1 mr-1">desktop 6
-					<a class="remove-tag pointer ml-1" aria-label="Remove tag"><span aria-hidden="true">×</span></a><input type="hidden" name="tags" value="desktop 6"></span>
-				<template id="tag-insertion" treetop-merge="insert-before-me"></template>
-				<input style="flex: auto" type="search" name="tag-query" class="border border-white px-1 my-1" placeholder="find a tag">
-				<button class="d-none" id="find-tag-submitter" treetop-submitter formnovalidate formmethod="GET" formaction="/ticket/systems/find-tag"></button>
-			</div>
-			<div id="tag-search">
-				<div style="position: absolute;top: 100%;z-index: 100;left: 2.5rem;right: 2.5rem;display: block;margin-top: -7px;" dismiss-me>
-					<div class="card shadow bg-light">
-						<div class="card-body">
-							<p class="text-muted mb-2 font-italic">Select a user:</p>
-							<div class="list-group">
-								<button type="button" treetop-submitter="" formaction="/ticket/software/update-assignee" name="add-assignee" value="Example User D" formnovalidate="" class="list-group-item list-group-item-action">Example User D</button>
-								<button type="button" treetop-submitter="" formaction="/ticket/software/update-assignee" name="add-assignee" value="Example User E" formnovalidate="" class="list-group-item list-group-item-action">Example User E</button>
-								<button type="button" treetop-submitter="" formaction="/ticket/software/update-assignee" name="add-assignee" value="Example User F" formnovalidate="" class="list-group-item list-group-item-action">Example User F</button>
-								<button type="button" treetop-submitter="" formaction="/ticket/software/update-assignee" name="add-assignee" value="Example User G" formnovalidate="" class="list-group-item list-group-item-action">Example User G</button>
-								<button type="button" treetop-submitter="" formaction="/ticket/software/update-assignee" name="add-assignee" value="Example User H" formnovalidate="" class="list-group-item list-group-item-action">Example User H</button>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+	{{ template "component-tags" .ComponentTags }}
 
 	<div class="form-group row">
 		<label for="description-textarea" class="col-sm-3 col-form-label">Description</label>

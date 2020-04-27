@@ -98,6 +98,10 @@
 						return
 					}
 					el.addEventListener("change", function (evt) {
+						if (evt.target.type == "file" && evt.target.files.length === 0) {
+							// ignore change event on file input where no files are selected
+							return
+						}
 						const clickElem = document.getElementById(clickID)
 						if (clickElem instanceof HTMLElement) {
 							clickElem.click()
@@ -129,9 +133,9 @@
 							clearTimeout(timeout)
 							timeout = null
 						}
-						// Debounce; wait for a 500 ms pause between input events
+						// Debounce; wait for a 300 ms pause between input events
 						// before triggering the click
-						timeout = setTimeout(clickIt, 500)
+						timeout = setTimeout(clickIt, 300)
 					})
 				},
 
