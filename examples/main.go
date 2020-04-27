@@ -42,18 +42,41 @@ func infoSetup(mux *http.ServeMux) {
 	exec := &treetop.DeveloperExecutor{
 		ViewExecutor: &treetop.FileExecutor{
 			KeyedString: map[string]string{
-				"local://base.html": assets.BaseHTML,
-				"local://nav.html":  assets.NavHTML(assets.IntroNav),
+				"local://base.html":     assets.BaseHTML,
+				"local://nav-home.html": assets.NavHTML(assets.IntroNav),
+				"local://nav.html":      assets.NavHTML(assets.NoPage),
+				"local://notfound.html": `
+				<div class="text-center">
+					<hr class="mb-3">
+					<h3>404 Not Found</h3>
+					<p>No page was found for this path.</p>
+					<p>You can file a (real) issue here <a href="https://github.com/rur/treetop/issues">treetop/issues</a></p>
+				</div>
+				`,
 			},
 		},
 	}
 
-	home := treetop.
-		NewView("local://base.html", treetop.Noop).
-		NewSubView("content", "examples/intro.html", treetop.Noop)
-	home.NewDefaultSubView("nav", "local://nav.html", treetop.Noop)
+	base := treetop.
+		NewView("local://base.html", treetop.Noop)
+	base.NewDefaultSubView("nav", "local://nav.html", treetop.Noop)
 
-	mux.Handle("/", exec.NewViewHandler(home).PageOnly())
+	home := base.NewSubView("content", "examples/intro.html", treetop.Noop)
+	navHome := base.NewSubView("nav", "local://nav-home.html", treetop.Noop)
+
+	homeHandler := exec.NewViewHandler(home, navHome).PageOnly()
+	notFoundHandler := exec.NewViewHandler(
+		base.NewSubView("content", "local://notfound.html", treetop.Noop)).
+		PageOnly()
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+		switch req.URL.Path {
+		case "/", "":
+			homeHandler.ServeHTTP(w, req)
+		default:
+			notFoundHandler.ServeHTTP(w, req)
+		}
+	})
 
 	if errs := exec.FlushErrors(); len(errs) > 0 {
 		log.Fatalf("Error(s) loading example templates:\n%s", errs)
