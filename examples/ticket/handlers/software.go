@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/rur/treetop"
 	"github.com/rur/treetop/examples/ticket/inputs"
@@ -105,27 +106,43 @@ func SubmitSoftwareTicketHandler(rsp treetop.Response, req *http.Request) interf
 func SoftwareAssigneeHandler(rsp treetop.Response, req *http.Request) interface{} {
 	query := req.URL.Query()
 	data := struct {
-		Assignees []string
-		FindUser  interface{}
-	}{
-		Assignees: query["assignees"],
+		Assignees []inputs.Assignee
+		AutoFocus bool
+	}{}
+	roles := query["assignee-role"]
+	var offset int
+	for _, a := range query["assignees"] {
+		if a = strings.TrimSpace(a); a != "" {
+			assignee := inputs.Assignee{
+				Name: a,
+			}
+			if offset < len(roles) {
+				assignee.Role = roles[offset]
+				offset++
+			}
+			data.Assignees = append(data.Assignees, assignee)
+		}
 	}
 	if len(data.Assignees) >= 10 {
 		return data
 	}
 	if addAssignee := query.Get("add-assignee"); addAssignee != "" {
+		data.AutoFocus = true
 		for _, user := range data.Assignees {
-			if addAssignee == user {
+			if addAssignee == user.Name {
 				// already added, nothing to add
 				goto CheckRemove
 			}
 		}
-		data.Assignees = append(data.Assignees, addAssignee)
+		data.Assignees = append(data.Assignees, inputs.Assignee{
+			Name: addAssignee,
+		})
 	}
 CheckRemove:
 	if removeAssignee := query.Get("remove-assignee"); removeAssignee != "" {
+		data.AutoFocus = true
 		for i, user := range data.Assignees {
-			if removeAssignee == user {
+			if removeAssignee == user.Name {
 				data.Assignees = append(data.Assignees[0:i], data.Assignees[i+1:]...)
 				// no need to keep looking
 				break
@@ -156,7 +173,9 @@ func SoftwareFindAssigneeHandler(rsp treetop.Response, req *http.Request) interf
 
 	selected := make(map[string]struct{})
 	for _, user := range query["assignees"] {
-		selected[user] = struct{}{}
+		if user = strings.TrimSpace(user); user != "" {
+			selected[user] = struct{}{}
+		}
 	}
 
 	for _, result := range inputs.SearchForUser(data.QueryString) {

@@ -9,10 +9,15 @@ import (
 // SoftwareTicket is the model for a helpdesk ticket
 type SoftwareTicket struct {
 	Summary     string
-	Assignees   []string
+	Assignees   []Assignee
 	IssueType   string
 	Description string
 	Attachments []*FileInfo
+}
+
+type Assignee struct {
+	Name string
+	Role string
 }
 
 // SoftwareTicketFromQuery descodes a help desk ticket model from url query parameters
@@ -20,9 +25,24 @@ type SoftwareTicket struct {
 func SoftwareTicketFromQuery(query url.Values) *SoftwareTicket {
 	ticket := &SoftwareTicket{
 		Summary:     strings.TrimSpace(query.Get("summary")),
-		Assignees:   query["assignees"],
 		IssueType:   query.Get("issue-type"),
 		Description: strings.TrimSpace(query.Get("description")),
+	}
+
+	var offset int
+	roles := query["assignee-role"]
+	for _, name := range query["assignees"] {
+		name = strings.TrimSpace(name)
+		assignee := Assignee{
+			Name: name,
+		}
+		if name != "" {
+			if offset < len(roles) {
+				assignee.Role = roles[offset]
+				offset++
+			}
+			ticket.Assignees = append(ticket.Assignees, assignee)
+		}
 	}
 
 	switch ticket.IssueType {
@@ -49,7 +69,8 @@ func (t *SoftwareTicket) RawQuery() string {
 	query.Set("summary", t.Summary)
 	query.Set("issue-type", t.IssueType)
 	for _, assignee := range t.Assignees {
-		query.Add("assignees", assignee)
+		query.Add("assignees", assignee.Name)
+		query.Add("assignee-role", assignee.Role)
 	}
 	query.Set("description", t.Description)
 	for _, att := range t.Attachments {
