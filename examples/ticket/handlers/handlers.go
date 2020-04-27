@@ -31,17 +31,21 @@ func TicketHandler(rsp treetop.Response, req *http.Request) interface{} {
 	}{
 		Summary: strings.TrimSpace(wsRegex.ReplaceAllString(query.Get("summary"), " ")),
 		Form:    rsp.HandleSubView("form", req),
+		Dept:    query.Get("department"),
 	}
 	// validate department and redirect if necessary
-	switch d := query.Get("department"); d {
-	case "helpdesk", "software", "systems":
-		// form redirect handler
-		data.Dept = d
-	}
-	if (data.Dept == "" && req.URL.Path != "/ticket") || (data.Dept != "" && req.URL.Path == "/ticket") {
-		// url does not match the department value, redirect
-		FormDepartmentRedirectHandler(rsp, req)
-		return nil
+	switch req.URL.Path {
+	case "/ticket/helpdesk/new":
+		data.Dept = "helpdesk"
+
+	case "/ticket/software/new":
+		data.Dept = "software"
+
+	case "/ticket/systems/new":
+		data.Dept = "software"
+
+	case "/ticket":
+		data.Dept = ""
 	}
 	return data
 }
