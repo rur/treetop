@@ -13,7 +13,7 @@ var viewDebug string
 
 // Setup will construct a view hierarchy for this form and bind
 // handlers to the supplied HTTP request router.
-func Setup(mux *http.ServeMux) {
+func Setup(mux *http.ServeMux, devMode bool) {
 	srv := newCookieServer()
 
 	base := treetop.NewView("local://base.html", treetop.Delegate("content"))
@@ -42,13 +42,17 @@ func Setup(mux *http.ServeMux) {
 		"examples/inline/templates/textarea.html.tmpl",
 		srv.bind(getFormFieldHandler("description")))
 
-	exec := &treetop.DeveloperExecutor{
-		ViewExecutor: &treetop.FileExecutor{
-			KeyedString: map[string]string{
-				"local://base.html": assets.BaseHTML,
-				"local://nav.html":  assets.NavHTML(assets.InlineNav),
-			},
+	var exec treetop.ViewExecutor = &treetop.FileExecutor{
+		KeyedString: map[string]string{
+			"local://base.html": assets.BaseHTML,
+			"local://nav.html":  assets.NavHTML(assets.InlineNav),
 		},
+	}
+	if devMode {
+		// Use developer executor to permit template file editing
+		exec = &treetop.DeveloperExecutor{
+			ViewExecutor: exec,
+		}
 	}
 
 	mux.Handle("/inline", exec.NewViewHandler(content))

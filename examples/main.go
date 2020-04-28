@@ -5,14 +5,19 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"regexp"
 
 	"github.com/rur/treetop"
+
+	"os"
 
 	"github.com/rur/treetop/examples/assets"
 	"github.com/rur/treetop/examples/greeter"
 	"github.com/rur/treetop/examples/inline"
 	"github.com/rur/treetop/examples/ticket"
 )
+
+var portReg = regexp.MustCompile(`^\d+$`)
 
 func main() {
 	mux := http.NewServeMux()
@@ -25,27 +30,38 @@ func main() {
 		io.WriteString(w, assets.TreetopJS)
 	})
 
+	devMode := true
+	port := "3000"
+	for i, arg := range os.Args[1:] {
+		if arg == "--prod" {
+			devMode = false
+		} else if portReg.MatchString(arg) {
+			port = arg
+		} else {
+			log.Fatalf("Invalid argument [%d] '%s'", i, arg)
+		}
+	}
+
 	// Register routes for example apps
-	greeter.Setup(mux)
-	inline.Setup(mux)
-	ticket.Setup(mux)
+	greeter.Setup(mux, devMode)
+	inline.Setup(mux, devMode)
+	ticket.Setup(mux, devMode)
 
-	infoSetup(mux)
+	infoSetup(mux, devMode)
 
-	fmt.Println("serving on http://0.0.0.0:3000/")
-	log.Fatal(http.ListenAndServe(":3000", mux))
+	fmt.Printf("serving on http://0.0.0.0:%s/\n", port)
+	log.Fatal(http.ListenAndServe(":"+port, mux))
 }
 
 // infoSetup will create template, handlers and bind to routes for the example landing page
-func infoSetup(mux *http.ServeMux) {
+func infoSetup(mux *http.ServeMux, devMode bool) {
 	// define handler for home page
-	exec := &treetop.DeveloperExecutor{
-		ViewExecutor: &treetop.FileExecutor{
-			KeyedString: map[string]string{
-				"local://base.html":     assets.BaseHTML,
-				"local://nav-home.html": assets.NavHTML(assets.IntroNav),
-				"local://nav.html":      assets.NavHTML(assets.NoPage),
-				"local://notfound.html": `
+	var exec treetop.ViewExecutor = &treetop.FileExecutor{
+		KeyedString: map[string]string{
+			"local://base.html":     assets.BaseHTML,
+			"local://nav-home.html": assets.NavHTML(assets.IntroNav),
+			"local://nav.html":      assets.NavHTML(assets.NoPage),
+			"local://notfound.html": `
 				<div class="text-center">
 					<hr class="mb-3">
 					<h3>404 Not Found</h3>
@@ -53,8 +69,12 @@ func infoSetup(mux *http.ServeMux) {
 					<p>You can file a (real) issue here <a href="https://github.com/rur/treetop/issues">treetop/issues</a></p>
 				</div>
 				`,
-			},
 		},
+	}
+	if devMode {
+		exec = &treetop.DeveloperExecutor{
+			ViewExecutor: exec,
+		}
 	}
 
 	base := treetop.

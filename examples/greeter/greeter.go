@@ -9,7 +9,7 @@ import (
 )
 
 // Setup register routes for /greeter example endpoint
-func Setup(mux *http.ServeMux) {
+func Setup(mux *http.ServeMux, devMode bool) {
 	// base view
 	page := treetop.NewView("local://base.html", treetop.Delegate("content"))
 	_ = page.NewDefaultSubView("nav", "local://nav.html", treetop.Noop)
@@ -24,16 +24,19 @@ func Setup(mux *http.ServeMux) {
 	notes := content.NewSubView("notes", "examples/greeter/templates/notes.html", notesHandler)
 
 	// Configure template executor with a hybrid of template files and inlined string templates
-	// Use developer executor to permit template file editing
-	exec := &treetop.DeveloperExecutor{
-		ViewExecutor: &treetop.FileExecutor{
-			KeyedString: map[string]string{
-				"local://base.html":       assets.BaseHTML,
-				"local://nav.html":        assets.NavHTML(assets.GreeterNav),
-				"local://landing.html":    `<p id="message"><i>Give me someone to say hello to!</i></p>`,
-				"local://hide-notes.html": `<div id="notes" class="hide"></div>`,
-			},
+	var exec treetop.ViewExecutor = &treetop.FileExecutor{
+		KeyedString: map[string]string{
+			"local://base.html":       assets.BaseHTML,
+			"local://nav.html":        assets.NavHTML(assets.GreeterNav),
+			"local://landing.html":    `<p id="message"><i>Give me someone to say hello to!</i></p>`,
+			"local://hide-notes.html": `<div id="notes" class="hide"></div>`,
 		},
+	}
+	if devMode {
+		// Use developer executor to permit template file editing
+		exec = &treetop.DeveloperExecutor{
+			ViewExecutor: exec,
+		}
 	}
 
 	mux.Handle("/greeter", exec.NewViewHandler(
