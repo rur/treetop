@@ -1,1 +1,1 @@
-web: examples $PORT --prod
+web: bin/examples $PORT --prod
