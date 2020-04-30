@@ -17,7 +17,7 @@ var (
 // ticket Block Handlers
 // -------------------------
 
-// ticketHandler (default partial)
+// TicketHandler (default partial)
 // Extends: content
 // Method: GET
 // Doc: Landing page for ticket wizard
@@ -42,7 +42,7 @@ func TicketHandler(rsp treetop.Response, req *http.Request) interface{} {
 		data.Dept = "software"
 
 	case "/ticket/systems/new":
-		data.Dept = "software"
+		data.Dept = "systems"
 
 	case "/ticket":
 		data.Dept = ""
@@ -50,7 +50,7 @@ func TicketHandler(rsp treetop.Response, req *http.Request) interface{} {
 	return data
 }
 
-// formDepartmentRedirectHandler will issue a redirect to the correct form path based upon the value
+// FormDepartmentRedirectHandler will issue a redirect to the correct form path based upon the value
 // of the department query parameter. If not recognized it directs browser to ticket landing page.
 func FormDepartmentRedirectHandler(w http.ResponseWriter, req *http.Request) {
 	var (
@@ -91,7 +91,7 @@ func mustParseURL(path string) *url.URL {
 	return u
 }
 
-// issuePreview (partial)
+// IssuePreview (partial)
 // Extends: content
 // Method: GET
 // Doc: Content wrapper around preview for different ticket type

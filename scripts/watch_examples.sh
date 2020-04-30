@@ -1,7 +1,8 @@
 #!/bin/sh
 
-# NOTE: To make this work on Mac I installed `brew instal util-linux`
-#       for the process session ID control.
+# NOTE: To make this work on Mac I installed:
+#       `brew instal fswatch` and
+#       `brew instal util-linux` for the process session ID control.
 
 sigint_handler()
 {

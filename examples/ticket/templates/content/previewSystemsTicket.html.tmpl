@@ -1,41 +1,27 @@
 <div id="preview">
 	<div class="card mb-4">
-		<h5 class="card-header">Software Ticket <strong class="badge badge-secondary float-right">SFW_###</strong></h5>
+		<h5 class="card-header">Systems/IT Ticket <strong class="badge badge-secondary float-right">SYS_###</strong></h5>
 		<div class="card-body">
 			<a href="{{ .EditLink }}" class="ml-3 float-right btn btn-sm btn-outline-secondary">Edit</a>
-
 			<div class="media mb-3">
-				{{ if eq .Ticket.IssueType "bug" }}<span class="badge badge-danger mt-2 mr-3">Bug</span>{{ end }}
-				{{ if eq .Ticket.IssueType "enhancement" }}<span class="badge badge-warning mt-2 mr-3">Enhancement</span>{{ end }}
-				{{ if eq .Ticket.IssueType "task" }}<span class="badge badge-primary mt-2 mr-3">Task</span>{{ end }}
-				{{ if eq .Ticket.IssueType "wishlist" }}<span class="badge badge-info mt-2 mr-3">Wishlist</span>{{ end }}
-				<div class="media-body">
-					<h4 class="mb-3">{{ .Ticket.Summary }} </h4>
-				</div>
+				<svg class="mr-2" style="fill: #AAA" viewBox="0 0 14 16" version="1.1" width="1.6rem" height="1.6rem" aria-hidden="true"><path fill-rule="evenodd" d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 011.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path></svg>
+				<h4 class="media-body">
+					{{ .Ticket.Summary }}
+				</h4>
 			</div>
 
+			{{ if .Ticket.Components }}
 			<div class="container border py-3 mb-3 bg-light">
 				<div class="row">
-					<div class="col-sm-3 text-center text-muted mb-3">
-					Assignee{{ if gt (len .Ticket.Assignees) 1 }}(s){{ end }}:
-					</div>
+					<div class="col-sm-3 text-center text-muted">Components:</div>
 					<div class="col">
-						<ul class="list-group list-group-flush">
-							{{ range $index, $assignee := .Ticket.Assignees }}
-							<li class="list-group-item bg-transparent">
-								<div class="media">
-									<div class="rounded-circle bg-secondary p-2 text-center text-white" style="width: 2.5rem; height: 2.5rem;"> ? </div>
-									<div class="media-body ml-3">
-									<h6 class="mb-1 mt-0">{{ $assignee.Name }}</h6>
-									<p class="mb-0 small text-muted">{{ $assignee.Role }}</p>
-									</div>
-								</div>
-							</li>
-							{{ end }}
-						</ul>
+						{{ range $index, $tag := .Ticket.Components -}}
+						<span class="badge badge-primary">{{ $tag }}</span>
+						{{ end }}	
 					</div>
 				</div>
 			</div>
+			{{ end }}
 
 			<h5>Description</h5>
 			{{ if .Ticket.Description }}

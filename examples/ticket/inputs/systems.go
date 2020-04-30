@@ -11,6 +11,7 @@ type SystemsTicket struct {
 	Summary     string
 	Description string
 	Attachments []*FileInfo
+	Components  []string
 }
 
 // SystemsTicketFromQuery descodes a help desk ticket model from url query parameters
@@ -19,6 +20,13 @@ func SystemsTicketFromQuery(query url.Values) *SystemsTicket {
 	ticket := &SystemsTicket{
 		Summary:     strings.TrimSpace(query.Get("summary")),
 		Description: strings.TrimSpace(query.Get("description")),
+	}
+
+	for _, tag := range query["tags"] {
+		tag = strings.TrimSpace(tag)
+		if tag != "" {
+			ticket.Components = append(ticket.Components, tag)
+		}
 	}
 
 	for _, enc := range query["attachment"] {
@@ -32,6 +40,7 @@ func SystemsTicketFromQuery(query url.Values) *SystemsTicket {
 	return ticket
 }
 
+// RawQuery will encode state of systems ticket into a URL encoded query string
 func (t *SystemsTicket) RawQuery() string {
 	query := url.Values{}
 	query.Set("department", "systems")
@@ -45,6 +54,9 @@ func (t *SystemsTicket) RawQuery() string {
 			continue
 		}
 		query["attachment"] = append(query["attachment"], string(enc))
+	}
+	for _, tag := range t.Components {
+		query.Add("tags", tag)
 	}
 	return query.Encode()
 }

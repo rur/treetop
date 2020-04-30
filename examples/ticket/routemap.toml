@@ -29,7 +29,7 @@ page = "ticket"
             handler = "handlers.PreviewSoftwareTicketHandler"
             template = "examples/ticket/templates/content/previewSoftwareTicket.html.tmpl"
             method = "GET"
-            doc = "Show preview of help desk ticket, no database so take details form query params"
+            doc = "Show preview of software ticket, no database so take details form query params"
 
           [[views.base.blocks.content.blocks.preview]]
             name = "preview-helpdesk-ticket"
@@ -38,6 +38,14 @@ page = "ticket"
             template = "examples/ticket/templates/content/previewHelpdeskTicket.html.tmpl"
             method = "GET"
             doc = "Show preview of help desk ticket, no database so take details form query params"
+
+          [[views.base.blocks.content.blocks.preview]]
+            name = "preview-systems-ticket"
+            path = "/ticket/systems/preview"
+            handler = "handlers.PreviewSystemsTicketHandler"
+            template = "examples/ticket/templates/content/previewSystemsTicket.html.tmpl"
+            method = "GET"
+            doc = "Show preview of systems ticket, no database so take details form query params"
 
       [[views.base.blocks.content]]
         name = "ticket-form-content"

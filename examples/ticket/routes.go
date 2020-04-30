@@ -43,6 +43,11 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 		"examples/ticket/templates/content/previewHelpdeskTicket.html.tmpl",
 		handlers.PreviewHelpdeskTicketHandler,
 	)
+	previewSystemsTicket := issuePreview.NewSubView(
+		"preview",
+		"examples/ticket/templates/content/previewSystemsTicket.html.tmpl",
+		handlers.PreviewSystemsTicketHandler,
+	)
 
 	// content
 	ticketFormContent := baseView.NewDefaultSubView(
@@ -199,6 +204,8 @@ func Routes(m Mux, exec treetop.ViewExecutor) {
 		exec.NewViewHandler(previewSoftwareTicket))
 	m.HandleGET("/ticket/helpdesk/preview",
 		exec.NewViewHandler(previewHelpdeskTicket))
+	m.HandleGET("/ticket/systems/preview",
+		exec.NewViewHandler(previewSystemsTicket))
 	m.HandlePOST("/ticket/helpdesk/upload-attachment",
 		exec.NewViewHandler(uploadedHelpdeskFiles).FragmentOnly())
 	m.HandlePOST("/ticket/helpdesk/submit",

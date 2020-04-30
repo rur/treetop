@@ -8,7 +8,7 @@ import (
 	"github.com/rur/treetop/examples/ticket/inputs"
 )
 
-// newSystemsTicket (partial)
+// NewSystemsTicketHandler (partial)
 // Extends: form
 // Method: GET
 // Doc: Form designed for creating systems tickets
@@ -34,7 +34,7 @@ func NewSystemsTicketHandler(rsp treetop.Response, req *http.Request) interface{
 	return data
 }
 
-// SubmitSystemsTicket (partial)
+// SubmitSystemsTicketHandler (partial)
 // Extends: formMessage
 // Method: POST
 // Doc: process creation of a new help desk ticket
@@ -85,13 +85,6 @@ func SubmitSystemsTicketHandler(rsp treetop.Response, req *http.Request) interfa
 		return data
 	}
 
-	if true {
-		data.Level = formMessageWarning
-		data.Title = "Not Implemented"
-		data.Message = "This has not been implemented just yet!"
-		return data
-	}
-
 	// ticket is valid redirect to preview endpoint
 	previewURL := url.URL{
 		Path:     "/ticket/systems/preview",
@@ -122,7 +115,7 @@ func PreviewSystemsTicketHandler(rsp treetop.Response, req *http.Request) interf
 	return data
 }
 
-// SystemsComponentTagsInputGroup (fragment)
+// SystemsComponentTagsInputGroupHandler (fragment)
 // Extends: componentTags
 // Method: GET
 // Doc: Load form input group for the component tags selector
@@ -151,7 +144,7 @@ Next:
 	return data
 }
 
-// SystemsComponentTagSearch (fragment)
+// SystemsComponentTagSearchHandler (fragment)
 // Extends: tagSearch
 // Method: GET
 // Doc: fuzzy match query to available systems component tags
