@@ -6,9 +6,8 @@
 
 HTML web applications share a lot of structure between endpoints. The Go
 [html/template](https://golang.org/pkg/html/template/) library has support for nested templates<sup>1</sup>.
-This is a powerful tool that web applications can use to reduce boilerplate. The Treetop library allows
-a handlers to be paired with nested templates so that HTTP endpoints can be constructed for
-different page configurations.
+This is a powerful tool that web applications can use to reduce boilerplate. The Treetop library matches a
+handler with each nested template so that HTTP endpoints can be constructed for different page configurations.
 
 
 #### Template Hierarchy
