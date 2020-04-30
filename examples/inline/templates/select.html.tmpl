@@ -1,0 +1,38 @@
+<div id="form-{{ .Field }}">
+    <label for="{{ .Field }}"><span class="text-uppercase">{{ .Title }}</span>
+         {{- if .Editing }} <i>(editing)</i>
+        {{- else -}}
+        <a treetop-link="/inline/{{ .Field }}?edit=true"
+           class="font-italic pointer p-0 text-secondary ml-2">[edit]</a>
+        {{- end }}</label>
+
+    {{ if .Editing }}
+    {{/* Editing Form */}}
+    <form treetop action="/inline/{{ .Field }}" method="POST">
+        <select autofocus name="{{ .Field}}" class="custom-select d-block w-100 {{ if .ErrorMessage }}is-invalid{{ end }}" id="{{ .Field }}" required>
+            <option value="">Choose...</option>
+            <option value="FAIL">something invalid!</option>
+            {{ range $index, $option := .Options }}
+            <option {{ if eq $.Value $option }} selected{{ end }} value="{{ $option }}">{{ $option }}</option>
+            {{ end }}
+        </select>
+
+        {{ if .ErrorMessage }}
+        <div class="invalid-feedback">{{ .ErrorMessage }}</div>
+        {{ end }}
+
+        <div class="my-2 text-right">
+            <button type="button" treetop-link="/inline/{{ .Field }}?edit=false" class="btn">Cancel</button>
+            <button class="btn btn-primary">Save</button>
+        </div>
+    </form>
+
+    {{ else }}
+    {{/* Display Mode */}}
+    <div class="mb-5">
+        <h5>{{ .Value }}</h5>
+    </div>
+
+    {{ end }}
+
+</div>

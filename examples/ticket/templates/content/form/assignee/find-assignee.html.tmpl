@@ -1,0 +1,26 @@
+{{ if .QueryString }}
+<div id="find-user">
+	<div style="position: absolute;top: 100%;z-index: 100;left: 0;right: 0;display: block;margin-top: 7px;" dismiss-me>
+		<div class="card shadow bg-light">
+			<div class="card-body">
+				{{ if .Results }}
+				<p class="text-muted mb-2 font-italic small">Users matching query '{{ .QueryString }}':</p>
+				<div class="list-group">
+					{{ range $index, $result := .Results }}
+					{{ if $result.Selected }}
+					<button type="button" treetop-submitter formaction="/ticket/software/update-assignee" name="remove-assignee" value="{{ $result.Name }}" formnovalidate class="list-group-item list-group-item-action text-danger">{{ $result.Name }} <span class="float-right" aria-hidden="true">× remove</span></button>
+					{{ else }}
+					<button type="button" treetop-submitter formaction="/ticket/software/update-assignee" name="add-assignee" value="{{ $result.Name }}" formnovalidate class="list-group-item list-group-item-action">{{ $result.Name }}</button>
+					{{ end }}
+					{{ end }}
+				</div>
+				{{ else }}
+				<div class="text-muted font-italic">No users found for query '{{ .QueryString }}'</div>
+				{{ end }}
+			</div>
+		</div>
+	</div>
+</div>
+{{ else }}
+<div id="find-user" class="d-none"></div>
+{{ end }}

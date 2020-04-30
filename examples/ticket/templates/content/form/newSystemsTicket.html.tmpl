@@ -1,0 +1,38 @@
+<div id="form" class="mb-5">
+
+	{{ template "component-tags" .ComponentTags }}
+
+	<div class="form-group row">
+		<label for="description-textarea" class="col-sm-3 col-form-label">Description</label>
+		<div class="col-sm-9">
+			<textarea name="description" id="description-textarea" cols="30" rows="10" class="form-control">{{ if .Description }}{{ .Description }}{{ else -}}
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.{{end}}</textarea>
+		</div>
+	</div>
+
+	<div class="form-group row">
+		<label class="col-sm-3 col-form-label">Attachments</label>
+		<div class="col-sm-9">
+			<div class="custom-file mb-2" click-on-change="upload-selected-attachment">
+				<input name="file-upload" type="file" class="custom-file-input" id="inputGroupFile02" multiple limit-upload-file-mb="1MB">
+				<label class="custom-file-label" for="inputGroupFile02" aria-describedby="inputGroupFileAddon02">Choose file</label>
+			</div>
+			<button class="d-none" id="upload-selected-attachment" treetop-submitter formnovalidate formmethod="POST" formenctype="multipart/form-data" formaction="/ticket/systems/upload-attachment"></button>
+
+			{{/* required */}}{{ template "attachment-list" .AttachmentList }}
+		</div>
+	</div>
+
+	{{ block "form-message" .FormMessage }}<div id="form-message" class="d-none"></div>{{ end }}
+
+	<div class="forim-group row py-3 mb-4">
+		<div class="col-sm-12 text-right">
+			<a href="/ticket/systems/new" title="Clear form an start again" class="btn btn-muted">Reset Form</a>
+			<button type="submit" treetop-submitter formaction="/ticket/systems/submit" formmethod="POST" class="btn btn-primary">Create Systems Ticket</button>
+		</div>
+	</div>
+
+	{{ template "notes" .Notes }}
+</div>

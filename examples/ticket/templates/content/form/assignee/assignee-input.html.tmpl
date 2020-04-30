@@ -1,0 +1,48 @@
+<fieldset id="assignee" class="form-group">
+	<div class="row mb-2">
+		<legend class="col-form-label col-sm-3 pt-0">Assignees</legend>
+		<div class="col-sm-9">
+			<div class="border rounded bg-light p-3">
+				<p class="small mb-2"><strong>Assign up to 10 people to this issue</strong></p>
+				<div class="position-relative" click-on-input="assignee-find-user">
+					<div class="mb-2 ">
+						<input enter-submitter="assignee-find-user" type="search" class="form-control" name="search-query" autocomplete="off" placeholder="search for users"{{ if .AutoFocus }} autofocus{{ end }}>
+						<button id="assignee-find-user" class="d-none"  treetop-submitter formnovalidate formaction="/ticket/software/find-assignee">Find User</button>
+					</div>
+
+					<div id="find-user" class="d-none"></div>
+				</div>
+
+				<div class="mb-2">
+					{{ if .Assignees }}
+					<div><button treetop-link="/ticket/software/update-assignee" type="button" class="btn" >
+						<span aria-hidden="true">×</span> Clear assignee(s)
+					</button></div>
+					{{ else }}
+					<input class="hide" required type="text" onkeydown="return false" name="assignees" value="">
+					{{ end }}
+						<ul class="list-group list-group-flush">
+					{{ range $index, $user := .Assignees }}
+							<li class="list-group-item bg-transparent">
+							<div class="media">
+								<div class="rounded-circle bg-secondary p-1 text-center text-white" style="width: 2rem; height: 2rem;"> ? </div>
+								<div class="media-body ml-3">
+								<h6 class="my-1">{{ $user.Name }}</h6>
+								</div>
+								<div>
+									<select name="assignee-role" class="form-control border-0 text-primary">
+										<option {{ if eq $user.Role "software developer" }} selected {{end}} value="software developer">Developer</option>
+										<option {{ if eq $user.Role "reviewer" }}  selected {{end}}value="reviewer">Reviewer</option>
+										<option {{ if eq $user.Role "quality control" }} selected {{end}} value="quality control">Quality Control</option>
+									</select>
+								</div>
+								<input type="hidden" name="assignees" value="{{ $user.Name }}">
+							</div>
+						</li>
+					{{ end }}
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+</fieldset>

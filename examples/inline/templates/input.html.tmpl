@@ -1,0 +1,34 @@
+<div id="input-{{ .Field }}">
+    <label for="{{ .Field }}"><span class="text-uppercase">{{ .Title }}</span>
+         {{- if .Editing }} <i>(editing)</i>
+        {{- else -}}
+        <a treetop-link="/inline/{{ .Field }}?edit=true"
+           class="font-italic pointer p-0 text-secondary ml-2">[edit]</a>
+        {{- end }}</label>
+
+    {{ if .Editing }}
+    {{/* Editing Form */}}
+    <form treetop action="/inline/{{ .Field }}" method="POST">
+    <div class="input-group">
+        <input type="text" autofocus class="form-control {{ if .ErrorMessage }}is-invalid {{ end }}" name="{{ .Field }}" placeholder="{{ .Field }}" value="{{ .Value }}" required="required">
+        <div class="input-group-append" id="button-addon4">
+            <button class="btn btn-primary">Save</button>
+        </div>
+    </div>
+
+    {{ if .ErrorMessage }}
+    <div class="text-danger">{{ .ErrorMessage }}</div>
+    {{ end }}
+
+    <div><a treetop-link="/inline/{{ .Field }}?edit=false" class="small font-italic btn btn-link p-0 text-primary">[x] cancel</a></div>
+
+    </form>
+
+    {{ else }}
+    {{/* Display Mode */}}
+    <div class="mb-5">
+        <h5>{{ .Value }}</h5>
+    </div>
+
+    {{ end }}
+</div>

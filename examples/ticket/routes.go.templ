@@ -1,0 +1,10 @@
+package ticket
+
+import (
+	"github.com/rur/treetop"
+	"github.com/rur/treetop/examples/ticket/handlers"
+)
+
+func Routes(m Mux, exec treetop.ViewExecutor) {
+	{{ block "routes" . }}{{ end }}
+}

@@ -1,0 +1,24 @@
+{{ if not .Files}}
+<div id="attachment-list">
+    <p class="text-muted small text-right">Hint. You can upload multiple files at once. <em>(not stored)</em></p>
+</div>
+
+{{ else }}
+
+<div id="attachment-list" treetop-merge="dedup-append">
+    {{ range $index, $file := .Files }}
+    <div id="attachment-{{ $file.SHA1 }}" class="media px-2 mt-3 mb-3" remove-me=".close">
+        <svg class="mr-2 text-muted" xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+        <div class="media-body">
+            <h6 class="mt-0 mb-1">{{ $file.Name }}</h6>
+            <div>{{ $file.Size }}</div>
+        </div>
+        <button type="button" class="close" aria-label="Close">
+            <span aria-hidden="true">×</span>
+        </button>
+        <input type="hidden" name="attachment" value="{{ $file.Encoded }}">
+    </div>
+    {{ end }}
+</div>
+
+{{ end}}

@@ -1,0 +1,41 @@
+<div id="content">
+    <hr>
+    <div class="container">
+        <h3 class="mb-3">Greeter</h3>
+        <p>Only a little more than hello world.</p>
+        <form action="/greeter/greet" treetop>
+            <div class="input-group mb-3">
+                <input id="name"
+                    name="name"
+                    type="text"
+                    autofocus tabindex="0"
+                    class="form-control"
+                    aria-label="Name of the person who is to be greeted"
+                    placeholder="Name of person to greet"
+                    value="{{ .Value }}">
+                <div class="input-group-append">
+                <button
+                    treetop-submitter
+                    name="submitter"
+                    value="Greet Me"
+                    type="button"
+                    tabindex="1"
+                    class="btn btn-outline-secondary">Greet Me</button>
+                </div>
+            </div>
+        </form>
+
+        {{ template "message" .Message}}
+
+        {{ block "notes" .Notes }}
+        <div id="notes" class="hide"></div>
+        {{ end }}
+    </div>
+</div>
+
+{{ define "treetop-config" }}
+<script>
+    // activate treetop with defaults
+    window.TREETOP_CONFIG = true;
+</script>
+{{ end }}

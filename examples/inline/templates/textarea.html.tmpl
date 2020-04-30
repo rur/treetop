@@ -1,0 +1,39 @@
+<div id="form-{{ .Field }}">
+    <label for="{{ .Field }}"><span class="text-uppercase">{{ .Title }}</span>
+         {{- if .Editing }} <i>(editing)</i>
+        {{- else -}}
+        <a class="font-italic pointer p-0 text-secondary ml-2"
+                treetop-link="/inline/{{ .Field }}?edit=true">[edit]</a>
+        {{- end }}</label>
+
+    {{ if .Editing }}
+    {{/* Editing Form */}}
+    <form treetop action="/inline/{{ .Field }}" method="POST">
+        <textarea rows="9" autofocus="" name="{{ .Field }}" class="form-control {{ if .ErrorMessage }}is-invalid{{ end }}" id="{{ .Field }}" style="font-size: 1.2rem">{{ .Value }}</textarea>
+
+        {{ if .ErrorMessage }}
+        <div class="invalid-feedback">
+          {{ .ErrorMessage }}
+        </div>
+        {{ end }}
+
+        <div class="my-2 text-right">
+            <button type="button" treetop-link="/inline/{{ .Field }}?edit=false" class="btn">Cancel</button>
+            <button class="btn btn-primary">Save</button>
+        </div>
+    </form>
+
+    {{ else }}
+    {{/* Display Mode */}}
+    <div>
+        {{ if .Value }}
+        <blockquote class="blockquote border-left">
+            <pre style="white-space: pre-wrap;" class="ml-3 pb-3 mb-4">{{ .Value }}</pre>
+        </blockquote>
+        {{ else }}
+        <p class="text-muted"><i>(none)</i></p>
+        {{ end }}
+    </div>
+
+    {{ end }}
+</div>
