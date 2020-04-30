@@ -18,6 +18,7 @@ type FormData struct {
 	Description string
 }
 
+// CountryOptions available for demo purposes
 var CountryOptions = []string{
 	"Canada",
 	"Mexico",
