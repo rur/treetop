@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 )
 
-// FormData is used to serialize the state of the inline example form
+// FormData is used to serialize the state of the inline demo form
 type FormData struct {
 	FirstName   string
 	LastName    string

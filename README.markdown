@@ -2,12 +2,12 @@
 
 # Treetop
 
-### A tool that creates request handlers for nested templates in Go
+### A tool to create request handlers for nested templates in Go
 
-HTML web applications typically share a lot of structure between
-endpoints. The Go template library supports nested templates<sup>1</sup>.
-This is a powerful tool that HTML apps can use to reduce boilerplate. Treetop pairs
-a function with each template so that HTTP endpoints can be constructed for
+HTML web applications share a lot of structure between endpoints. The Go
+[html/template](https://golang.org/pkg/html/template/) library has support for nested templates<sup>1</sup>.
+This is a powerful tool that web applications can use to reduce boilerplate. The Treetop library allows
+a handlers to be paired with nested templates so that HTTP endpoints can be constructed for
 different page configurations.
 
 
@@ -72,6 +72,8 @@ The Treetop package wraps features of the Go standard library, mostly within "ne
 
 ### Hot-swap sections of a page without JS boilerplate
 
+See [Template Protocol DEMO](https://treetop-demo.herokuapp.com/)
+
 Since views are self-contained, they can be rendered in isolation. Treetop
 handlers support rendering template fragments that can be 'applied' to a loaded document.
 The following is an illustration of the protocol.
@@ -92,14 +94,14 @@ A [Treetop Client Library](https://github.com/rur/treetop-client) is available.
 It sends template requests using XHR and applies fragments to the DOM with a simple
 find and replace mechanism.
 
-Hot-swapping can be used to improve user experience in several ways <sup>[docs needed]</sup>.
-See examples for more details.
+Hot-swapping can be used to improve user experience in several ways.
+See demo for more details.
 
-## Example
+## Example Apps
 
-An example app can be run from this repo <sup>[needs improvement]</sup>.
+An examples app can be run from this repo.
 
-    $ go run ./example/
+    $ go run ./demo/
 
 Tip. Activate your network tab to observe what's going on.
 

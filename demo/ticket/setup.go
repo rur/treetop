@@ -4,11 +4,11 @@ import (
 	"net/http"
 
 	"github.com/rur/treetop"
-	"github.com/rur/treetop/examples/assets"
-	"github.com/rur/treetop/examples/ticket/handlers"
+	"github.com/rur/treetop/demo/assets"
+	"github.com/rur/treetop/demo/ticket/handlers"
 )
 
-// Setup register routes for /view example endpoint
+// Setup register routes for /view demo endpoint
 func Setup(mux *http.ServeMux, devMode bool) {
 	// developer executor will force templates to be reloaded from disk for
 	// every request. Also template errors will be rendered in the browser

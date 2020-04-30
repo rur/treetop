@@ -46,7 +46,7 @@ func (srv *cookieServer) put(respID int, fd *FormData) {
 	srv.Unlock()
 }
 
-// teardown frees any request scoped resources, in this example we purge
+// teardown frees any request scoped resources, in this demo we purge
 // form data from the response cache
 func (srv *cookieServer) teardown(respID int) {
 	srv.Lock()

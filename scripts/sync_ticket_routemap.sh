@@ -2,9 +2,9 @@
 
 set -ex
 
-tmpdir=`ttpage ./examples/ticket/routemap.toml`
+tmpdir=`ttpage ./demo/ticket/routemap.toml`
 
-cp "$tmpdir/page/ticket/routemap.toml" ./examples/ticket/routemap.toml
-cp "$tmpdir/page/ticket/handlers.go" ./examples/ticket/handlers.go
-rsync -r "$tmpdir/page/ticket/templates/" ./examples/ticket/templates/
-go generate ./examples/ticket
+cp "$tmpdir/page/ticket/routemap.toml" ./demo/ticket/routemap.toml
+cp "$tmpdir/page/ticket/handlers.go" ./demo/ticket/handlers.go
+rsync -r "$tmpdir/page/ticket/templates/" ./demo/ticket/templates/
+go generate ./demo/ticket

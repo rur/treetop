@@ -1,7 +1,7 @@
 package assets
 
 var (
-	// TreetopJS is a snapshot of the treetop-client source for use with the example app
+	// TreetopJS is a snapshot of the treetop-client source for use with the demo app
 	TreetopJS string = `
 /* global window, document, XMLHttpRequest, ActiveXObject, history, setTimeout, URLSearchParams */
 

@@ -5,23 +5,23 @@ import (
 	"net/http"
 
 	"github.com/rur/treetop"
-	"github.com/rur/treetop/examples/assets"
+	"github.com/rur/treetop/demo/assets"
 )
 
-// Setup register routes for /greeter example endpoint
+// Setup register routes for /greeter demo endpoint
 func Setup(mux *http.ServeMux, devMode bool) {
 	// base view
 	page := treetop.NewView("local://base.html", treetop.Delegate("content"))
 	_ = page.NewDefaultSubView("nav", "local://nav.html", treetop.Noop)
 
 	// Greeter Content View
-	content := page.NewSubView("content", "examples/greeter/templates/content.html", contentViewHandler)
+	content := page.NewSubView("content", "demo/greeter/templates/content.html", contentViewHandler)
 	// content -> message
 	greetForm := content.NewSubView("message", "local://landing.html", treetop.Noop)
-	greetMessage := content.NewSubView("message", "examples/greeter/templates/greeting.html", greetingViewHandler)
+	greetMessage := content.NewSubView("message", "demo/greeter/templates/greeting.html", greetingViewHandler)
 	// content -> notes
 	hideNotes := content.NewSubView("notes", "local://hide-notes.html", treetop.Noop)
-	notes := content.NewSubView("notes", "examples/greeter/templates/notes.html", notesHandler)
+	notes := content.NewSubView("notes", "demo/greeter/templates/notes.html", notesHandler)
 
 	// Configure template executor with a hybrid of template files and inlined string templates
 	var exec treetop.ViewExecutor = &treetop.FileExecutor{

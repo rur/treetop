@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/rur/treetop"
-	"github.com/rur/treetop/examples/ticket/inputs"
+	"github.com/rur/treetop/demo/ticket/inputs"
 )
 
 // Method: POST

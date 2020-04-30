@@ -14,9 +14,9 @@ trap sigint_handler 0
 
 while true; do
   set -x
-  setsid go run ./examples &
+  setsid go run ./demo &
   PID=$!
-  fswatch -1 `find ./examples -name '*.go' -print`
+  fswatch -1 `find ./demo -name '*.go' -print`
   # the negative PID is necessary to kill subprocesses
   # see https://unix.stackexchange.com/questions/124127/kill-all-descendant-processes
   kill -- -$PID

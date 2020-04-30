@@ -1,4 +1,4 @@
-namespace = "github.com/treetop/examples"
+namespace = "github.com/treetop/demo"
 page = "ticket"
 
 [views]
@@ -6,14 +6,14 @@ page = "ticket"
     name = "base"
     handler = "treetop.Delegate(\"content\")"
     template = "local://base.html"
-    doc = "HTML template for demo example site"
+    doc = "HTML template for demo demo site"
     uri = "/ticket"
     [views.base.blocks]
 
       [[views.base.blocks.content]]
         name = "issue-preview"
         handler = "handlers.IssuePreviewHandler"
-        template = "examples/ticket/templates/content/issuePreview.html.tmpl"
+        template = "demo/ticket/templates/content/issuePreview.html.tmpl"
         doc = "Content wrapper around preview for different ticket type"
         [views.base.blocks.content.blocks]
 
@@ -21,13 +21,13 @@ page = "ticket"
             name = "preview-notes"
             default = true
             handler = "treetop.Noop"
-            template = "examples/ticket/templates/content/notes.html.tmpl"
+            template = "demo/ticket/templates/content/notes.html.tmpl"
 
           [[views.base.blocks.content.blocks.preview]]
             name = "preview-software-ticket"
             path = "/ticket/software/preview"
             handler = "handlers.PreviewSoftwareTicketHandler"
-            template = "examples/ticket/templates/content/previewSoftwareTicket.html.tmpl"
+            template = "demo/ticket/templates/content/previewSoftwareTicket.html.tmpl"
             method = "GET"
             doc = "Show preview of software ticket, no database so take details form query params"
 
@@ -35,7 +35,7 @@ page = "ticket"
             name = "preview-helpdesk-ticket"
             path = "/ticket/helpdesk/preview"
             handler = "handlers.PreviewHelpdeskTicketHandler"
-            template = "examples/ticket/templates/content/previewHelpdeskTicket.html.tmpl"
+            template = "demo/ticket/templates/content/previewHelpdeskTicket.html.tmpl"
             method = "GET"
             doc = "Show preview of help desk ticket, no database so take details form query params"
 
@@ -43,7 +43,7 @@ page = "ticket"
             name = "preview-systems-ticket"
             path = "/ticket/systems/preview"
             handler = "handlers.PreviewSystemsTicketHandler"
-            template = "examples/ticket/templates/content/previewSystemsTicket.html.tmpl"
+            template = "demo/ticket/templates/content/previewSystemsTicket.html.tmpl"
             method = "GET"
             doc = "Show preview of systems ticket, no database so take details form query params"
 
@@ -52,7 +52,7 @@ page = "ticket"
         default = true
         path = "/ticket"
         handler = "handlers.TicketHandler"
-        template = "examples/ticket/templates/content/ticketFormContent.html.tmpl"
+        template = "demo/ticket/templates/content/ticketFormContent.html.tmpl"
         method = "GET"
         doc = "Landing page for ticket wizard"
         [views.base.blocks.content.blocks]
@@ -61,7 +61,7 @@ page = "ticket"
             name = "new-helpdesk-ticket"
             path = "/ticket/helpdesk/new"
             handler = "handlers.NewHelpdeskTicketHandler"
-            template = "examples/ticket/templates/content/form/newHelpdeskTicket.html.tmpl"
+            template = "demo/ticket/templates/content/form/newHelpdeskTicket.html.tmpl"
             method = "GET"
             doc = "Form designed for creating helpdesk tickets"
             [views.base.blocks.content.blocks.form.blocks]
@@ -71,7 +71,7 @@ page = "ticket"
                 fragment = true
                 default = true
                 handler = "handlers.AttachmentFileListHandler"
-                template = "examples/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl"
+                template = "demo/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl"
                 doc = "Default helpdesk attachment file list template handler, parse file info from query string"
 
               [[views.base.blocks.content.blocks.form.blocks.attachment-list]]
@@ -79,7 +79,7 @@ page = "ticket"
                 fragment = true
                 path = "/ticket/helpdesk/upload-attachment"
                 handler = "handlers.UploadedFilesHandler"
-                template = "examples/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl"
+                template = "demo/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl"
                 method = "POST"
                 doc = "Load a list of uploaded files, save to storage and return metadata to the form"
 
@@ -88,7 +88,7 @@ page = "ticket"
                 fragment = true
                 path = "/ticket/helpdesk/submit"
                 handler = "handlers.SubmitHelpDeskTicketHandler"
-                template = "examples/ticket/templates/content/form/formMessage/submitHelpDeskTicket.html.tmpl"
+                template = "demo/ticket/templates/content/form/formMessage/submitHelpDeskTicket.html.tmpl"
                 method = "POST"
                 doc = "process creation of a new help desk ticket"
 
@@ -96,7 +96,7 @@ page = "ticket"
                 name = "new-helpdesk-notes"
                 default = true
                 handler = "treetop.Noop"
-                template = "examples/ticket/templates/content/notes.html.tmpl"
+                template = "demo/ticket/templates/content/notes.html.tmpl"
                 doc = "Show this when helpdesk form is loaded"
 
               [[views.base.blocks.content.blocks.form.blocks.reported-by]]
@@ -105,7 +105,7 @@ page = "ticket"
                 default = true
                 path = "/ticket/helpdesk/update-reported-by"
                 handler = "handlers.HelpdeskReportedByHandler"
-                template = "examples/ticket/templates/content/form/reportedBy/helpdeskReportedBy.html.tmpl"
+                template = "demo/ticket/templates/content/form/reportedBy/helpdeskReportedBy.html.tmpl"
                 method = "GET"
                 doc = "Options for notifying help desk of who reported the issue"
                 [views.base.blocks.content.blocks.form.blocks.reported-by.blocks]
@@ -116,7 +116,7 @@ page = "ticket"
                     default = true
                     path = "/ticket/helpdesk/find-reported-by"
                     handler = "handlers.FindReportedByUserHandler"
-                    template = "examples/ticket/templates/content/form/reportedBy/findReportedByUser.html.tmpl"
+                    template = "demo/ticket/templates/content/form/reportedBy/findReportedByUser.html.tmpl"
                     method = "GET"
                     doc = "query string to find a user to select"
 
@@ -124,7 +124,7 @@ page = "ticket"
             name = "new-software-ticket"
             path = "/ticket/software/new"
             handler = "handlers.NewSoftwareTicketHandler"
-            template = "examples/ticket/templates/content/form/newSoftwareTicket.html.tmpl"
+            template = "demo/ticket/templates/content/form/newSoftwareTicket.html.tmpl"
             method = "GET"
             doc = "Form designed for creating software tickets"
             [views.base.blocks.content.blocks.form.blocks]
@@ -135,7 +135,7 @@ page = "ticket"
                 default = true
                 path = "/ticket/software/update-assignee"
                 handler = "handlers.SoftwareAssigneeHandler"
-                template = "examples/ticket/templates/content/form/assignee/assignee-input.html.tmpl"
+                template = "demo/ticket/templates/content/form/assignee/assignee-input.html.tmpl"
                 doc = "Select multiple users as assignees"
                 [views.base.blocks.content.blocks.form.blocks.assignee.blocks]
 
@@ -145,7 +145,7 @@ page = "ticket"
                     default = true
                     path = "/ticket/software/find-assignee"
                     handler = "handlers.SoftwareFindAssigneeHandler"
-                    template = "examples/ticket/templates/content/form/assignee/find-assignee.html.tmpl"
+                    template = "demo/ticket/templates/content/form/assignee/find-assignee.html.tmpl"
                     method = "GET"
                     doc = "query string to find a user to select"
 
@@ -154,7 +154,7 @@ page = "ticket"
                 fragment = true
                 default = true
                 handler = "handlers.AttachmentFileListHandler"
-                template = "examples/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl"
+                template = "demo/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl"
                 doc = "Default software attachment file list template handler, parse file info from query string"
 
               [[views.base.blocks.content.blocks.form.blocks.attachment-list]]
@@ -162,7 +162,7 @@ page = "ticket"
                 fragment = true
                 path = "/ticket/software/upload-attachment"
                 handler = "handlers.UploadedFilesHandler"
-                template = "examples/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl"
+                template = "demo/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl"
                 method = "POST"
                 doc = "Load a list of uploaded files, save to storage and return metadata to the form"
 
@@ -171,7 +171,7 @@ page = "ticket"
                 fragment = true
                 path = "/ticket/software/submit"
                 handler = "handlers.SubmitSoftwareTicketHandler"
-                template = "examples/ticket/templates/content/form/formMessage/submitSoftwareTicket.html.tmpl"
+                template = "demo/ticket/templates/content/form/formMessage/submitSoftwareTicket.html.tmpl"
                 method = "POST"
                 doc = "process creation of a new software ticket"
 
@@ -179,14 +179,14 @@ page = "ticket"
                 name = "view-software-notes"
                 default = true
                 handler = "treetop.Noop"
-                template = "examples/ticket/templates/content/notes.html.tmpl"
+                template = "demo/ticket/templates/content/notes.html.tmpl"
                 doc = "Show this when software form is loaded"
 
           [[views.base.blocks.content.blocks.form]]
             name = "new-systems-ticket"
             path = "/ticket/systems/new"
             handler = "handlers.NewSystemsTicketHandler"
-            template = "examples/ticket/templates/content/form/newSystemsTicket.html.tmpl"
+            template = "demo/ticket/templates/content/form/newSystemsTicket.html.tmpl"
             method = "GET"
             doc = "Form designed for creating systems tickets"
             [views.base.blocks.content.blocks.form.blocks]
@@ -196,7 +196,7 @@ page = "ticket"
                 fragment = true
                 default = true
                 handler = "handlers.AttachmentFileListHandler"
-                template = "examples/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl"
+                template = "demo/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl"
                 doc = "Default systems attachment file list template handler, parse file info from query string"
 
               [[views.base.blocks.content.blocks.form.blocks.attachment-list]]
@@ -204,7 +204,7 @@ page = "ticket"
                 fragment = true
                 path = "/ticket/systems/upload-attachment"
                 handler = "handlers.UploadedFilesHandler"
-                template = "examples/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl"
+                template = "demo/ticket/templates/content/form/attachmentList/uploadedFiles.html.tmpl"
                 method = "POST"
                 doc = "Load a list of uploaded files, save to storage and return metadata to the form"
 
@@ -214,7 +214,7 @@ page = "ticket"
                 default = true
                 path = "/ticket/systems/update-tags"
                 handler = "handlers.SystemsComponentTagsInputGroupHandler"
-                template = "examples/ticket/templates/content/form/componentTags/systemsComponentTagsInputGroup.html.tmpl"
+                template = "demo/ticket/templates/content/form/componentTags/systemsComponentTagsInputGroup.html.tmpl"
                 doc = "Load form input group for the component tags selector"
                 [views.base.blocks.content.blocks.form.blocks.component-tags.blocks]
 
@@ -223,7 +223,7 @@ page = "ticket"
                     fragment = true
                     path = "/ticket/systems/find-tag"
                     handler = "handlers.SystemsComponentTagSearchHandler"
-                    template = "examples/ticket/templates/content/form/componentTags/systemsComponentTagSearch.html.tmpl"
+                    template = "demo/ticket/templates/content/form/componentTags/systemsComponentTagSearch.html.tmpl"
                     doc = "fuzzy match query to available systems component tags"
 
               [[views.base.blocks.content.blocks.form.blocks.form-message]]
@@ -231,7 +231,7 @@ page = "ticket"
                 fragment = true
                 path = "/ticket/systems/submit"
                 handler = "handlers.SubmitSystemsTicketHandler"
-                template = "examples/ticket/templates/content/form/formMessage/submitSystemsTicket.html.tmpl"
+                template = "demo/ticket/templates/content/form/formMessage/submitSystemsTicket.html.tmpl"
                 method = "POST"
                 doc = "process creation of a new systems ticket"
 
@@ -239,7 +239,7 @@ page = "ticket"
                 name = "view-systems-notes"
                 default = true
                 handler = "treetop.Noop"
-                template = "examples/ticket/templates/content/notes.html.tmpl"
+                template = "demo/ticket/templates/content/notes.html.tmpl"
                 doc = "Show this when systems form is loaded"
 
       [[views.base.blocks.nav]]
@@ -247,4 +247,4 @@ page = "ticket"
         default = true
         handler = "treetop.Noop"
         template = "local://nav.html"
-        doc = "Navigate between the different example apps"
+        doc = "Navigate between the different demo apps"

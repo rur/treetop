@@ -6,7 +6,7 @@ import (
 	"net/url"
 
 	"github.com/rur/treetop"
-	"github.com/rur/treetop/examples/assets"
+	"github.com/rur/treetop/demo/assets"
 )
 
 var viewDebug string
@@ -19,27 +19,27 @@ func Setup(mux *http.ServeMux, devMode bool) {
 	base := treetop.NewView("local://base.html", treetop.Delegate("content"))
 	_ = base.NewDefaultSubView("nav", "local://nav.html", treetop.Noop)
 	content := base.NewSubView("content",
-		"examples/inline/templates/content.html.tmpl",
+		"demo/inline/templates/content.html.tmpl",
 		profileContentHandler)
 
 	firstName := content.NewDefaultSubView("first-name",
-		"examples/inline/templates/input.html.tmpl",
+		"demo/inline/templates/input.html.tmpl",
 		srv.bind(getFormFieldHandler("firstName")))
 
 	surname := content.NewDefaultSubView("surname",
-		"examples/inline/templates/input.html.tmpl",
+		"demo/inline/templates/input.html.tmpl",
 		srv.bind(getFormFieldHandler("surname")))
 
 	email := content.NewDefaultSubView("email",
-		"examples/inline/templates/email.html.tmpl",
+		"demo/inline/templates/email.html.tmpl",
 		srv.bind(getFormFieldHandler("email")))
 
 	country := content.NewDefaultSubView("country",
-		"examples/inline/templates/select.html.tmpl",
+		"demo/inline/templates/select.html.tmpl",
 		srv.bind(getFormFieldHandler("country")))
 
 	description := content.NewDefaultSubView("description",
-		"examples/inline/templates/textarea.html.tmpl",
+		"demo/inline/templates/textarea.html.tmpl",
 		srv.bind(getFormFieldHandler("description")))
 
 	var exec treetop.ViewExecutor = &treetop.FileExecutor{

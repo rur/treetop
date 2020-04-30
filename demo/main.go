@@ -11,10 +11,10 @@ import (
 
 	"os"
 
-	"github.com/rur/treetop/examples/assets"
-	"github.com/rur/treetop/examples/greeter"
-	"github.com/rur/treetop/examples/inline"
-	"github.com/rur/treetop/examples/ticket"
+	"github.com/rur/treetop/demo/assets"
+	"github.com/rur/treetop/demo/greeter"
+	"github.com/rur/treetop/demo/inline"
+	"github.com/rur/treetop/demo/ticket"
 )
 
 var portReg = regexp.MustCompile(`^\d+$`)
@@ -42,7 +42,7 @@ func main() {
 		}
 	}
 
-	// Register routes for example apps
+	// Register routes for demo apps
 	greeter.Setup(mux, devMode)
 	inline.Setup(mux, devMode)
 	ticket.Setup(mux, devMode)
@@ -53,7 +53,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(":"+port, mux))
 }
 
-// infoSetup will create template, handlers and bind to routes for the example landing page
+// infoSetup will create template, handlers and bind to routes for the demo landing page
 func infoSetup(mux *http.ServeMux, devMode bool) {
 	// define handler for home page
 	var exec treetop.ViewExecutor = &treetop.FileExecutor{
@@ -81,7 +81,7 @@ func infoSetup(mux *http.ServeMux, devMode bool) {
 		NewView("local://base.html", treetop.Noop)
 	base.NewDefaultSubView("nav", "local://nav.html", treetop.Noop)
 
-	home := base.NewSubView("content", "examples/intro.html", treetop.Noop)
+	home := base.NewSubView("content", "demo/intro.html", treetop.Noop)
 	navHome := base.NewSubView("nav", "local://nav-home.html", treetop.Noop)
 
 	homeHandler := exec.NewViewHandler(home, navHome).PageOnly()
@@ -99,6 +99,6 @@ func infoSetup(mux *http.ServeMux, devMode bool) {
 	})
 
 	if errs := exec.FlushErrors(); len(errs) > 0 {
-		log.Fatalf("Error(s) loading example templates:\n%s", errs)
+		log.Fatalf("Error(s) loading demo templates:\n%s", errs)
 	}
 }
