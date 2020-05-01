@@ -12,7 +12,6 @@ var (
 )
 
 func processInputName(form url.Values, field string) (string, string) {
-	// TODO: unicode normalization here
 	value := form.Get(field)
 	if len(value) > 255 {
 		return value, "name is too large"
@@ -24,7 +23,6 @@ func processInputName(form url.Values, field string) (string, string) {
 }
 
 func processInputEmail(form url.Values, field string) (string, string) {
-	// TODO: unicode normalization here
 	value := form.Get(field)
 	confirm := form.Get(field + "_confirm")
 	if len(value) > 255 {
@@ -50,7 +48,6 @@ func processInputContry(form url.Values, field string) (string, string) {
 }
 
 func processInputDescription(form url.Values, field string) (string, string) {
-	// TODO: unicode normalization here
 	value := form.Get(field)
 	if len(value) > 1000 {
 		return value, "Message is too large, max 1000 character bytes"
