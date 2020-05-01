@@ -12,6 +12,7 @@ const (
 	GreeterNav
 	InlineNav
 	TicketsNav
+	MoreNav
 )
 
 // NavHTML returns the app navigation template for a page given the page numbers

@@ -60,6 +60,7 @@ func infoSetup(mux *http.ServeMux, devMode bool) {
 		KeyedString: map[string]string{
 			"local://base.html":     assets.BaseHTML,
 			"local://nav-home.html": assets.NavHTML(assets.IntroNav),
+			"local://nav-more.html": assets.NavHTML(assets.MoreNav),
 			"local://nav.html":      assets.NavHTML(assets.NoPage),
 			"local://notfound.html": `
 				<div class="text-center">
@@ -79,15 +80,21 @@ func infoSetup(mux *http.ServeMux, devMode bool) {
 
 	base := treetop.
 		NewView("local://base.html", treetop.Noop)
-	base.NewDefaultSubView("nav", "local://nav.html", treetop.Noop)
 
-	home := base.NewSubView("content", "demo/intro.html", treetop.Noop)
-	navHome := base.NewSubView("nav", "local://nav-home.html", treetop.Noop)
+	mux.Handle("/more", exec.NewViewHandler(
+		base.NewSubView("content", "demo/more.html", treetop.Noop),
+		base.NewSubView("nav", "local://nav-more.html", treetop.Noop),
+	).PageOnly())
 
-	homeHandler := exec.NewViewHandler(home, navHome).PageOnly()
+	homeHandler := exec.NewViewHandler(
+		base.NewSubView("content", "demo/intro.html", treetop.Noop),
+		base.NewSubView("nav", "local://nav-home.html", treetop.Noop),
+	).PageOnly()
+
 	notFoundHandler := exec.NewViewHandler(
-		base.NewSubView("content", "local://notfound.html", treetop.Noop)).
-		PageOnly()
+		base.NewSubView("content", "local://notfound.html", treetop.Noop),
+		base.NewSubView("nav", "local://nav.html", treetop.Noop),
+	).PageOnly()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		switch req.URL.Path {
