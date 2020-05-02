@@ -2,6 +2,8 @@
 
 # Treetop
 
+[![GoDoc](https://godoc.org/github.com/rur/treetop?status.svg)](https://godoc.org/github.com/rur/treetop)
+
 ### A tool to create request handlers for nested templates in Go
 
 HTML web applications share a lot of structure between endpoints. The Go
