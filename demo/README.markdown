@@ -11,8 +11,8 @@ requests.
 
 ## Greeter App
 
-Given a name, the server responds with a greeting message which is routed to a "greeting" div on the page.
-No real scenario, but it's nice to be nice!
+Given a name, the server responds with a greeting message which is routed to the "message" div on the page.
+Not a real scenario, but it's nice to be nice!
 
 It demonstrates: XHR form submit, browser history control and multi-fragment template response.
 

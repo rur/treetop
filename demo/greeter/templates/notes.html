@@ -1,7 +1,9 @@
 <div id="notes" class="my-5 border rounded bg-light text-muted p-3 small">
     <h6 class="muted">Notes:</h6>
     <ul class="list-group list-group-flush">
-        {{ range $index, $note := . -}}
-        <li class="list-group-item bg-light">{{ $note }}</li>{{ end }}
+        <li class="list-group-item bg-light">Form is submitted using XHR, url query parameters .</li>
+        <li class="list-group-item bg-light">Using 'Enter' key to submit, the input cursor will not lose focus or position.</li>
+        <li class="list-group-item bg-light">A history state was pushed, try using browser back and forward button.</li>
+        <li class="list-group-item bg-light">Notes are included as a fragment within the greeting template response.</li>
     </ul>
 </div>

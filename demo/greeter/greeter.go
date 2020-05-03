@@ -1,7 +1,6 @@
 package greeter
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/rur/treetop"
@@ -21,7 +20,7 @@ func Setup(mux *http.ServeMux, devMode bool) {
 	greetMessage := content.NewSubView("message", "demo/greeter/templates/greeting.html", greetingViewHandler)
 	// content -> notes
 	hideNotes := content.NewSubView("notes", "local://hide-notes.html", treetop.Noop)
-	notes := content.NewSubView("notes", "demo/greeter/templates/notes.html", notesHandler)
+	notes := content.NewSubView("notes", "demo/greeter/templates/notes.html", treetop.Noop)
 
 	// Configure template executor with a hybrid of template files and inlined string templates
 	var exec treetop.ViewExecutor = &treetop.FileExecutor{
@@ -73,26 +72,4 @@ func greetingViewHandler(_ treetop.Response, req *http.Request) interface{} {
 		who = "World"
 	}
 	return who
-}
-
-// notesHandler will compile a list of notes about the current request
-// for the user to review.
-func notesHandler(_ treetop.Response, req *http.Request) interface{} {
-	var notes []string
-	if !treetop.IsTemplateRequest(req) {
-		notes = append(notes, "Full page request!")
-	} else {
-		notes = append(notes, "XHR form submit, see url query parameters.")
-		if submitter := req.URL.Query().Get("submitter"); submitter != "" {
-			notes = append(
-				notes,
-				fmt.Sprintf("Form submit with the '%s' button. Treetop JS client supports element submitters.", submitter),
-			)
-		} else {
-			notes = append(notes, "Notice that the input cursor has not lost its focus or position.")
-		}
-		notes = append(notes, "A history state was pushed, try using browser back and forward button.")
-		notes = append(notes, "These notes were 'included' with the message template. Check your network inspector for details.")
-	}
-	return notes
 }
