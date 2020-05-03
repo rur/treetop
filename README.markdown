@@ -68,12 +68,11 @@ Views can have as many levels of nesting as needed.
 
 The Treetop package wraps features of the Go standard library, mostly within "net/http" and "html/template".
 
-
 ##  HTML Template Protocol
 
 ### Hot-swap sections of a page without JS boilerplate
 
-See [Template Protocol DEMO](https://treetop-demo.herokuapp.com/)
+#### [Online DEMO](https://treetop-demo.herokuapp.com/)
 
 Since views are self-contained, they can be rendered in isolation. Treetop
 handlers support rendering template fragments that can be 'applied' to a loaded document.
@@ -98,13 +97,13 @@ find and replace mechanism.
 Hot-swapping can be used to improve user experience in several ways.
 See demo for more details.
 
-## Example Apps
+## Examples
 
-An examples app can be run from this repo.
+#### Demo Apps ([README](demo/README.markdown) / [DEMO](https://treetop-demo.herokuapp.com/))
+
+Demo can be run locally by cloning this repo and running the command,
 
     $ go run ./demo/
-
-Tip. Activate your network tab to observe what's going on.
 
 ### Other Examples:
 

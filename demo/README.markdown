@@ -63,7 +63,7 @@ The forms includes several input components that require server IO:
 * flash messages, and
 * redirects.
 
-This app makes use of a _route map_* tool to generate the router setup code from a configuration file.
+This app makes use of a 'route map' tool* to generate the router setup code.
 
 Review source: [ticket/routemap.toml](ticket/routemap.toml), is used to generate, [ticket/routes.go](ticket/routes.go)
 
@@ -82,4 +82,4 @@ The full page hierarchy for the `"/ticket/helpdesk/new"` endpoint.
     |
     '- nav: SubView("nav", "local://nav.html", github.com/rur/treetop.Noop)
 
-_* [ttroutes](https://github.com/rur/ttgen) command line tool is a prototype script for generating Treetop routing code_
+_* [ttroutes](https://github.com/rur/ttgen) command line tool is a prototype for generating routing code for nested templates and Treetop view handlers_
