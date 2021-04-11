@@ -11,9 +11,7 @@ HTML web applications share a lot of structure between endpoints. The Go
 This is a powerful tool that web applications can use to reduce boilerplate. The Treetop library matches a
 handler with each nested template so that HTTP endpoints can be constructed for different page configurations.
 
-
 #### Template Hierarchy
-
 
                   BaseHandler(...)
                 | base.html ========================|
@@ -50,15 +48,15 @@ for each route.
 
 Example of embedded template blocks in `"base.html"`,
 
-	...
-	<div class="layout">
-		{{ block "nav" .Nav }}  <div id="nav">default nav</div> {{ end }}
+    ...
+    <div class="layout">
+    	{{ block "nav" .Nav }}  <div id="nav">default nav</div> {{ end }}
 
-		{{ template "sidebar" .SideBar }}
+    	{{ template "sidebar" .SideBar }}
 
-		{{ template "content" .Content }}
-	</div>
-	...
+    	{{ template "content" .Content }}
+    </div>
+    ...
 
 _See text/template [Nested Template Definitions](https://tip.golang.org/pkg/text/template/#hdr-Nested_template_definitions) for more info._
 
@@ -68,7 +66,7 @@ Views can have as many levels of nesting as needed.
 
 The Treetop package wraps features of the Go standard library, mostly within "net/http" and "html/template".
 
-##  HTML Template Protocol
+## HTML Template Protocol
 
 ### Hot-swap sections of a page without JS boilerplate
 
@@ -99,11 +97,15 @@ See demo for more details.
 
 ## Examples
 
-#### Demo Apps ([README](demo/README.markdown) / [DEMO](https://treetop-demo.herokuapp.com/))
+#### Demo Apps ([README](https://github.com/rur/treetop-demo#treetop-demo) / [DEMO](https://treetop-demo.herokuapp.com/))
 
-Demo can be run locally by cloning this repo and running the command,
+Demo can be run locally by cloning the [treetop-demo](https://github.com/rur/treetop-demo) repo and running the command,
 
-    $ go run ./demo/
+    $ git clone https://github.com/rur/treetop-demo.git
+    ...
+    $ cd treetop-demo
+    $ go run . 8080
+    serving on http://0.0.0.0:8080/
 
 ### Other Examples:
 
@@ -179,7 +181,7 @@ are handled mechanically on the client. This avoids the need for callbacks or ot
 
 See [Client Library](https://github.com/rur/treetop-client) for more information.
 
-
 ## _Footnotes_
+
 1. Go supports template inheritance through [nested template definitions](https://tip.golang.org/pkg/text/template/#hdr-Nested_template_definitions).
 2. A [http.ResponseWriter](https://golang.org/pkg/net/http/#ResponseWriter) will flush headers when either `WriteHeaders(..)` or `Write(..)` methods are invoked.
