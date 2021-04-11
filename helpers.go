@@ -27,7 +27,7 @@ func Delegate(blockname string) ViewHandlerFunc {
 }
 
 // RequestHandler handler helper is used where only the http.Request instance is needed
-// to resolve the template data so the treetop.Response isnt part of the actual handler function.
+// to resolve the template data so the treetop.Response isn't part of the actual handler function.
 func RequestHandler(f func(*http.Request) interface{}) ViewHandlerFunc {
 	return func(_ Response, req *http.Request) interface{} {
 		return f(req)

@@ -1,5 +1,7 @@
 package inputs
 
+import "strconv"
+
 func SearchForUser(queryString string) []string {
 	// For demo purposes, filter out any characters not in the latin alphabet.
 	// All other characters must be in an allowlist, otherwise the result set will be empty
@@ -27,7 +29,7 @@ FILTER:
 	// For demo purposes, vary number of results based
 	// on the number of characters in the input query.
 	for i := len(filteredQuery) - 1; i < 26; i++ {
-		results = append(results, "Example User "+string(i+65))
+		results = append(results, "Example User "+strconv.Itoa(i+65))
 		if len(results) == 5 {
 			break
 		}

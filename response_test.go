@@ -103,7 +103,7 @@ func TestResponse_WithView_Cancel(t *testing.T) {
 
 // Parent handler should not be able to hijack a response already
 // hijacked by a sub view.
-func TestResponse_WithView_ParentDontWrite(t *testing.T) {
+func TestResponse_WithView_ParentDoNotWrite(t *testing.T) {
 	rec := httptest.NewRecorder()
 	rsp := BeginResponse(context.Background(), rec)
 
@@ -179,7 +179,7 @@ func Test_ResponseWrapper_HandleSubView(t *testing.T) {
 				ResponseWriter: &httptest.ResponseRecorder{},
 				responseID:     1234,
 				subViews: map[string]*View{
-					"some-block": &View{
+					"some-block": {
 						HandlerFunc: Constant("This is a test"),
 					},
 				},
@@ -197,7 +197,7 @@ func Test_ResponseWrapper_HandleSubView(t *testing.T) {
 				responseID:     1234,
 				status:         400,
 				subViews: map[string]*View{
-					"some-block": &View{
+					"some-block": {
 						HandlerFunc: func(rsp Response, _ *http.Request) interface{} {
 							rsp.Status(501)
 							return "Not Implemented"
@@ -218,7 +218,7 @@ func Test_ResponseWrapper_HandleSubView(t *testing.T) {
 				ResponseWriter: &httptest.ResponseRecorder{},
 				responseID:     1234,
 				subViews: map[string]*View{
-					"some-block": &View{
+					"some-block": {
 						HandlerFunc: func(rsp Response, _ *http.Request) interface{} {
 							return fmt.Sprintf("Response token %v", rsp.ResponseID())
 						},
@@ -237,7 +237,7 @@ func Test_ResponseWrapper_HandleSubView(t *testing.T) {
 				ResponseWriter: &httptest.ResponseRecorder{},
 				responseID:     1234,
 				subViews: map[string]*View{
-					"some-block": &View{
+					"some-block": {
 						HandlerFunc: Constant("This should not happen"),
 					},
 				},

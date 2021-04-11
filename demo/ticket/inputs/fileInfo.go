@@ -5,6 +5,7 @@ import (
 	"net/url"
 )
 
+// FileInfo encapsulates information about an uploaded file
 type FileInfo struct {
 	SHA1    string
 	Name    string
@@ -12,14 +13,17 @@ type FileInfo struct {
 	Encoded string
 }
 
+// MarshalBase64 will encode the fields of this object
+// as a base 64 encoded url key value string
 func (fi *FileInfo) MarshalBase64() ([]byte, error) {
-	vals := url.Values{}
-	vals.Set("sha1", fi.SHA1)
-	vals.Set("name", fi.Name)
-	vals.Set("size", fi.Size)
-	return []byte(base64.StdEncoding.EncodeToString([]byte(vals.Encode()))), nil
+	vls := url.Values{}
+	vls.Set("sha1", fi.SHA1)
+	vls.Set("name", fi.Name)
+	vls.Set("size", fi.Size)
+	return []byte(base64.StdEncoding.EncodeToString([]byte(vls.Encode()))), nil
 }
 
+// UnmarshalBase64 populate file info fields from a b64 encoded url key value string
 func (fi *FileInfo) UnmarshalBase64(in []byte) error {
 	query := make([]byte, len(in))
 	count, err := base64.StdEncoding.Decode(query, in)
@@ -27,13 +31,13 @@ func (fi *FileInfo) UnmarshalBase64(in []byte) error {
 		return err
 	}
 	query = query[:count]
-	vals, err := url.ParseQuery(string(query))
+	vls, err := url.ParseQuery(string(query))
 	if err != nil {
 		return err
 	}
-	fi.SHA1 = vals.Get("sha1")
-	fi.Name = vals.Get("name")
-	fi.Size = vals.Get("size")
+	fi.SHA1 = vls.Get("sha1")
+	fi.Name = vls.Get("name")
+	fi.Size = vls.Get("size")
 	fi.Encoded = string(in)
 	return nil
 }
