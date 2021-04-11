@@ -58,7 +58,7 @@ type Response interface {
 	// response.
 	Finished() bool
 
-	// HandleSubView loads data from a named child subview handler. If no handler is availabe for the name,
+	// HandleSubView loads data from a named child subview handler. If no handler is available for the name,
 	// nil will be returned.
 	//
 	// NOTE: Since a sub handler may have returned nil, there is no way for the parent handler to determine

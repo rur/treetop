@@ -29,7 +29,7 @@ func getBuffer() *bytes.Buffer {
 	return buf
 }
 
-// reset a buffer and make it eligable for either being returned to the
+// reset a buffer and make it eligible for either being returned to the
 // pool or being deallocated
 func releaseBuffer(buf *bytes.Buffer) {
 	buf.Reset()
@@ -40,7 +40,7 @@ func releaseBuffer(buf *bytes.Buffer) {
 // partial data loading.
 type ViewHandlerFunc func(Response, *http.Request) interface{}
 
-// ViewHandler is an extention of the http.Handler interface with methods added
+// ViewHandler is an extension of the http.Handler interface with methods added
 // for extra treetop endpoint configuration
 type ViewHandler interface {
 	http.Handler

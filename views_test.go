@@ -284,7 +284,7 @@ func Test_insertView(t *testing.T) {
 			wantFound: true,
 		},
 		{
-			name: "found, without interferring with other views",
+			name: "found, without interfering with other views",
 			view: func() *View {
 				v := NewView("base.html", Noop)
 				v.NewDefaultSubView("test", "gone.html", Noop)
