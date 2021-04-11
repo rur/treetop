@@ -1,3 +1,10 @@
+## [0.3.2] - 2021-04-10
+
+### Housekeeping
+
+- Test with latest stable Golang version 1.16
+- Move Treetop Demo code into a separate repo https://github.com/rur/treetop-demo
+
 ## [0.3.1] - 2020-04-07
 
 ### New Features
@@ -9,7 +16,6 @@
 
 - Template cache not used/not working when constructing template in file executors
 - Files not being closed properly in FS executor
-
 
 ## [0.3.0] - 2020-03-10
 
@@ -72,7 +78,6 @@ Example usage
     })
     mux.Handle("/some/path", exec.NewViewHandler(content))
 
-
 ### View Debugging
 
 `SprintViewTree` is a to-string function that is helpful for showing how a given view
@@ -119,7 +124,6 @@ changes in protocol terminology.
 - Re-organize how demos are loaded to allow for more to be added
 - Create 'Writer' greeter example for comparison
 
-
 ## [0.2.0] - 2020-02-16
 
 Add clarifications to the prototype library API and improve code docs.
@@ -139,7 +143,6 @@ Add clarifications to the prototype library API and improve code docs.
 - Rename `HandlePartial` method to `HandleSubView` in `treetop.Response` interface to be consistent with the view builder
 - Rename `Done` method to `Finished` in `treetop.Response` interface
 - Rename `HandlerFunc` signature type to `ViewHandlerFunc` to make a clearer association with the view builder
-
 
 #### Defining a page with views
 
