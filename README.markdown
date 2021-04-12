@@ -6,14 +6,19 @@
 
 [![GoDoc](https://godoc.org/github.com/rur/treetop?status.svg)](https://godoc.org/github.com/rur/treetop)
 
-HTML web applications share a lot of structure between endpoints. The Go
-[html/template](https://golang.org/pkg/html/template/) library has support for nested templates<sup>1</sup>.
-This is a powerful tool that web applications can use to reduce boilerplate. The Treetop library matches a
-handler with each nested template so that HTTP endpoints can be constructed for different page configurations.
+The Go standard library has powerful support for nested templates <sup>[[html/template](https://golang.org/pkg/html/template/)]</sup>.
+The Treetop library aims to make it easier to construct HTML endpoints from a hierarchy of reusable fragments.
+
+- Aims to be as lightweight as possible
+- No 3rd-party dependencies
+- Support for HTML hot-swapping to achieve interactivity (see [Online DEMO](https://treetop-demo.herokuapp.com/))
 
 #### Template Hierarchy
 
-                  BaseHandler(...)
+Parent and child templates are matched with individual functions. Template trees can then be bound together in
+various configurations to construct endpoints.
+
+                  BaseHandlerFunc(...)
                 | base.html ========================|
                 | …                                 |
                 | {{ template "content" .Content }} |
@@ -21,7 +26,7 @@ handler with each nested template so that HTTP endpoints can be constructed for 
                 |_________________|_________________|
                                   |
                            ______/ \______
-      ContentAHandler(...)                ContentBHandler(...)
+      ContentAHandlerFunc(...)            ContentBHandlerFunc(...)
     | contentA.html ========== |        | contentB.html ========== |
     |                          |        |                          |
     | <div id="content">...</… |        | <div id="content">...</… |
