@@ -4,18 +4,19 @@
 
 [![GoDoc](https://godoc.org/github.com/rur/treetop?status.svg)](https://godoc.org/github.com/rur/treetop)
 
-### A tool to create request handlers for nested templates in Go
+### Create request handlers for nested templates in Go
 
 The Treetop library makes it easier to build HTML endpoints using a hierarchy of nested templates, as supported by the Go standard library <sup>[[html/template](https://golang.org/pkg/html/template/)]</sup>.
 
 - Lightweight by design
 - No 3rd-party dependencies
-- Support for a HTML hot-swap protocol (see [Online DEMO](https://treetop-demo.herokuapp.com/))
+- Protocol for HTML hot-swapping (see [Online DEMO](https://treetop-demo.herokuapp.com/))
 
 #### Template Hierarchy
 
 Parent and child templates are paired with individual handler functions.
-Templates are combined in different configurations to bind endpoints to a router.
+Templates can be assembled in different ways to bind endpoints to your
+application router.
 
 
                              BaseFunc(…)
@@ -25,16 +26,16 @@ Templates are combined in different configurations to bind endpoints to a router
                 | {{ template "content" .Content }}  |
                 | …               /\                 |
                 | </html>         ||                 |
-                |_________________||_________________|
-                              ___(or)___
-                             /          \
-          ContentAFunc(…)   /            \   ContentBFunc(…)
-    |==== content_a.html =====|        |==== content_b.html =====|
-    |                         |        |                         |
-    | <div id="content">A</…  |        | <div id="content">B</…  |
-    |_________________________|        |_________________________|
+                |________________ || ________________|
+                                 /  \
+                                /    \
+            ContentAFunc(…)    /      \   ContentBFunc(…)
+      |==== content_a.html =====|   |==== content_b.html =====|
+      |                         |   |                         |
+      | <div id="content">A</…  |   | <div id="content">B</…  |
+      |_________________________|   |_________________________|
 
-_A basic example of a page hierarchy showing content A and B sharing the same 'base' template_
+_Basic example of a page hierarchy showing content A and B sharing the same 'base' template_
 
 __Note.__ Multiple levels of hierarchy are supported, see Golang doc for details [[doc](https://tip.golang.org/pkg/text/template/#hdr-Nested_template_definitions)]
 
@@ -55,7 +56,7 @@ handlers that share the same "base", "nav" and "sidebar" templates.
 #### Template Executor
 
 The 'Executor' is responsible for collecting related views,
-configuring templates and plumb it all together to produce a `http.Handler` instance
+configuring templates and plumbing it all together to produce a `http.Handler` instance
 for each route.
 
 Example of embedded template blocks in `"base.html"`,
@@ -102,14 +103,14 @@ The following is an illustration of the protocol.
 
 A [Treetop Client Library](https://github.com/rur/treetop-client) is available.
 It sends template requests using XHR and applies fragments to the DOM with a simple
-_find and replace_ mechanism.
+find and replace mechanism.
 
 Hot-swapping can be used to improve user experience in several ways.
 See demo for more details.
 
 ## Examples
 
-- Treetop demo apps ([README](https://github.com/rur/treetop-demo#treetop-demo) / [Online DEMO](https://treetop-demo.herokuapp.com/))
+- Demo Apps ([README](https://github.com/rur/treetop-demo#treetop-demo) / [Online DEMO](https://treetop-demo.herokuapp.com/))
 - [Todo \*Without\* MVC](https://github.com/rur/todowithoutmvc) - Treetop implementation of [TodoMVC](http://todomvc.com) app using the template protocol.
 
 ## Template Executor
