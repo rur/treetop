@@ -15,8 +15,8 @@ The Treetop library makes it easier to build HTML endpoints using a hierarchy of
 #### Template Hierarchy
 
 Parent and child templates are paired with individual handler functions.
-Templates can be assembled in different ways to bind endpoints to your
-application router.
+You can build pages by combining views in different ways and
+binding endpoints to your application router.
 
 
                              BaseFunc(…)
@@ -39,8 +39,9 @@ _Basic example of a page hierarchy showing content A and B sharing the same 'bas
 
 __Note.__ Multiple levels of hierarchy are supported, see Golang doc for details [[doc](https://tip.golang.org/pkg/text/template/#hdr-Nested_template_definitions)]
 
-### Example 
-The code below is an extension of this example. It binds the routes `"/content_a"` and `"/content_b"` with two
+### API Overview 
+
+The code below is an extension of the example hierarchy. It binds the routes `"/content_a"` and `"/content_b"` with two
 handlers that share the same "base", "nav" and "sidebar" templates.
 
     base := treetop.NewView("base.html", BaseHandler)
@@ -50,14 +51,14 @@ handlers that share the same "base", "nav" and "sidebar" templates.
     contentB := base.NewSubView("content", "content_b.html", ContentBHandler)
 
     exec := treetop.FileExecutor{}
-    mux.Handle("/content_a", exec.NewViewHandler(contentA, nav))
-    mux.Handle("/content_b", exec.NewViewHandler(contentB, nav))
+    myMux.Handle("/content_a", exec.NewViewHandler(contentA, nav))
+    myMux.Handle("/content_b", exec.NewViewHandler(contentB, nav))
 
 #### Template Executor
 
 The 'Executor' is responsible for collecting related views,
 configuring templates and plumbing it all together to produce a `http.Handler` instance
-for each route.
+for your router.
 
 Example of embedded template blocks in `"base.html"`,
 
@@ -73,7 +74,25 @@ Example of embedded template blocks in `"base.html"`,
 
 _See text/template [Nested Template Definitions](https://tip.golang.org/pkg/text/template/#hdr-Nested_template_definitions) for more info._
 
-Views can have as many levels of nesting as needed.
+Note the loose coupling between content handlers in the outline below.
+
+    func BaseHandler(rsp treetop.Response, req *http.Request) interface{} {
+        // data for base template
+        return struct {
+            ...
+        }{
+            ...
+            Nav: rsp.HandleSubView("nav", req),
+            SideBar: rsp.HandleSubView("sidebar", req),
+            Content: rsp.HandleSubView("content", req),
+        }
+    }
+
+    func ContentAHandler(rsp treetop.Response, req *http.Request) interface{} {
+        // data for Content A template
+        return ...
+    }
+
 
 ### No Third-Party Dependencies
 
@@ -105,7 +124,7 @@ A [Treetop Client Library](https://github.com/rur/treetop-client) is available.
 It sends template requests using XHR and applies fragments to the DOM with a simple
 find and replace mechanism.
 
-Hot-swapping can be used to improve user experience in several ways.
+Hot-swapping can be used to enhance user experience in several ways.
 See demo for more details.
 
 ## Examples
