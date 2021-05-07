@@ -4,6 +4,8 @@
 
 [![GoDoc](https://godoc.org/github.com/rur/treetop?status.svg)](https://godoc.org/github.com/rur/treetop)
 
+## Bridging _net/http_ with _html/template_
+
 ### Create request handlers for nested templates in Go
 
 The Treetop library makes it easier to build HTML endpoints using a hierarchy of nested templates, as supported by the Go standard library <sup>[[html/template](https://golang.org/pkg/html/template/)]</sup>.
@@ -17,7 +19,6 @@ The Treetop library makes it easier to build HTML endpoints using a hierarchy of
 Parent and child templates are paired with individual handler functions.
 You can build pages by combining views in different ways and
 binding endpoints to your application router.
-
 
                              BaseFunc(…)
                 |============ base.html =============|
@@ -37,9 +38,9 @@ binding endpoints to your application router.
 
 _Basic example of a page hierarchy showing content A and B sharing the same 'base' template_
 
-__Note.__ Multiple levels of hierarchy are supported, see Golang doc for details [[doc](https://tip.golang.org/pkg/text/template/#hdr-Nested_template_definitions)]
+**Note.** Multiple levels of hierarchy are supported, see Golang doc for details [[doc](https://tip.golang.org/pkg/text/template/#hdr-Nested_template_definitions)]
 
-### API Overview 
+### API Overview
 
 The code below is an extension of the example hierarchy. It binds the routes `"/content_a"` and `"/content_b"` with two
 handlers that share the same "base", "nav" and "sidebar" templates.
@@ -92,7 +93,6 @@ Note the loose coupling between content handlers in the outline below.
         // data for Content A template
         return ...
     }
-
 
 ### No Third-Party Dependencies
 
@@ -204,5 +204,4 @@ See [Client Library](https://github.com/rur/treetop-client) for more information
 
 ## _Footnotes_
 
-<a name="ref_1"></a>1. Go supports template inheritance through [nested template definitions](https://tip.golang.org/pkg/text/template/#hdr-Nested_template_definitions).
-2. A [http.ResponseWriter](https://golang.org/pkg/net/http/#ResponseWriter) will flush headers when either `WriteHeaders(..)` or `Write(..)` methods are invoked.
+<a name="ref_1"></a>1. Go supports template inheritance through [nested template definitions](https://tip.golang.org/pkg/text/template/#hdr-Nested_template_definitions). 2. A [http.ResponseWriter](https://golang.org/pkg/net/http/#ResponseWriter) will flush headers when either `WriteHeaders(..)` or `Write(..)` methods are invoked.
