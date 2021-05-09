@@ -4,20 +4,18 @@
 
 [![GoDoc](https://godoc.org/github.com/rur/treetop?status.svg)](https://godoc.org/github.com/rur/treetop)
 
-## Bridging _net/http_ with _html/template_
+### A lightweight bridge from _net/http_ to _html/template_
 
-### Create request handlers for nested templates in Go
-
-The Treetop library makes it easier to build HTML endpoints using a hierarchy of nested templates, as supported by the Go standard library <sup>[[html/template](https://golang.org/pkg/html/template/)]</sup>.
+Build HTML endpoints for a hierarchy of nested templates, as supported by the Go standard library <sup>[[html/template](https://golang.org/pkg/html/template/)]</sup>.
 
 - Lightweight by design
 - No 3rd-party dependencies
-- Protocol for HTML hot-swapping (see [Online DEMO](https://treetop-demo.herokuapp.com/))
+- Protocol for fragment hot-swapping (see [Online DEMO](https://treetop-demo.herokuapp.com/))
 
 #### Template Hierarchy
 
-Parent and child templates are paired with individual handler functions.
-You can build pages by combining views in different ways and
+Each template is paired with an individual data loading function.
+Pages are constructed by combining templates in different configurations and
 binding endpoints to your application router.
 
                              BaseFunc(…)
@@ -38,12 +36,13 @@ binding endpoints to your application router.
 
 _Basic example of a page hierarchy showing content A and B sharing the same 'base' template_
 
-**Note.** Multiple levels of hierarchy are supported, see Golang doc for details [[doc](https://tip.golang.org/pkg/text/template/#hdr-Nested_template_definitions)]
+**Note.** Nested hierarchy is supported, see Golang docs for details <sup>[[doc](https://tip.golang.org/pkg/text/template/#hdr-Nested_template_definitions)]</sup>
 
 ### API Overview
 
-The code below is an extension of the example hierarchy. It binds the routes `"/content_a"` and `"/content_b"` with two
-handlers that share the same "base", "nav" and "sidebar" templates.
+The code example below is an extension of the hierarchy diagram. It binds
+`"/content_a"` and `"/content_b"` routes with two
+pages that share the same "base", "nav" and "sidebar" templates.
 
     base := treetop.NewView("base.html", BaseHandler)
     nav := base.NewSubView("nav", "nav.html", NavHandler)
