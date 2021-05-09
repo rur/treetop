@@ -6,7 +6,7 @@
 
 ### A lightweight bridge from _net/http_ to _html/template_
 
-Build HTML endpoints for a hierarchy of nested templates, as supported by the Go standard library <sup>[[html/template](https://golang.org/pkg/html/template/)]</sup>.
+Build HTML endpoints using a hierarchy of nested templates, as supported by the Go standard library <sup>[[html/template](https://golang.org/pkg/html/template/)]</sup>.
 
 - Lightweight by design
 - No 3rd-party dependencies
