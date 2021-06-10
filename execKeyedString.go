@@ -70,6 +70,9 @@ func (kse *KeyedStringExecutor) constructTemplate(view *View) (*template.Templat
 		if _, err := t.Parse(templateStr); err != nil {
 			return nil, err
 		}
+		if err := checkTemplateForBlockNames(t, v); err != nil {
+			return nil, err
+		}
 		for _, sub := range v.SubViews {
 			if sub != nil {
 				queue.add(sub)

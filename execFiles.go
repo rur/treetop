@@ -68,7 +68,7 @@ func (fe *FileExecutor) constructTemplate(view *View) (*template.Template, error
 			file, err := os.Open(v.Template)
 			if err != nil {
 				return nil, fmt.Errorf(
-					"Failed to open template file '%s', error %s",
+					"failed to open template file '%s', error %s",
 					v.Template, err.Error(),
 				)
 			}
@@ -76,7 +76,7 @@ func (fe *FileExecutor) constructTemplate(view *View) (*template.Template, error
 			templateString, err = readStringAndClose(buffer, file)
 			if err != nil {
 				return nil, fmt.Errorf(
-					"Failed to read contents of template file '%s', error %s",
+					"failed to read contents of template file '%s', error %s",
 					v.Template, err.Error(),
 				)
 			}
@@ -84,7 +84,7 @@ func (fe *FileExecutor) constructTemplate(view *View) (*template.Template, error
 		_, err := t.Parse(templateString)
 		if err != nil {
 			return nil, fmt.Errorf(
-				"Failed to parse contents of template file '%s', error %s",
+				"failed to parse contents of template file '%s', error %s",
 				v.Template, err.Error(),
 			)
 		}

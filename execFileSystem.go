@@ -72,7 +72,7 @@ func (fe *FileSystemExecutor) constructTemplate(view *View) (*template.Template,
 			file, err := fe.FS.Open(v.Template)
 			if err != nil {
 				return nil, fmt.Errorf(
-					"Failed to open template file '%s', error %s",
+					"failed to open template file '%s', error %s",
 					v.Template, err.Error(),
 				)
 			}
@@ -80,7 +80,7 @@ func (fe *FileSystemExecutor) constructTemplate(view *View) (*template.Template,
 			templateString, err = readStringAndClose(buffer, file)
 			if err != nil {
 				return nil, fmt.Errorf(
-					"Failed to read contents of template file '%s', error %s",
+					"failed to read contents of template file '%s', error %s",
 					v.Template, err.Error(),
 				)
 			}
@@ -89,7 +89,7 @@ func (fe *FileSystemExecutor) constructTemplate(view *View) (*template.Template,
 		_, err := t.Parse(templateString)
 		if err != nil {
 			return nil, fmt.Errorf(
-				"Failed to parse contents of template file '%s', error %s",
+				"failed to parse contents of template file '%s', error %s",
 				v.Template, err.Error(),
 			)
 		}

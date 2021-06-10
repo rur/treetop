@@ -53,7 +53,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 				<p id="ps">Default {{ . }}</p>
 				{{ end }}
 				</body></html>`,
-				"content.html": "<div id=\"content\">\n<p>Given {{ .Message }}</p>\n{{ template \"sub\" .Sub }}\n</div>",
+				"content.html": "<div id=\"content\">\n<p>Given {{ .Message }}</p>\n{{ template \"sub\" .Sub }}\n</div>{{ block \"never\" . }}{{ end }}",
 				"sub.html":     `<p id="sub">Given {{ . }}</p>`,
 				"ps.html":      `<div id="ps">Given {{ . }}</div>`,
 			}),
@@ -94,7 +94,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 				<p id="ps">Default {{ . }}</p>
 				{{ end }}
 				</body></html>`,
-				"content.html": "<div id=\"content\">\n<p>Given {{ .Message }}</p>\n{{ template \"sub\" .Sub }}\n</div>",
+				"content.html": "<div id=\"content\">\n<p>Given {{ .Message }}</p>\n{{ template \"sub\" .Sub }}\n</div>{{ block \"never\" . }}{{ end }}",
 				"sub.html":     `<p id="sub">Given {{ . }}</p>`,
 				"ps.html":      `<div id="ps">Given {{ . }}</div>`,
 			}),
@@ -118,8 +118,9 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 				{{ block "ps" .PS }}
 				<p id="ps">Default {{ . }}</p>
 				{{ end }}
+				{{ block "never" . }}{{ end }}
 				</body></html>`,
-				"content.html": "<div id=\"content\">\n<p>Given {{ .Message }}</p>\n{{ template \"sub\" .Sub }}\n</div>",
+				"content.html": "<div id=\"content\">\n<p>Given {{ .Message }}</p>\n{{ template \"sub\" .Sub }}\n</div>{{ block \"never\" . }}{{ end }}",
 				"sub.html":     `<p id="sub">Given {{ . }}</p>`,
 				"ps.html":      `<div id="ps">Given {{ . }}</div>`,
 			}),
@@ -133,11 +134,46 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 			</template>`),
 			templateOnly: true,
 		},
+		{
+			name: "error, template missing a declared blockname",
+			exec: NewKeyedStringExecutor(map[string]string{
+				"base.html": `{{ template "content" .Content }}
+				{{ block "ps" .PS }}<p id="ps">Default {{ . }}</p>{{ end }}`,
+				"content.html": "MISSING TEMPLATE BLOCK 'sub' and 'never'",
+				"sub.html":     `Sub`,
+				"ps.html":      `Ps`,
+			}),
+			expectErrors: []string{
+				`content.html is missing template declaration(s) for sub view blocks: "never", "sub"`,
+				`content.html is missing template declaration(s) for sub view blocks: "never", "sub"`,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			handler := tt.exec.NewViewHandler(content, ps)
+			gotErrors := tt.exec.FlushErrors()
+			if len(tt.expectErrors)+len(gotErrors) > 0 {
+				for len(gotErrors) < len(tt.expectErrors) {
+					gotErrors = append(gotErrors, nil)
+				}
+				for i, err := range gotErrors {
+					if err == nil {
+						t.Errorf("Expecting an error [%d]: %s", i, tt.expectErrors[i])
+						continue
+					}
+					if i >= len(tt.expectErrors) {
+						t.Errorf("Unexpected error [%d]: %s", i, err.Error())
+						continue
+					}
+					if got := err.Error(); got != tt.expectErrors[i] {
+						t.Errorf("Expecting error [%d]\n%s\ngot\n%s", i, tt.expectErrors[i], got)
+					}
+				}
+				return
+			}
+
 			if tt.pageOnly {
 				handler = handler.PageOnly()
 			}
@@ -158,25 +194,6 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 
 			if gotTemplate != tt.expectTemplate {
 				t.Errorf("Expecting partial body\n%s\nGot\n%s", tt.expectTemplate, gotTemplate)
-			}
-
-			gotErrors := tt.exec.FlushErrors()
-			for len(gotErrors) < len(tt.expectErrors) {
-				gotErrors = append(gotErrors, nil)
-			}
-
-			for i, err := range gotErrors {
-				if err == nil {
-					t.Errorf("Expecting an error [%d]: %s", i, tt.expectErrors[i])
-					continue
-				}
-				if i >= len(tt.expectErrors) {
-					t.Errorf("Unexpected error [%d]: %s", i, err.Error())
-					continue
-				}
-				if got := err.Error(); got != tt.expectErrors[i] {
-					t.Errorf("Expecting error [%d]\n%s\ngot\n%s", i, tt.expectErrors[i], got)
-				}
 			}
 		})
 	}
@@ -310,8 +327,6 @@ func TestKeyedStringExecutor_constructTemplate(t *testing.T) {
 }
 
 func TestNewKeyedStringExecutor(t *testing.T) {
-	type args struct {
-	}
 	tests := []struct {
 		name      string
 		templates map[string]string
