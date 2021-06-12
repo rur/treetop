@@ -2,12 +2,7 @@ package treetop
 
 import (
 	"errors"
-	"fmt"
 	"html/template"
-	"sort"
-	"strconv"
-	"strings"
-	"text/template/parse"
 )
 
 // ViewExecutor is an interface for objects that implement transforming a View definition
@@ -164,51 +159,4 @@ func (q *viewQueue) next() (*View, error) {
 
 func (q *viewQueue) empty() bool {
 	return q.offset >= len(q.items)
-}
-
-// checkTemplateForBlockNames will scan the parsed templates for blocks/template slots
-// that match the declared block names. If a block naming is not present, return an error
-func checkTemplateForBlockNames(tmpl *template.Template, v *View) error {
-	parsedBlocks := make(map[string]bool)
-	for _, tplName := range listTemplateNodeName(tmpl.Tree.Root) {
-		parsedBlocks[tplName] = true
-	}
-
-	var missing []string
-	for blockName := range v.SubViews {
-		if _, ok := parsedBlocks[blockName]; !ok {
-			missing = append(missing, strconv.Quote(blockName))
-		}
-	}
-	if len(missing) == 0 {
-		return nil
-	}
-	sort.Strings(missing)
-	return fmt.Errorf("%s is missing template declaration(s) for sub view blocks: %s", v.Template, strings.Join(missing, ", "))
-}
-
-// listTemplateNodeName will scan a parsed template tree for template nodes
-// and list all template names found
-func listTemplateNodeName(list *parse.ListNode) (names []string) {
-	if list == nil {
-		return
-	}
-	for _, node := range list.Nodes {
-		switch n := node.(type) {
-		case *parse.TemplateNode:
-			names = append(names, n.Name)
-		case *parse.IfNode:
-			names = append(names, listTemplateNodeName(n.List)...)
-			names = append(names, listTemplateNodeName(n.ElseList)...)
-		case *parse.RangeNode:
-			names = append(names, listTemplateNodeName(n.List)...)
-			names = append(names, listTemplateNodeName(n.ElseList)...)
-		case *parse.WithNode:
-			names = append(names, listTemplateNodeName(n.List)...)
-			names = append(names, listTemplateNodeName(n.ElseList)...)
-		case *parse.ListNode:
-			names = append(names, listTemplateNodeName(n)...)
-		}
-	}
-	return
 }

@@ -53,17 +53,30 @@ func TestStringExecutor_constructTemplate(t *testing.T) {
 			data: "world",
 			want: `<div> base, content:  default here  </div>`,
 		},
+		{
+			name: "error, template missing a declared blockname",
+			view: func() *View {
+				b := NewView(`<div> base, content: </div>`, Noop)
+				b.NewSubView("content", `<p id="content">hello {{ . }}!</p>`, Noop)
+				return b
+			}(),
+			wantErr: `<div> base, content: </div> is missing template declaration(s) for sub view blocks: "content"`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			exec := StringExecutor{}
-			got, err := exec.constructTemplate(tt.view)
+			exec.NewViewHandler(nil)
+			got, err := exec.TemplateExecutor.constructTemplate(tt.view)
 			if err != nil {
 				if err.Error() != tt.wantErr {
 					t.Errorf("StringExecutor.constructTemplate() error = %v, wantErr %v", err, tt.wantErr)
 				} else if tt.wantErr == "" {
 					t.Errorf("StringExecutor.constructTemplate() unexpected error = %v", err)
 				}
+				return
+			} else if tt.wantErr != "" {
+				t.Errorf("Expected error %s", tt.wantErr)
 				return
 			}
 

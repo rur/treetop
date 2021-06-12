@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
-	"io"
 	"os"
 )
 
@@ -90,14 +89,4 @@ func (fe *FileExecutor) constructTemplate(view *View) (*template.Template, error
 		}
 	}
 	return out, nil
-}
-
-// readStringAndClose ensures that the supplied read closer is closed
-func readStringAndClose(buffer *bytes.Buffer, rc io.ReadCloser) (string, error) {
-	defer rc.Close()
-	_, err := buffer.ReadFrom(rc)
-	if err != nil {
-		return "", err
-	}
-	return buffer.String(), nil
 }
