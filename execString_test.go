@@ -192,12 +192,12 @@ func TestStringExecutor_NewViewHandler(t *testing.T) {
 				ps := base.NewSubView("ps", `{{ failps }}`, Constant("from ps to ps"))
 				return exec.NewViewHandler(content, ps)
 			},
-			expectPage:     "Not Acceptable\n",
-			expectTemplate: "Not Acceptable\n",
+			expectPage:     "Not Acceptable",
+			expectTemplate: "Not Acceptable",
 			expectErrors: []string{
-				`template: :1: function "fail" not defined`,
-				`template: content:1: function "failcontent" not defined`,
-				`template: ps:1: function "failps" not defined`,
+				`failed to parse template "{{ fail }}": template: :1: function "fail" not defined`,
+				`failed to parse template "{{ failcontent }}": template: content:1: function "failcontent" not defined`,
+				`failed to parse template "{{ failps }}": template: ps:1: function "failps" not defined`,
 			},
 		},
 		{
@@ -211,13 +211,13 @@ func TestStringExecutor_NewViewHandler(t *testing.T) {
 
 			<div id="ps">Given from base to ps</div>
 			</body></html>`),
-			expectTemplate: "Not Acceptable\n",
+			expectTemplate: "Not Acceptable",
 			pageOnly:       true,
 		},
 		{
 			name:       "template only",
 			getHandler: standardHandler,
-			expectPage: "Not Acceptable\n",
+			expectPage: "Not Acceptable",
 			expectTemplate: stripIndent(`<template>
 			<div id="content">
 			<p>Given from content to content!</p>
@@ -232,8 +232,8 @@ func TestStringExecutor_NewViewHandler(t *testing.T) {
 			getHandler: func(exec ViewExecutor) ViewHandler {
 				return exec.NewViewHandler(nil)
 			},
-			expectPage:     "Not Acceptable\n",
-			expectTemplate: "Not Acceptable\n",
+			expectPage:     "Not Acceptable",
+			expectTemplate: "Not Acceptable",
 		},
 	}
 

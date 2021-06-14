@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"html/template"
 	"net/http/httptest"
+	"regexp"
 	"strings"
 	"testing"
-	"unicode/utf8"
 )
 
 func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
@@ -76,8 +76,8 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 		{
 			name:           "missing base template error",
 			exec:           NewKeyedStringExecutor(map[string]string{}),
-			expectPage:     "Not Acceptable\n",
-			expectTemplate: "Not Acceptable\n",
+			expectPage:     "Not Acceptable",
+			expectTemplate: "Not Acceptable",
 			expectErrors: []string{
 				`no key found for template 'base.html'`,
 				`no key found for template 'content.html'`,
@@ -106,7 +106,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 
 			<div id="ps">Given from base to ps</div>
 			</body></html>`),
-			expectTemplate: "Not Acceptable\n",
+			expectTemplate: "Not Acceptable",
 			pageOnly:       true,
 		},
 		{
@@ -124,7 +124,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 				"sub.html":     `<p id="sub">Given {{ . }}</p>`,
 				"ps.html":      `<div id="ps">Given {{ . }}</div>`,
 			}),
-			expectPage: "Not Acceptable\n",
+			expectPage: "Not Acceptable",
 			expectTemplate: stripIndent(`<template>
 			<div id="content">
 			<p>Given from content to content!</p>
@@ -202,7 +202,7 @@ func TestKeyedStringExecutor_NewViewHandler_NilView(t *testing.T) {
 	handler.ServeHTTP(rec, mockRequest("/some/path", "*/*"))
 	gotPage := stripIndent(sDumpBody(rec))
 
-	expected := "Not Acceptable\n"
+	expected := "Not Acceptable"
 
 	if gotPage != expected {
 		t.Errorf("Expecting page body\n%s\nGot\n%s", expected, gotPage)
@@ -378,82 +378,7 @@ func TestNewKeyedStringExecutor(t *testing.T) {
 
 // stripIndent removes all whitespace at the beginning of every line
 func stripIndent(s string) string {
-	out := make([]byte, 0, len(s))
-	indent := true
-	for _, code := range s {
-		switch code {
-		case '\n', '\r':
-			indent = true
-		case ' ', '\t':
-			if indent {
-				continue
-			}
-		default:
-			indent = false
-		}
-		pos := len(out)
-		for pad := utf8.RuneLen(code); pad > 0; pad-- {
-			out = append(out, ' ')
-		}
-		utf8.EncodeRune(out[pos:], code)
-	}
-	return string(out)
-}
-
-func Test_stripIndent(t *testing.T) {
-	tests := []struct {
-		name string
-		s    string
-		want string
-	}{
-		{
-			name: "basic",
-			s:    "test",
-			want: "test",
-		},
-		{
-			name: "basic with indent",
-			s:    "   test",
-			want: "test",
-		},
-		{
-			name: "multiline basic",
-			s: `test
-
-			test
-			`,
-			want: "test\n\ntest\n",
-		},
-		{
-			name: "multiline with mixed spaces and tabs",
-			s: strings.Join([]string{
-				"\t\t \ttest",
-				"\t\t \ttest",
-				"\t\t \ttest",
-				"\t\t \ttest",
-				"\t\t \ttest",
-			}, "\n"),
-			want: "test\ntest\ntest\ntest\ntest",
-		},
-		{
-			name: "multiline with mixed spaces and tabs and multi byte uft8 runes",
-			s: strings.Join([]string{
-				"\t\t \ttest",
-				"\t\t \ttest",
-				"\t\t \tHello 世界  ",
-				"\t\t \ttest",
-				"\t\t \ttest",
-			}, "\n"),
-			want: "test\ntest\nHello 世界  \ntest\ntest",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := stripIndent(tt.s); got != tt.want {
-				t.Errorf("stripIndent() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	return strings.TrimSpace(regexp.MustCompile(`\s+`).ReplaceAllString(s, " "))
 }
 
 func TestKeyedStringExecutor_FuncMap(t *testing.T) {

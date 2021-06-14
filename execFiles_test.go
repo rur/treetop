@@ -47,33 +47,37 @@ func TestFileExecutor_NewViewHandler(t *testing.T) {
 		{
 			name:       "functional example",
 			getHandler: standardHandler,
-			expectPage: stripIndent(`<html><body>
+			expectPage: stripIndent(`<html>
+			<body>
 			<div id="content">
 			<p>Given from base to content</p>
 			<p id="sub">Given from base via content to sub</p>
 			</div>
-
 			<div id="ps">Given from base to ps</div>
-			</body></html>`),
+			</body>
+			</html>`),
 			expectTemplate: stripIndent(`<template>
 			<div id="content">
 			<p>Given from content to content!</p>
 			<p id="sub">Given from content to sub</p>
 			</div>
+
 			<div id="ps">Given from ps to ps</div>
 			</template>`),
 		},
 		{
 			name:       "page only",
 			getHandler: standardHandler,
-			expectPage: stripIndent(`<html><body>
+			expectPage: stripIndent(`<html>
+			<body>
 			<div id="content">
 			<p>Given from base to content</p>
 			<p id="sub">Given from base via content to sub</p>
 			</div>
 
 			<div id="ps">Given from base to ps</div>
-			</body></html>`),
+			</body>
+			</html>`),
 			expectTemplate: "Not Acceptable\n",
 			pageOnly:       true,
 		},
@@ -86,6 +90,7 @@ func TestFileExecutor_NewViewHandler(t *testing.T) {
 			<p>Given from content to content!</p>
 			<p id="sub">Given from content to sub</p>
 			</div>
+
 			<div id="ps">Given from ps to ps</div>
 			</template>`),
 			templateOnly: true,
@@ -98,10 +103,8 @@ func TestFileExecutor_NewViewHandler(t *testing.T) {
 			expectPage:     "Not Acceptable\n",
 			expectTemplate: "Not Acceptable\n",
 			expectErrors: []string{
-				`Failed to open template file 'notexists.html', ` +
-					`error open notexists.html: no such file or directory`,
-				`Failed to open template file 'notexists.html', ` +
-					`error open notexists.html: no such file or directory`,
+				`failed to load template "notexists.html": open notexists.html: no such file or directory`,
+				`failed to load template "notexists.html": open notexists.html: no such file or directory`,
 			},
 		},
 		{
@@ -112,10 +115,8 @@ func TestFileExecutor_NewViewHandler(t *testing.T) {
 			expectPage:     "Not Acceptable\n",
 			expectTemplate: "Not Acceptable\n",
 			expectErrors: []string{
-				`Failed to parse contents of template file 'testdata/missingFunc.html', ` +
-					`error template: :2: function "func_that_does_not_exist" not defined`,
-				`Failed to parse contents of template file 'testdata/missingFunc.html', ` +
-					`error template: :2: function "func_that_does_not_exist" not defined`,
+				`failed to parse template "testdata/missingFunc.html": template: :2: function "func_that_does_not_exist" not defined`,
+				`failed to parse template "testdata/missingFunc.html": template: :2: function "func_that_does_not_exist" not defined`,
 			},
 		},
 		{
@@ -146,19 +147,23 @@ func TestFileExecutor_NewViewHandler(t *testing.T) {
 				ps := base.NewSubView("ps", "testdata/ps.html", Constant("from ps to ps"))
 				return exec.NewViewHandler(content, ps)
 			},
-			expectPage: stripIndent(`<html><body>
+			expectPage: stripIndent(`<html>
+			<body>
 			<div id="content">
 			<p>Given from base to content</p>
 			<p id="sub">Given from base via content to sub</p>
 			</div>
 
 			<div id="ps">Given from base to ps</div>
-			</body></html>`),
+			</body>
+			</html>
+			`),
 			expectTemplate: stripIndent(`<template>
 			<div id="content">
 			<p>Given from content to content!</p>
 			<p id="sub">Given from content to sub</p>
 			</div>
+
 			<div id="ps">Given from ps to ps</div>
 			</template>`),
 		},
@@ -168,27 +173,6 @@ func TestFileExecutor_NewViewHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			exec := &FileExecutor{}
 			handler := tt.getHandler(exec)
-			if tt.pageOnly {
-				handler = handler.PageOnly()
-			}
-			if tt.templateOnly {
-				handler = handler.FragmentOnly()
-			}
-			rec := httptest.NewRecorder()
-			handler.ServeHTTP(rec, mockRequest("/some/path", "*/*"))
-			gotPage := stripIndent(sDumpBody(rec))
-
-			if gotPage != tt.expectPage {
-				t.Errorf("Expecting page body\n%s\nGot\n%s", tt.expectPage, gotPage)
-			}
-
-			rec = httptest.NewRecorder()
-			handler.ServeHTTP(rec, mockRequest("/some/path", TemplateContentType))
-			gotTemplate := stripIndent(sDumpBody(rec))
-
-			if gotTemplate != tt.expectTemplate {
-				t.Errorf("Expecting partial body\n%s\nGot\n%s", tt.expectTemplate, gotTemplate)
-			}
 
 			gotErrors := exec.FlushErrors()
 			for len(gotErrors) < len(tt.expectErrors) {
@@ -208,6 +192,29 @@ func TestFileExecutor_NewViewHandler(t *testing.T) {
 					t.Errorf("Expecting error [%d]\n%s\ngot\n%s", i, tt.expectErrors[i], got)
 				}
 			}
+
+			if tt.pageOnly {
+				handler = handler.PageOnly()
+			}
+			if tt.templateOnly {
+				handler = handler.FragmentOnly()
+			}
+			rec := httptest.NewRecorder()
+			handler.ServeHTTP(rec, mockRequest("/some/path", "*/*"))
+			gotPage := stripIndent(sDumpBody(rec))
+
+			if gotPage != stripIndent(tt.expectPage) {
+				t.Errorf("Expecting page body\n%s\nGot\n%s", tt.expectPage, gotPage)
+			}
+
+			rec = httptest.NewRecorder()
+			handler.ServeHTTP(rec, mockRequest("/some/path", TemplateContentType))
+			gotTemplate := stripIndent(sDumpBody(rec))
+
+			if gotTemplate != stripIndent(tt.expectTemplate) {
+				t.Errorf("Expecting partial body\n%s\nGot\n%s", tt.expectTemplate, gotTemplate)
+			}
+
 		})
 	}
 }
@@ -273,11 +280,12 @@ func TestFileExecutor_UsingSameTemplate(t *testing.T) {
 	h.ServeHTTP(rec, mockRequest("/some/path", "*/*"))
 	gotPage := strings.TrimSpace(stripIndent(sDumpBody(rec)))
 	expectPage := strings.TrimSpace(stripIndent(`
-	<html><body>
+	<html>
+	<body>
 	<h1>Common Content Data</h1>
-
 	<h1>Common Postscript Data</h1>
-	</body></html>
+	</body>
+	</html>
 	`))
 	if gotPage != expectPage {
 		t.Errorf("Expecting\n%s\ngot\n%s", expectPage, gotPage)

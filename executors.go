@@ -143,18 +143,12 @@ func (fe *FileExecutor) NewViewHandler(view *View, includes ...*View) ViewHandle
 		}
 		file, err := os.Open(name)
 		if err != nil {
-			return "", fmt.Errorf(
-				"failed to open template file '%s', error %s",
-				name, err.Error(),
-			)
+			return "", err
 		}
 		defer file.Close()
 		tpl, err := ioutil.ReadAll(file)
 		if err != nil {
-			return "", fmt.Errorf(
-				"failed to open template file '%s', error %s",
-				name, err.Error(),
-			)
+			return "", err
 		}
 		return string(tpl), nil
 	})

@@ -42,11 +42,11 @@ func (tl TemplateLoader) ViewTemplate(view *View) (*template.Template, error) {
 		}
 		templateString, err := tl.Load(v.Template)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf(`failed to load template %#v: %s`, v.Template, err)
 		}
 
 		if _, err := t.Parse(templateString); err != nil {
-			return nil, err
+			return nil, fmt.Errorf(`failed to parse template %#v: %s`, v.Template, err)
 		}
 		// require template to declare a template/block node for each direct subview name
 		if err := checkTemplateForBlockNames(t, v); err != nil {
