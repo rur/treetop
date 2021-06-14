@@ -79,9 +79,9 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 			expectPage:     "Not Acceptable\n",
 			expectTemplate: "Not Acceptable\n",
 			expectErrors: []string{
-				`KeyedStringExecutor: no template found for key 'base.html'`,
-				`KeyedStringExecutor: no template found for key 'content.html'`,
-				`KeyedStringExecutor: no template found for key 'ps.html'`,
+				`no key found for template 'base.html'`,
+				`no key found for template 'content.html'`,
+				`no key found for template 'ps.html'`,
 			},
 		},
 		{
@@ -153,24 +153,19 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			handler := tt.exec.NewViewHandler(content, ps)
-			gotErrors := tt.exec.FlushErrors()
-			if len(tt.expectErrors)+len(gotErrors) > 0 {
-				for len(gotErrors) < len(tt.expectErrors) {
-					gotErrors = append(gotErrors, nil)
+			err := tt.exec.FlushErrors()
+			if err != nil {
+				if len(tt.expectErrors) == 0 {
+					t.Errorf("Unexpected error: %s", err)
 				}
-				for i, err := range gotErrors {
-					if err == nil {
-						t.Errorf("Expecting an error [%d]: %s", i, tt.expectErrors[i])
-						continue
-					}
-					if i >= len(tt.expectErrors) {
-						t.Errorf("Unexpected error [%d]: %s", i, err.Error())
-						continue
-					}
-					if got := err.Error(); got != tt.expectErrors[i] {
-						t.Errorf("Expecting error [%d]\n%s\ngot\n%s", i, tt.expectErrors[i], got)
+				for _, expect := range tt.expectErrors {
+					if !strings.Contains(err.Error(), expect) {
+						t.Errorf("Expecting error %s to contain: %s", err, expect)
 					}
 				}
+				return
+			} else if len(tt.expectErrors) > 0 {
+				t.Errorf("Expected errors: %v", tt.expectErrors)
 				return
 			}
 
@@ -279,7 +274,7 @@ func TestKeyedStringExecutor_constructTemplate(t *testing.T) {
 				return b
 			}(),
 			data:    "world",
-			wantErr: "KeyedStringExecutor: no template found for key 'content-other.html'",
+			wantErr: "no key found for template 'content-other.html'",
 		},
 		{
 			name: "multi level default children",
@@ -306,18 +301,25 @@ func TestKeyedStringExecutor_constructTemplate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.exec.constructTemplate(tt.view)
+			got, ok := tt.exec.NewViewHandler(tt.view).(*TemplateHandler)
+			if !ok {
+				t.Fatal("StringExecutor did not return a TemplateHandler")
+			}
+			err := tt.exec.FlushErrors()
 			if err != nil {
-				if err.Error() != tt.wantErr {
-					t.Errorf("KeyedStringExecutor.constructTemplate() error = %v, wantErr %v", err, tt.wantErr)
-				} else if tt.wantErr == "" {
-					t.Errorf("KeyedStringExecutor.constructTemplate() unexpected error = %v", err)
+				if tt.wantErr == "" {
+					t.Errorf("Unexpected error: %s", err)
+				} else if !strings.Contains(err.Error(), tt.wantErr) {
+					t.Errorf("Expecting error %s to contain: %s", err, tt.wantErr)
 				}
+				return
+			} else if tt.wantErr != "" {
+				t.Errorf("Expected error %s", tt.wantErr)
 				return
 			}
 
 			buf := new(bytes.Buffer)
-			got.ExecuteTemplate(buf, tt.view.Defines, tt.data)
+			got.PageTemplate.ExecuteTemplate(buf, tt.view.Defines, tt.data)
 			gotString := buf.String()
 			if stripIndent(gotString) != stripIndent(tt.want) {
 				t.Errorf("KeyedStringExecutor.constructTemplate() got %v, want %v", gotString, tt.want)

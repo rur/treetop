@@ -1,6 +1,7 @@
 package treetop
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"sort"
@@ -9,23 +10,19 @@ import (
 	"text/template/parse"
 )
 
-type TemplateExecutor struct {
-	Funcs  template.FuncMap
-	Loader func(string) (string, error)
-
-	exec Executor
+type TemplateLoader struct {
+	Load  func(string) (string, error)
+	Funcs template.FuncMap
 }
 
-func (te *TemplateExecutor) NewViewHandler(view *View, includes ...*View) ViewHandler {
-	te.exec.NewTemplate = te.constructTemplate
-	return te.exec.NewViewHandler(view, includes...)
+func NewTemplateLoader(funcs template.FuncMap, load func(string) (string, error)) *TemplateLoader {
+	return &TemplateLoader{
+		Load:  load,
+		Funcs: funcs,
+	}
 }
 
-func (te *TemplateExecutor) FlushErrors() ExecutorErrors {
-	return te.exec.FlushErrors()
-}
-
-func (te *TemplateExecutor) constructTemplate(view *View) (*template.Template, error) {
+func (tl TemplateLoader) ViewTemplate(view *View) (*template.Template, error) {
 	if view == nil {
 		return nil, nil
 	}
@@ -38,12 +35,12 @@ func (te *TemplateExecutor) constructTemplate(view *View) (*template.Template, e
 		v, _ := queue.next()
 		var t *template.Template
 		if out == nil {
-			out = template.New(v.Defines).Funcs(te.Funcs)
+			out = template.New(v.Defines).Funcs(tl.Funcs)
 			t = out
 		} else {
 			t = out.New(v.Defines)
 		}
-		templateString, err := te.Loader(v.Template)
+		templateString, err := tl.Load(v.Template)
 		if err != nil {
 			return nil, err
 		}
@@ -62,6 +59,36 @@ func (te *TemplateExecutor) constructTemplate(view *View) (*template.Template, e
 		}
 	}
 	return out, nil
+}
+
+// utilities ---
+
+var errEmptyViewQueue = errors.New("empty view queue")
+
+// viewQueue simple queue implementation used for breath first traversal
+//
+// NB: this is only suitable for localized short-lived queues since the underlying
+// array will not deallocate pointers
+type viewQueue struct {
+	offset int
+	items  []*View
+}
+
+func (q *viewQueue) add(v *View) {
+	q.items = append(q.items, v)
+}
+
+func (q *viewQueue) next() (*View, error) {
+	if q.empty() {
+		return nil, errEmptyViewQueue
+	}
+	next := q.items[q.offset]
+	q.offset++
+	return next, nil
+}
+
+func (q *viewQueue) empty() bool {
+	return q.offset >= len(q.items)
 }
 
 // checkTemplateForBlockNames will scan the parsed templates for blocks/template slots

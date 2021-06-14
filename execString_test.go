@@ -66,13 +66,17 @@ func TestStringExecutor_constructTemplate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			exec := StringExecutor{}
-			exec.NewViewHandler(nil)
-			got, err := exec.TemplateExecutor.constructTemplate(tt.view)
+			got, ok := exec.NewViewHandler(tt.view).(*TemplateHandler)
+			if !ok {
+				t.Fatal("StringExecutor did not return a TemplateHandler")
+			}
+			err := exec.FlushErrors()
+
 			if err != nil {
-				if err.Error() != tt.wantErr {
-					t.Errorf("StringExecutor.constructTemplate() error = %v, wantErr %v", err, tt.wantErr)
-				} else if tt.wantErr == "" {
-					t.Errorf("StringExecutor.constructTemplate() unexpected error = %v", err)
+				if tt.wantErr == "" {
+					t.Errorf("Unexpected error: %s", err)
+				} else if !strings.Contains(err.Error(), tt.wantErr) {
+					t.Errorf("Expecting error %s to contain: %s", err, tt.wantErr)
 				}
 				return
 			} else if tt.wantErr != "" {
@@ -81,7 +85,7 @@ func TestStringExecutor_constructTemplate(t *testing.T) {
 			}
 
 			buf := new(bytes.Buffer)
-			got.ExecuteTemplate(buf, tt.view.Defines, tt.data)
+			got.PageTemplate.ExecuteTemplate(buf, tt.view.Defines, tt.data)
 			gotString := buf.String()
 			if gotString != tt.want {
 				t.Errorf("StringExecutor.constructTemplate() got %v, want %v", gotString, tt.want)

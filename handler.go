@@ -73,6 +73,55 @@ type TemplateHandler struct {
 	ServeTemplateError func(error, Response, *http.Request)
 }
 
+// NewTemplateHandler compiles an endpoint view hierarchy and loads corresponding HTML templates
+func NewTemplateHandler(view *View, includes []*View, load *TemplateLoader) (*TemplateHandler, ExecutorErrors) {
+	page, part, incls := CompileViews(view, includes...)
+	handler := &TemplateHandler{
+		Page:             page,
+		Partial:          part,
+		Includes:         incls,
+		IncludeTemplates: make([]Template, len(incls)),
+	}
+
+	var templateErrors ExecutorErrors
+
+	if t, err := load.ViewTemplate(page); err != nil {
+		templateErrors = append(templateErrors, &ExecutorError{
+			View: page,
+			Err:  err,
+		})
+		// this handler will not accept page requests
+		handler.Page = nil
+	} else {
+		handler.PageTemplate = t
+	}
+
+	if t, err := load.ViewTemplate(part); err != nil {
+		templateErrors = append(templateErrors, &ExecutorError{
+			View: part,
+			Err:  err,
+		})
+		// error has been captured, disable partial handling
+		handler.Partial = nil
+	} else {
+		handler.PartialTemplate = t
+	}
+
+	for i, inc := range incls {
+		if t, err := load.ViewTemplate(inc); err != nil {
+			templateErrors = append(templateErrors, &ExecutorError{
+				View: inc,
+				Err:  err,
+			})
+			// error has been captured, disable partial handing
+			handler.Partial = nil
+		} else {
+			handler.IncludeTemplates[i] = t
+		}
+	}
+	return handler, templateErrors
+}
+
 // FragmentOnly creates a new Handler that only responds to fragment requests
 func (h *TemplateHandler) FragmentOnly() ViewHandler {
 	return &TemplateHandler{
@@ -163,7 +212,6 @@ func (h *TemplateHandler) servePageRequest(resp *ResponseWrapper, req *http.Requ
 		// This will be ignored if the header was sent
 		http.Error(resp, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 	}
-	return
 }
 
 // serverTemplateRequest will execute the partial along with each postscript handler in order
