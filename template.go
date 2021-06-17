@@ -49,8 +49,8 @@ func (tl TemplateLoader) ViewTemplate(view *View) (*template.Template, error) {
 			return nil, fmt.Errorf(`failed to parse template %#v: %s`, v.Template, err)
 		}
 		// require template to declare a template/block node for each direct subview name
-		if err := checkTemplateForBlockNames(t, v); err != nil {
-			return nil, err
+		if err := checkTemplateForBlockNames(t, v.SubViews); err != nil {
+			return nil, fmt.Errorf("template %s: %s", v.Template, err)
 		}
 		for _, sub := range v.SubViews {
 			if sub != nil {
@@ -93,14 +93,14 @@ func (q *viewQueue) empty() bool {
 
 // checkTemplateForBlockNames will scan the parsed templates for blocks/template slots
 // that match the declared block names. If a block naming is not present, return an error
-func checkTemplateForBlockNames(tmpl *template.Template, v *View) error {
+func checkTemplateForBlockNames(tmpl *template.Template, subviews map[string]*View) error {
 	parsedBlocks := make(map[string]bool)
 	for _, tplName := range listTemplateNodeName(tmpl.Tree.Root) {
 		parsedBlocks[tplName] = true
 	}
 
 	var missing []string
-	for blockName := range v.SubViews {
+	for blockName := range subviews {
 		if _, ok := parsedBlocks[blockName]; !ok {
 			missing = append(missing, strconv.Quote(blockName))
 		}
@@ -109,7 +109,7 @@ func checkTemplateForBlockNames(tmpl *template.Template, v *View) error {
 		return nil
 	}
 	sort.Strings(missing)
-	return fmt.Errorf("%s is missing template declaration(s) for sub view blocks: %s", v.Template, strings.Join(missing, ", "))
+	return fmt.Errorf("missing template declaration(s) for sub view blocks: %s", strings.Join(missing, ", "))
 }
 
 // listTemplateNodeName will scan a parsed template tree for template nodes

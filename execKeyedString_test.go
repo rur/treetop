@@ -144,8 +144,8 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 				"ps.html":      `Ps`,
 			}),
 			expectErrors: []string{
-				`content.html is missing template declaration(s) for sub view blocks: "never", "sub"`,
-				`content.html is missing template declaration(s) for sub view blocks: "never", "sub"`,
+				`template content.html: missing template declaration(s) for sub view blocks: "never", "sub"`,
+				`template content.html: missing template declaration(s) for sub view blocks: "never", "sub"`,
 			},
 		},
 	}

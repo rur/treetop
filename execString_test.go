@@ -60,7 +60,7 @@ func TestStringExecutor_constructTemplate(t *testing.T) {
 				b.NewSubView("content", `<p id="content">hello {{ . }}!</p>`, Noop)
 				return b
 			}(),
-			wantErr: `<div> base, content: </div> is missing template declaration(s) for sub view blocks: "content"`,
+			wantErr: `template <div> base, content: </div>: missing template declaration(s) for sub view blocks: "content"`,
 		},
 	}
 	for _, tt := range tests {
