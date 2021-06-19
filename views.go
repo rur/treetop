@@ -107,6 +107,13 @@ func (v *View) NewDefaultSubView(defines string, tmpl string, handler ViewHandle
 	return sub
 }
 
+// HasSubView asserts that a subview name exists without the need to define a template
+func (v *View) HasSubView(name string) {
+	if _, ok := v.SubViews[name]; !ok {
+		v.SubViews[name] = nil
+	}
+}
+
 // Copy creates a duplicate so that the original is not affected by
 // changes. This will propegate as a 'deep copy' to all default subviews
 func (v *View) Copy() *View {

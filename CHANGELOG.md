@@ -15,10 +15,10 @@ A refactor of executors, with stricter template validation which may cause break
 - A template will be rejected **with an error** if it does not contain a template or block declaration
   for all defined sub-view names.
 
-          tErr.Error()
-          => template example.html.tmpl: missing template declaration(s) for sub view blocks: "my-block"
+        tErr.Error()
+        => template example.html.tmpl: missing template declaration(s) for sub view blocks: "my-block"
 
-      - The above can be corrected by adding `{{ template "my-block" .MyBlock }}` to _example.html.tmpl_.
+  - The above can be corrected by adding `{{ template "my-block" .MyBlock }}` to _example.html.tmpl_.
 
 ### Housekeeping
 
