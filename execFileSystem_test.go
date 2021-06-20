@@ -47,14 +47,16 @@ func TestFileSystemExecutor_NewViewHandler(t *testing.T) {
 		{
 			name:       "functional example",
 			getHandler: standardHandler,
-			expectPage: stripIndent(`<html><body>
+			expectPage: stripIndent(`<html>
+			<body>
 			<div id="content">
 			<p>Given from base to content</p>
 			<p id="sub">Given from base via content to sub</p>
 			</div>
 
 			<div id="ps">Given from base to ps</div>
-			</body></html>`),
+			</body>
+			</html>`),
 			expectTemplate: stripIndent(`<template>
 			<div id="content">
 			<p>Given from content to content!</p>
@@ -66,21 +68,23 @@ func TestFileSystemExecutor_NewViewHandler(t *testing.T) {
 		{
 			name:       "page only",
 			getHandler: standardHandler,
-			expectPage: stripIndent(`<html><body>
+			expectPage: stripIndent(`<html>
+			<body>
 			<div id="content">
 			<p>Given from base to content</p>
 			<p id="sub">Given from base via content to sub</p>
 			</div>
 
 			<div id="ps">Given from base to ps</div>
-			</body></html>`),
-			expectTemplate: "Not Acceptable\n",
+			</body>
+			</html>`),
+			expectTemplate: "Not Acceptable",
 			pageOnly:       true,
 		},
 		{
 			name:       "template only",
 			getHandler: standardHandler,
-			expectPage: "Not Acceptable\n",
+			expectPage: "Not Acceptable",
 			expectTemplate: stripIndent(`<template>
 			<div id="content">
 			<p>Given from content to content!</p>
@@ -95,13 +99,11 @@ func TestFileSystemExecutor_NewViewHandler(t *testing.T) {
 			getHandler: func(exec ViewExecutor) ViewHandler {
 				return exec.NewViewHandler(NewView("notexists.html", Noop))
 			},
-			expectPage:     "Not Acceptable\n",
-			expectTemplate: "Not Acceptable\n",
+			expectPage:     "Not Acceptable",
+			expectTemplate: "Not Acceptable",
 			expectErrors: []string{
-				`Failed to open template file 'notexists.html', ` +
-					`error open testdata/notexists.html: no such file or directory`,
-				`Failed to open template file 'notexists.html', ` +
-					`error open testdata/notexists.html: no such file or directory`,
+				`failed to load template "notexists.html": failed to open template file 'notexists.html', error open testdata/notexists.html: no such file or directory`,
+				`failed to load template "notexists.html": failed to open template file 'notexists.html', error open testdata/notexists.html: no such file or directory`,
 			},
 		},
 		{
@@ -109,13 +111,11 @@ func TestFileSystemExecutor_NewViewHandler(t *testing.T) {
 			getHandler: func(exec ViewExecutor) ViewHandler {
 				return exec.NewViewHandler(NewView("missingFunc.html", Noop))
 			},
-			expectPage:     "Not Acceptable\n",
-			expectTemplate: "Not Acceptable\n",
+			expectPage:     "Not Acceptable",
+			expectTemplate: "Not Acceptable",
 			expectErrors: []string{
-				`Failed to parse contents of template file 'missingFunc.html', ` +
-					`error template: :2: function "func_that_does_not_exist" not defined`,
-				`Failed to parse contents of template file 'missingFunc.html', ` +
-					`error template: :2: function "func_that_does_not_exist" not defined`,
+				`failed to parse template "missingFunc.html": template: :2: function "func_that_does_not_exist" not defined`,
+				`failed to parse template "missingFunc.html": template: :2: function "func_that_does_not_exist" not defined`,
 			},
 		},
 		{
@@ -146,14 +146,16 @@ func TestFileSystemExecutor_NewViewHandler(t *testing.T) {
 				content.NewSubView("never", "never.html", Noop) // nil subview
 				return exec.NewViewHandler(content, ps)
 			},
-			expectPage: stripIndent(`<html><body>
+			expectPage: stripIndent(`<html>
+			<body>
 			<div id="content">
 			<p>Given from base to content</p>
 			<p id="sub">Given from base via content to sub</p>
 			</div>
 
 			<div id="ps">Given from base to ps</div>
-			</body></html>`),
+			</body>
+			</html>`),
 			expectTemplate: stripIndent(`<template>
 			<div id="content">
 			<p>Given from content to content!</p>
@@ -283,11 +285,13 @@ func TestFileSystemExecutor_UsingSameTemplate(t *testing.T) {
 	h.ServeHTTP(rec, mockRequest("/some/path", "*/*"))
 	gotPage := strings.TrimSpace(stripIndent(sDumpBody(rec)))
 	expectPage := strings.TrimSpace(stripIndent(`
-	<html><body>
+	<html>
+<body>
 	<h1>Common Content Data</h1>
 
 	<h1>Common Postscript Data</h1>
-	</body></html>
+	</body>
+</html>
 	`))
 	if gotPage != expectPage {
 		t.Errorf("Expecting\n%s\ngot\n%s", expectPage, gotPage)

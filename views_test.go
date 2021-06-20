@@ -45,6 +45,34 @@ func TestDefaultSubView(t *testing.T) {
 	}
 }
 
+func TestHasSubview(t *testing.T) {
+	base := NewView("base.html", Constant("base!"))
+	base.HasSubView("sub-block")
+
+	sub, ok := base.SubViews["sub-block"]
+	if !ok {
+		t.Error("Failed to register block with base")
+	}
+	if sub != nil {
+		t.Errorf("HasSubView unexpected subview: %v", sub)
+	}
+}
+
+func TestHasSubviewNoEffectOnDefault(t *testing.T) {
+	base := NewView("base.html", Constant("base!"))
+	base.NewDefaultSubView("sub-block", "sub.html", Constant("sub!"))
+	base.HasSubView("sub-block")
+
+	sub, ok := base.SubViews["sub-block"]
+	if !ok {
+		t.Error("Failed to register block with base")
+	}
+	err := assertViewDetails(sub, "sub.html", "sub!")
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 func TestCopyView(t *testing.T) {
 	// create a base view then copy it and make changes
 	base := NewView("base.html", Constant("base!"))

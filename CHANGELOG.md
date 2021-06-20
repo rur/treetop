@@ -1,3 +1,30 @@
+## [0.4.0] - WIP
+
+A refactor of executors, with stricter template validation which may cause breakage.
+
+### Added
+
+- New `treetop.ServeClientLibrary` handler serving an embedded copy of the _treetop-client_ JS, for convenience sake
+- Add `view.HasSubView` method to assert the existence of a sub view name without specifying a template.
+
+        myPage := treetop.NewView("base.html.tmpl", BaseHandler)
+        myPage.HasSubView("sidebar") // no template or handler specified
+
+### Breaking Changes
+
+- A template will be rejected **with an error** if it does not contain a template or block declaration
+  for all defined sub-view names.
+
+        tErr.Error()
+        => template example.html.tmpl: missing template declaration(s) for sub view blocks: "my-block"
+
+  - The above can be corrected by adding `{{ template "my-block" .MyBlock }}` to _example.html.tmpl_.
+
+### Housekeeping
+
+- Major refactor of Executors to remove duplicate code. The behavior of all executors should remain the same!
+- Replace deprecated use of `HeaderMap` in favor of `.Header()`
+
 ## [0.3.2] - 2021-04-10
 
 ### Housekeeping

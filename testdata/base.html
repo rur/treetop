@@ -1,7 +1,7 @@
-<html><body>
-{{ template "content" .Content }}
-
-{{ block "ps" .PS }}
-<p id="ps">Default {{ . }}</p>
-{{ end }}
-</body></html>
+<html>
+  <body>
+    {{ template "content" .Content }} {{ block "ps" .PS }}
+    <p id="ps">Default {{ . }}</p>
+    {{ end }}
+  </body>
+</html>

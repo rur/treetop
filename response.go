@@ -116,11 +116,8 @@ func (rsp *ResponseWrapper) WithSubViews(subViews map[string]*View) *ResponseWra
 		derivedFrom:    rsp,
 		hijacked:       rsp.hijacked,
 	}
-	if subViews != nil {
-		// some defensive copying here
-		for k, v := range subViews {
-			derived.subViews[k] = v
-		}
+	for k, v := range subViews {
+		derived.subViews[k] = v
 	}
 	return &derived
 }

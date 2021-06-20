@@ -1,4 +1,4 @@
 <div id="content">
-<p>Given {{ .Message }}</p>
-{{ template "sub" .Sub }}
+  <p>Given {{ .Message }}</p>
+  {{ template "sub" .Sub }}{{ block "never" . }}{{ end }}
 </div>

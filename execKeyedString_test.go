@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"html/template"
 	"net/http/httptest"
+	"regexp"
 	"strings"
 	"testing"
-	"unicode/utf8"
 )
 
 func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
@@ -53,7 +53,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 				<p id="ps">Default {{ . }}</p>
 				{{ end }}
 				</body></html>`,
-				"content.html": "<div id=\"content\">\n<p>Given {{ .Message }}</p>\n{{ template \"sub\" .Sub }}\n</div>",
+				"content.html": "<div id=\"content\">\n<p>Given {{ .Message }}</p>\n{{ template \"sub\" .Sub }}\n</div>{{ block \"never\" . }}{{ end }}",
 				"sub.html":     `<p id="sub">Given {{ . }}</p>`,
 				"ps.html":      `<div id="ps">Given {{ . }}</div>`,
 			}),
@@ -76,12 +76,12 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 		{
 			name:           "missing base template error",
 			exec:           NewKeyedStringExecutor(map[string]string{}),
-			expectPage:     "Not Acceptable\n",
-			expectTemplate: "Not Acceptable\n",
+			expectPage:     "Not Acceptable",
+			expectTemplate: "Not Acceptable",
 			expectErrors: []string{
-				`KeyedStringExecutor: no template found for key 'base.html'`,
-				`KeyedStringExecutor: no template found for key 'content.html'`,
-				`KeyedStringExecutor: no template found for key 'ps.html'`,
+				`no key found for template 'base.html'`,
+				`no key found for template 'content.html'`,
+				`no key found for template 'ps.html'`,
 			},
 		},
 		{
@@ -94,7 +94,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 				<p id="ps">Default {{ . }}</p>
 				{{ end }}
 				</body></html>`,
-				"content.html": "<div id=\"content\">\n<p>Given {{ .Message }}</p>\n{{ template \"sub\" .Sub }}\n</div>",
+				"content.html": "<div id=\"content\">\n<p>Given {{ .Message }}</p>\n{{ template \"sub\" .Sub }}\n</div>{{ block \"never\" . }}{{ end }}",
 				"sub.html":     `<p id="sub">Given {{ . }}</p>`,
 				"ps.html":      `<div id="ps">Given {{ . }}</div>`,
 			}),
@@ -106,7 +106,7 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 
 			<div id="ps">Given from base to ps</div>
 			</body></html>`),
-			expectTemplate: "Not Acceptable\n",
+			expectTemplate: "Not Acceptable",
 			pageOnly:       true,
 		},
 		{
@@ -118,12 +118,13 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 				{{ block "ps" .PS }}
 				<p id="ps">Default {{ . }}</p>
 				{{ end }}
+				{{ block "never" . }}{{ end }}
 				</body></html>`,
-				"content.html": "<div id=\"content\">\n<p>Given {{ .Message }}</p>\n{{ template \"sub\" .Sub }}\n</div>",
+				"content.html": "<div id=\"content\">\n<p>Given {{ .Message }}</p>\n{{ template \"sub\" .Sub }}\n</div>{{ block \"never\" . }}{{ end }}",
 				"sub.html":     `<p id="sub">Given {{ . }}</p>`,
 				"ps.html":      `<div id="ps">Given {{ . }}</div>`,
 			}),
-			expectPage: "Not Acceptable\n",
+			expectPage: "Not Acceptable",
 			expectTemplate: stripIndent(`<template>
 			<div id="content">
 			<p>Given from content to content!</p>
@@ -133,11 +134,41 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 			</template>`),
 			templateOnly: true,
 		},
+		{
+			name: "error, template missing a declared blockname",
+			exec: NewKeyedStringExecutor(map[string]string{
+				"base.html": `{{ template "content" .Content }}
+				{{ block "ps" .PS }}<p id="ps">Default {{ . }}</p>{{ end }}`,
+				"content.html": "MISSING TEMPLATE BLOCK 'sub' and 'never'",
+				"sub.html":     `Sub`,
+				"ps.html":      `Ps`,
+			}),
+			expectErrors: []string{
+				`template content.html: missing template declaration(s) for sub view blocks: "never", "sub"`,
+				`template content.html: missing template declaration(s) for sub view blocks: "never", "sub"`,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			handler := tt.exec.NewViewHandler(content, ps)
+			err := tt.exec.FlushErrors()
+			if err != nil {
+				if len(tt.expectErrors) == 0 {
+					t.Errorf("Unexpected error: %s", err)
+				}
+				for _, expect := range tt.expectErrors {
+					if !strings.Contains(err.Error(), expect) {
+						t.Errorf("Expecting error %s to contain: %s", err, expect)
+					}
+				}
+				return
+			} else if len(tt.expectErrors) > 0 {
+				t.Errorf("Expected errors: %v", tt.expectErrors)
+				return
+			}
+
 			if tt.pageOnly {
 				handler = handler.PageOnly()
 			}
@@ -159,25 +190,6 @@ func TestKeyedStringExecutor_NewViewHandler(t *testing.T) {
 			if gotTemplate != tt.expectTemplate {
 				t.Errorf("Expecting partial body\n%s\nGot\n%s", tt.expectTemplate, gotTemplate)
 			}
-
-			gotErrors := tt.exec.FlushErrors()
-			for len(gotErrors) < len(tt.expectErrors) {
-				gotErrors = append(gotErrors, nil)
-			}
-
-			for i, err := range gotErrors {
-				if err == nil {
-					t.Errorf("Expecting an error [%d]: %s", i, tt.expectErrors[i])
-					continue
-				}
-				if i >= len(tt.expectErrors) {
-					t.Errorf("Unexpected error [%d]: %s", i, err.Error())
-					continue
-				}
-				if got := err.Error(); got != tt.expectErrors[i] {
-					t.Errorf("Expecting error [%d]\n%s\ngot\n%s", i, tt.expectErrors[i], got)
-				}
-			}
 		})
 	}
 }
@@ -190,7 +202,7 @@ func TestKeyedStringExecutor_NewViewHandler_NilView(t *testing.T) {
 	handler.ServeHTTP(rec, mockRequest("/some/path", "*/*"))
 	gotPage := stripIndent(sDumpBody(rec))
 
-	expected := "Not Acceptable\n"
+	expected := "Not Acceptable"
 
 	if gotPage != expected {
 		t.Errorf("Expecting page body\n%s\nGot\n%s", expected, gotPage)
@@ -262,7 +274,7 @@ func TestKeyedStringExecutor_constructTemplate(t *testing.T) {
 				return b
 			}(),
 			data:    "world",
-			wantErr: "KeyedStringExecutor: no template found for key 'content-other.html'",
+			wantErr: "no key found for template 'content-other.html'",
 		},
 		{
 			name: "multi level default children",
@@ -289,18 +301,25 @@ func TestKeyedStringExecutor_constructTemplate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.exec.constructTemplate(tt.view)
+			got, ok := tt.exec.NewViewHandler(tt.view).(*TemplateHandler)
+			if !ok {
+				t.Fatal("StringExecutor did not return a TemplateHandler")
+			}
+			err := tt.exec.FlushErrors()
 			if err != nil {
-				if err.Error() != tt.wantErr {
-					t.Errorf("KeyedStringExecutor.constructTemplate() error = %v, wantErr %v", err, tt.wantErr)
-				} else if tt.wantErr == "" {
-					t.Errorf("KeyedStringExecutor.constructTemplate() unexpected error = %v", err)
+				if tt.wantErr == "" {
+					t.Errorf("Unexpected error: %s", err)
+				} else if !strings.Contains(err.Error(), tt.wantErr) {
+					t.Errorf("Expecting error %s to contain: %s", err, tt.wantErr)
 				}
+				return
+			} else if tt.wantErr != "" {
+				t.Errorf("Expected error %s", tt.wantErr)
 				return
 			}
 
 			buf := new(bytes.Buffer)
-			got.ExecuteTemplate(buf, tt.view.Defines, tt.data)
+			got.PageTemplate.ExecuteTemplate(buf, tt.view.Defines, tt.data)
 			gotString := buf.String()
 			if stripIndent(gotString) != stripIndent(tt.want) {
 				t.Errorf("KeyedStringExecutor.constructTemplate() got %v, want %v", gotString, tt.want)
@@ -310,8 +329,6 @@ func TestKeyedStringExecutor_constructTemplate(t *testing.T) {
 }
 
 func TestNewKeyedStringExecutor(t *testing.T) {
-	type args struct {
-	}
 	tests := []struct {
 		name      string
 		templates map[string]string
@@ -361,82 +378,7 @@ func TestNewKeyedStringExecutor(t *testing.T) {
 
 // stripIndent removes all whitespace at the beginning of every line
 func stripIndent(s string) string {
-	out := make([]byte, 0, len(s))
-	indent := true
-	for _, code := range s {
-		switch code {
-		case '\n', '\r':
-			indent = true
-		case ' ', '\t':
-			if indent {
-				continue
-			}
-		default:
-			indent = false
-		}
-		pos := len(out)
-		for pad := utf8.RuneLen(code); pad > 0; pad-- {
-			out = append(out, ' ')
-		}
-		utf8.EncodeRune(out[pos:], code)
-	}
-	return string(out)
-}
-
-func Test_stripIndent(t *testing.T) {
-	tests := []struct {
-		name string
-		s    string
-		want string
-	}{
-		{
-			name: "basic",
-			s:    "test",
-			want: "test",
-		},
-		{
-			name: "basic with indent",
-			s:    "   test",
-			want: "test",
-		},
-		{
-			name: "multiline basic",
-			s: `test
-
-			test
-			`,
-			want: "test\n\ntest\n",
-		},
-		{
-			name: "multiline with mixed spaces and tabs",
-			s: strings.Join([]string{
-				"\t\t \ttest",
-				"\t\t \ttest",
-				"\t\t \ttest",
-				"\t\t \ttest",
-				"\t\t \ttest",
-			}, "\n"),
-			want: "test\ntest\ntest\ntest\ntest",
-		},
-		{
-			name: "multiline with mixed spaces and tabs and multi byte uft8 runes",
-			s: strings.Join([]string{
-				"\t\t \ttest",
-				"\t\t \ttest",
-				"\t\t \tHello 世界  ",
-				"\t\t \ttest",
-				"\t\t \ttest",
-			}, "\n"),
-			want: "test\ntest\nHello 世界  \ntest\ntest",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := stripIndent(tt.s); got != tt.want {
-				t.Errorf("stripIndent() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	return strings.TrimSpace(regexp.MustCompile(`\s+`).ReplaceAllString(s, " "))
 }
 
 func TestKeyedStringExecutor_FuncMap(t *testing.T) {

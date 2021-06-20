@@ -144,8 +144,6 @@ func Test_ResponseWrapper_HandleSubView(t *testing.T) {
 	type fields struct {
 		http.ResponseWriter
 		responseID uint32
-		dataCalled bool
-		data       interface{}
 		status     int
 		subViews   map[string]*View
 	}

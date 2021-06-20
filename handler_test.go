@@ -195,7 +195,7 @@ func TestTemplateHandler_DesignatePageURL(t *testing.T) {
 	th := exec.NewViewHandler(v)
 	rec := httptest.NewRecorder()
 	th.ServeHTTP(rec, mockRequest("/some/path", TemplateContentType))
-	pageURL := rec.HeaderMap.Get("X-Page-URL")
+	pageURL := rec.Header().Get("X-Page-URL")
 	if pageURL != expecting {
 		t.Errorf("Expecting X-Page-URL header to be %s, got %s", expecting, pageURL)
 	}

@@ -154,16 +154,16 @@ func TestWriter(t *testing.T) {
 				t.Errorf("Writer got error %s", err)
 			}
 			status := tt.args.w.Code
-			contentType := tt.args.w.HeaderMap.Get("Content-Type")
-			pageURL := tt.args.w.HeaderMap.Get("X-Page-Url")
-			responseHistory := tt.args.w.HeaderMap.Get("X-Response-History")
+			contentType := tt.args.w.Header().Get("Content-Type")
+			pageURL := tt.args.w.Header().Get("X-Page-Url")
+			responseHistory := tt.args.w.Header().Get("X-Response-History")
 			var wantHistory string
 			if tt.args.replaceState {
 				wantHistory = "replace"
 			}
 
 			if tt.args.isPartial || tt.args.pageURL != "" {
-				if vary := tt.args.w.HeaderMap.Get("Vary"); vary != "Accept" {
+				if vary := tt.args.w.Header().Get("Vary"); vary != "Accept" {
 					t.Errorf("Expecting Vary header to be 'Accept', got %#v", vary)
 				}
 			}
@@ -198,12 +198,12 @@ func TestNewPartialWriter_Basic(t *testing.T) {
 		t.Errorf("Expecting status 200 got %d", rsp.Code)
 	}
 
-	cType := rsp.HeaderMap.Get("Content-Type")
+	cType := rsp.Header().Get("Content-Type")
 	if cType != TemplateContentType {
 		t.Errorf("Expecting content type %s, got %s", TemplateContentType, cType)
 	}
 
-	pageURL := rsp.HeaderMap.Get("X-Page-URL")
+	pageURL := rsp.Header().Get("X-Page-URL")
 	if pageURL != "/test" {
 		t.Errorf("Expecting page URL %s, got %s", "/test", pageURL)
 	}
@@ -235,12 +235,12 @@ func TestNewPartialWriter_AsResponseWriter(t *testing.T) {
 		t.Errorf("Expecting status 418 got %d", rsp.Code)
 	}
 
-	cType := rsp.HeaderMap.Get("Content-Type")
+	cType := rsp.Header().Get("Content-Type")
 	if cType != TemplateContentType {
 		t.Errorf("Expecting content type %s, got %s", TemplateContentType, cType)
 	}
 
-	pageURL := rsp.HeaderMap.Get("X-Page-URL")
+	pageURL := rsp.Header().Get("X-Page-URL")
 	if pageURL != "/test" {
 		t.Errorf("Expecting page URL %s, got %s", "/test", pageURL)
 	}
@@ -265,12 +265,12 @@ func TestNewFragmentWriter_Basic(t *testing.T) {
 		t.Errorf("Expecting status 200 got %d", rsp.Code)
 	}
 
-	cType := rsp.HeaderMap.Get("Content-Type")
+	cType := rsp.Header().Get("Content-Type")
 	if cType != TemplateContentType {
 		t.Errorf("Expecting content type %s, got %s", TemplateContentType, cType)
 	}
 
-	pageURL := rsp.HeaderMap.Get("X-Page-URL")
+	pageURL := rsp.Header().Get("X-Page-URL")
 	if pageURL != "" {
 		t.Errorf("Expecting page URL not be set, got %s", pageURL)
 	}
@@ -296,12 +296,12 @@ func TestNewFragmentWriter_AddPageURL(t *testing.T) {
 		t.Errorf("Expecting status 200 got %d", rsp.Code)
 	}
 
-	cType := rsp.HeaderMap.Get("Content-Type")
+	cType := rsp.Header().Get("Content-Type")
 	if cType != TemplateContentType {
 		t.Errorf("Expecting content type %s, got %s", TemplateContentType, cType)
 	}
 
-	pageURL := rsp.HeaderMap.Get("X-Page-URL")
+	pageURL := rsp.Header().Get("X-Page-URL")
 	if pageURL != "/test-other" {
 		t.Errorf("Expecting page URL %s, got %s", "/test-other", pageURL)
 	}

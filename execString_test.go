@@ -53,22 +53,39 @@ func TestStringExecutor_constructTemplate(t *testing.T) {
 			data: "world",
 			want: `<div> base, content:  default here  </div>`,
 		},
+		{
+			name: "error, template missing a declared blockname",
+			view: func() *View {
+				b := NewView(`<div> base, content: </div>`, Noop)
+				b.NewSubView("content", `<p id="content">hello {{ . }}!</p>`, Noop)
+				return b
+			}(),
+			wantErr: `template <div> base, content: </div>: missing template declaration(s) for sub view blocks: "content"`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			exec := StringExecutor{}
-			got, err := exec.constructTemplate(tt.view)
+			got, ok := exec.NewViewHandler(tt.view).(*TemplateHandler)
+			if !ok {
+				t.Fatal("StringExecutor did not return a TemplateHandler")
+			}
+			err := exec.FlushErrors()
+
 			if err != nil {
-				if err.Error() != tt.wantErr {
-					t.Errorf("StringExecutor.constructTemplate() error = %v, wantErr %v", err, tt.wantErr)
-				} else if tt.wantErr == "" {
-					t.Errorf("StringExecutor.constructTemplate() unexpected error = %v", err)
+				if tt.wantErr == "" {
+					t.Errorf("Unexpected error: %s", err)
+				} else if !strings.Contains(err.Error(), tt.wantErr) {
+					t.Errorf("Expecting error %s to contain: %s", err, tt.wantErr)
 				}
+				return
+			} else if tt.wantErr != "" {
+				t.Errorf("Expected error %s", tt.wantErr)
 				return
 			}
 
 			buf := new(bytes.Buffer)
-			got.ExecuteTemplate(buf, tt.view.Defines, tt.data)
+			got.PageTemplate.ExecuteTemplate(buf, tt.view.Defines, tt.data)
 			gotString := buf.String()
 			if gotString != tt.want {
 				t.Errorf("StringExecutor.constructTemplate() got %v, want %v", gotString, tt.want)
@@ -175,12 +192,12 @@ func TestStringExecutor_NewViewHandler(t *testing.T) {
 				ps := base.NewSubView("ps", `{{ failps }}`, Constant("from ps to ps"))
 				return exec.NewViewHandler(content, ps)
 			},
-			expectPage:     "Not Acceptable\n",
-			expectTemplate: "Not Acceptable\n",
+			expectPage:     "Not Acceptable",
+			expectTemplate: "Not Acceptable",
 			expectErrors: []string{
-				`template: :1: function "fail" not defined`,
-				`template: content:1: function "failcontent" not defined`,
-				`template: ps:1: function "failps" not defined`,
+				`failed to parse template "{{ fail }}": template: :1: function "fail" not defined`,
+				`failed to parse template "{{ failcontent }}": template: content:1: function "failcontent" not defined`,
+				`failed to parse template "{{ failps }}": template: ps:1: function "failps" not defined`,
 			},
 		},
 		{
@@ -194,13 +211,13 @@ func TestStringExecutor_NewViewHandler(t *testing.T) {
 
 			<div id="ps">Given from base to ps</div>
 			</body></html>`),
-			expectTemplate: "Not Acceptable\n",
+			expectTemplate: "Not Acceptable",
 			pageOnly:       true,
 		},
 		{
 			name:       "template only",
 			getHandler: standardHandler,
-			expectPage: "Not Acceptable\n",
+			expectPage: "Not Acceptable",
 			expectTemplate: stripIndent(`<template>
 			<div id="content">
 			<p>Given from content to content!</p>
@@ -215,8 +232,8 @@ func TestStringExecutor_NewViewHandler(t *testing.T) {
 			getHandler: func(exec ViewExecutor) ViewHandler {
 				return exec.NewViewHandler(nil)
 			},
-			expectPage:     "Not Acceptable\n",
-			expectTemplate: "Not Acceptable\n",
+			expectPage:     "Not Acceptable",
+			expectTemplate: "Not Acceptable",
 		},
 	}
 
