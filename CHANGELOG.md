@@ -1,4 +1,4 @@
-## [0.4.0] - WIP
+## [0.4.0-rc.0] - 2021-06-20
 
 A refactor of executors, with stricter template validation which may cause breakage.
 
