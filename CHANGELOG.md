@@ -1,3 +1,17 @@
+## [0.4.0-rc.1] - 2021-06-24
+
+Quick fix for an issue in the previous release affecting the FS executor.
+
+### Bugfix
+
+- `FileSystemExecutor` was memoizing template contents
+  - This is of little benefit since it only helps at startup time
+  - The template contents stay in memory for the lifetime of the app
+
+### Housekeeping
+
+- Add test coverage for DeveloperExecutor forced reloading
+
 ## [0.4.0-rc.0] - 2021-06-20
 
 A refactor of executors, with stricter template validation which may cause breakage.
