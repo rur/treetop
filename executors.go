@@ -135,11 +135,11 @@ type FileExecutor struct {
 // view template strings as a file path using os.Open.
 func (fe *FileExecutor) NewViewHandler(view *View, includes ...*View) ViewHandler {
 	loader := NewTemplateLoader(fe.Funcs, func(name string) (string, error) {
-		if fe.KeyedString == nil {
-			// well need this to cache the template
-			fe.KeyedString = make(map[string]string)
-		} else if tmpl, ok := fe.KeyedString[name]; ok {
-			return tmpl, nil
+		if len(fe.KeyedString) > 0 {
+			tmpl, ok := fe.KeyedString[name]
+			if ok {
+				return tmpl, nil
+			}
 		}
 		file, err := os.Open(name)
 		if err != nil {
@@ -174,11 +174,11 @@ type FileSystemExecutor struct {
 // view template strings as keys into the string template dictionary.
 func (fse *FileSystemExecutor) NewViewHandler(view *View, includes ...*View) ViewHandler {
 	loader := NewTemplateLoader(fse.Funcs, func(name string) (string, error) {
-		if fse.KeyedString == nil {
-			// well need this to cache the template
-			fse.KeyedString = make(map[string]string)
-		} else if tmpl, ok := fse.KeyedString[name]; ok {
-			return tmpl, nil
+		if len(fse.KeyedString) > 0 {
+			tmpl, ok := fse.KeyedString[name]
+			if ok {
+				return tmpl, nil
+			}
 		}
 		file, err := fse.FS.Open(name)
 		if err != nil {
@@ -195,8 +195,6 @@ func (fse *FileSystemExecutor) NewViewHandler(view *View, includes ...*View) Vie
 				name, err.Error(),
 			)
 		}
-		// cache this template as a keyed string
-		fse.KeyedString[name] = string(tpl)
 		return string(tpl), nil
 	})
 	handler, errs := NewTemplateHandler(view, includes, loader)

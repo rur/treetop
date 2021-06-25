@@ -256,13 +256,7 @@ func (h *TemplateHandler) serveTemplateRequest(resp *ResponseWrapper, req *http.
 		}
 		err := tmpl.ExecuteTemplate(buf, views[i].Defines, data[i])
 		if err != nil {
-			if h.ServeTemplateError != nil {
-				h.ServeTemplateError(err, resp, req)
-			} else {
-				// use log pkg standard logger
-				log.Printf("treetop: partial template execute error %s", err)
-				http.Error(resp, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			}
+			errlog(err)
 			return
 		}
 	}
