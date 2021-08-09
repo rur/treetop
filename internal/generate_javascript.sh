@@ -5,7 +5,7 @@ set -e
 echo "Fetching treetop client library "
 
 modified=`date +%s`
-content=`curl https://raw.githubusercontent.com/rur/treetop-client/v0.9.0/treetop.js | sed 's|\`|"|g'`
+content=`curl https://raw.githubusercontent.com/rur/treetop-client/v0.10.0/treetop.js | sed 's|\`|"|g'`
 
 
 cat << EOF > javascript.go
