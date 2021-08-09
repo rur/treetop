@@ -1,3 +1,11 @@
+## [0.4.0] - 2021-08-08
+
+Finalize release candidate for v0.4 and embedded client code
+
+### Changes
+
+- Upgrade embedded treetop-client code following v0.10.0 release
+
 ## [0.4.0-rc.2] - 2021-06-24
 
 Quick fix for an issue in the previous release affecting the FS executor.
