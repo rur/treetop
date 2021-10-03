@@ -1,3 +1,16 @@
+## [0.4.1] - 2021-10-02
+
+Fix issue with the assignment of the Vary header and improve test coverage for
+user defined headers.
+
+### Bugfix
+
+- Do not clobber user defined _Vary_ header values when responding from a dual fragment/page endpoint
+
+### Changes
+
+- CI now runs tests against a newer version of golang (1.16)
+
 ## [0.4.0] - 2021-08-08
 
 Finalize release candidate for v0.4 and embedded client code

@@ -76,7 +76,7 @@ func (tw *writer) WriteHeader(status int) {
 			pageURL = respURI.String()
 		}
 		header.Set("X-Page-URL", hexEscapeNonASCII(pageURL))
-		header.Set("Vary", "Accept")
+		header.Add("Vary", "Accept")
 		if tw.replaceURLState {
 			header.Set("X-Response-History", "replace")
 		}
