@@ -191,7 +191,7 @@ func (h *TemplateHandler) servePageRequest(resp *ResponseWrapper, req *http.Requ
 
 	if h.Partial != nil {
 		// inform cache that another content type is possible for this endpoint
-		resp.Header().Set("Vary", "Accept")
+		resp.Header().Add("Vary", "Accept")
 	}
 
 	// set content type as standard html mimetype

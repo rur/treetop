@@ -200,3 +200,20 @@ func TestTemplateHandler_DesignatePageURL(t *testing.T) {
 		t.Errorf("Expecting X-Page-URL header to be %s, got %s", expecting, pageURL)
 	}
 }
+
+func TestTemplateHandler_AdditionalVaryHeaders(t *testing.T) {
+	exec := NewKeyedStringExecutor(handlerTemplateTestTemplateMap)
+	v := NewSubView("sub-content", "sub-content.html", func(resp Response, req *http.Request) interface{} {
+		resp.Header().Add("Vary", "Cookie")
+		return "testing"
+	})
+
+	th := exec.NewViewHandler(v)
+	rec := httptest.NewRecorder()
+	th.ServeHTTP(rec, mockRequest("/some/path", TemplateContentType))
+	expecting := "Cookie, Accept"
+	varyHeader := rec.Header().Values("Vary")
+	if strings.Join(varyHeader, ", ") != expecting {
+		t.Errorf("Expecting Vary header to be [%s], got %v", expecting, varyHeader)
+	}
+}
