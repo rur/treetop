@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -188,6 +189,7 @@ func TestNewPartialWriter_Basic(t *testing.T) {
 	request := mockRequest("/test", TemplateContentType)
 	rsp := httptest.NewRecorder()
 	if tW, ok := NewPartialWriter(rsp, request); ok {
+		tW.Header().Add("Vary", "Cookie") // test Vary header handling
 		tW.Write([]byte("something here!"))
 	} else {
 		t.Error("Failed to recognize template request")
@@ -206,6 +208,12 @@ func TestNewPartialWriter_Basic(t *testing.T) {
 	pageURL := rsp.Header().Get("X-Page-URL")
 	if pageURL != "/test" {
 		t.Errorf("Expecting page URL %s, got %s", "/test", pageURL)
+	}
+
+	varyHeader := strings.Join(rsp.Header().Values("Vary"), ", ")
+	expectHeader := "Cookie, Accept"
+	if varyHeader != expectHeader {
+		t.Errorf("Expecting vary header [%s], got [%s]", expectHeader, varyHeader)
 	}
 
 	body := rsp.Body.String()
@@ -255,6 +263,7 @@ func TestNewFragmentWriter_Basic(t *testing.T) {
 	request := mockRequest("/test", TemplateContentType)
 	rsp := httptest.NewRecorder()
 	if tW, ok := NewFragmentWriter(rsp, request); ok {
+		rsp.Header().Add("Vary", "Cookie")
 		tW.Write([]byte("something here!"))
 	} else {
 		t.Error("Failed to recognize template request")
@@ -275,6 +284,12 @@ func TestNewFragmentWriter_Basic(t *testing.T) {
 		t.Errorf("Expecting page URL not be set, got %s", pageURL)
 	}
 
+	varyHeader := strings.Join(rsp.Header().Values("Vary"), ", ")
+	expectHeader := "Cookie"
+	if varyHeader != expectHeader {
+		t.Errorf("Expecting vary header [%s], got [%s]", expectHeader, varyHeader)
+	}
+
 	body := rsp.Body.String()
 	if body != "something here!" {
 		t.Errorf("Expecting body 'something here!', got '%s'", body)
@@ -286,6 +301,7 @@ func TestNewFragmentWriter_AddPageURL(t *testing.T) {
 	rsp := httptest.NewRecorder()
 	if tW, ok := NewFragmentWriter(rsp, request); ok {
 		tW.DesignatePageURL("/test-other")
+		tW.Header().Add("Vary", "Cookie")
 		tW.Write([]byte("something here!"))
 	} else {
 		t.Error("Failed to recognize template request")
@@ -304,6 +320,12 @@ func TestNewFragmentWriter_AddPageURL(t *testing.T) {
 	pageURL := rsp.Header().Get("X-Page-URL")
 	if pageURL != "/test-other" {
 		t.Errorf("Expecting page URL %s, got %s", "/test-other", pageURL)
+	}
+
+	varyHeader := strings.Join(rsp.Header().Values("Vary"), ", ")
+	expectHeader := "Cookie, Accept"
+	if varyHeader != expectHeader {
+		t.Errorf("Expecting vary header [%s], got [%s]", expectHeader, varyHeader)
 	}
 
 	body := rsp.Body.String()
