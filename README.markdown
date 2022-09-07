@@ -10,7 +10,7 @@ Build HTML endpoints using a hierarchy of nested templates, as supported by the 
 
 - Lightweight by design
 - No 3rd-party dependencies
-- Protocol for fragment hot-swapping (see [Online DEMO](https://treetop-demo.herokuapp.com/))
+- Optional protocol extension for fragment hot-swapping <sup>[[1](#request-protocol-extension)]
 
 #### Template Hierarchy
 
@@ -18,31 +18,36 @@ Each template is paired with an individual data loading function.
 Pages are constructed by combining templates in different configurations and
 binding endpoints to your application router.
 
-                             BaseFunc(…)
-                |============ base.html =============|
-                | <html>                             |
-                | …                                  |
-                | {{ template "content" .Content }}  |
-                | …               /\                 |
-                | </html>         ||                 |
-                |________________ || ________________|
-                                 /  \
-                                /    \
-            ContentAFunc(…)    /      \   ContentBFunc(…)
-      |==== content_a.html =====|   |==== content_b.html =====|
-      |                         |   |                         |
-      | <div id="content">A</…  |   | <div id="content">B</…  |
-      |_________________________|   |_________________________|
+```
+                         BaseFunc(…)
+            ┌──────────── base.html ─────────────┐
+            │ <html>                             │
+            │ …                                  │
+            │ {{ template "content" .Content }}  │
+            │ …               ▲                  │
+            │ </html>         │                  │
+            │~~~~~~~~~~~~~~~~ │ ~~~~~~~~~~~~~~~~~│
+                              │
+                         ┌────┴────┐
+        ContentAFunc(…)  │         │   ContentBFunc(…)
+  ┌──── content_a.html ──┴──┐   ┌──┴── content_b.html ─────┐
+  │                         │   │                          │
+  │ <div id="content">A</…  │   │  <div id="content">B</…  │
+  │~~~~~~~~~~~~~~~~~~~~~~~~~│   │~~~~~~~~~~~~~~~~~~~~~~~~~~│
+
+```
 
 _Basic example of a page hierarchy showing content A and B sharing the same 'base' template_
 
 **Note.** Nested hierarchy is supported, see Golang docs for details <sup>[[doc](https://tip.golang.org/pkg/text/template/#hdr-Nested_template_definitions)]</sup>
 
-### API Overview
+### Library Overview
 
-The code example below is an extension of the hierarchy diagram. It binds
-`"/content_a"` and `"/content_b"` routes with two
-pages that share the same "base", "nav" and "sidebar" templates.
+The code example shows how `http.Handler` endpoints are created from 
+a hierarchy of templates and handler pairs. 
+
+The example binds the `"/content_a"` and `"/content_b"` routes shown in the diagram 
+with additional "nav" and "sidebar" templates.
 
     base := treetop.NewView("base.html", BaseHandler)
     nav := base.NewSubView("nav", "nav.html", NavHandler)
@@ -54,11 +59,10 @@ pages that share the same "base", "nav" and "sidebar" templates.
     myMux.Handle("/content_a", exec.NewViewHandler(contentA, nav))
     myMux.Handle("/content_b", exec.NewViewHandler(contentB, nav))
 
-#### Template Executor
 
-The 'Executor' is responsible for collecting related views,
-configuring templates and plumbing it all together to produce a `http.Handler` instance
-for your router.
+Note that `exec := treetop.FileExecutor{}` is responsible for compiling a template tree
+from your view definitions, plumbing togeather handler functions and exposing a `http.Handler` 
+interface to your application router.
 
 Example of embedded template blocks in `"base.html"`,
 
@@ -77,7 +81,7 @@ _See text/template [Nested Template Definitions](https://tip.golang.org/pkg/text
 Note the loose coupling between content handlers in the outline below.
 
     func BaseHandler(rsp treetop.Response, req *http.Request) interface{} {
-        // data for base template
+        // data for `base.html` template
         return struct {
             ...
         }{
@@ -89,22 +93,27 @@ Note the loose coupling between content handlers in the outline below.
     }
 
     func ContentAHandler(rsp treetop.Response, req *http.Request) interface{} {
-        // data for Content A template
-        return ...
+        // data for the `content_a.html` template
+        return struct {
+            ...
+        }{
+            ...
+        }
     }
 
 ### No Third-Party Dependencies
 
 The Treetop package wraps features of the Go standard library, mostly within "net/http" and "html/template".
 
-## HTML Template Protocol
+## Request Protocol Extension
 
-### Hot-swap sections of a page without JS boilerplate
+Hot-swap sections of a page with minimal boilerplate.
 
-#### [Online DEMO](https://treetop-demo.herokuapp.com/)
+#### [DEMO](https://treetop-demo.herokuapp.com/)
 
-Since views are self-contained, they can be rendered in isolation. Treetop
+Since Treetop views are self-contained, they can be rendered in isolation. Treetop
 handlers support rendering template fragments that can be applied to a loaded document.
+
 The following is an illustration of the protocol.
 
     > GET /content_a HTTP/1.1
@@ -119,16 +128,12 @@ The following is an illustration of the protocol.
           <div id="nav">...</div>
       </template>
 
-A [Treetop Client Library](https://github.com/rur/treetop-client) is available.
-It sends template requests using XHR and applies fragments to the DOM with a simple
-find and replace mechanism.
+A [Client Library](https://github.com/rur/treetop-client) handles the
+the client side of the protocol, passively updating the DOM based on the response. 
 
-Hot-swapping can be used to enhance user experience in several ways.
-See demo for more details.
+### Examples
 
-## Examples
-
-- Demo Apps ([README](https://github.com/rur/treetop-demo#treetop-demo) / [Online DEMO](https://treetop-demo.herokuapp.com/))
+- Demo Apps ([README](https://github.com/rur/treetop-demo#treetop-demo) / [DEMO](https://treetop-demo.herokuapp.com/))
 - [Todo \*Without\* MVC](https://github.com/rur/todowithoutmvc) - Treetop implementation of [TodoMVC](http://todomvc.com) app using the template protocol.
 
 ## Template Executor
