@@ -109,7 +109,7 @@ The Treetop package wraps features of the Go standard library, mostly within "ne
 
 Hot-swap sections of a page with minimal boilerplate.
 
-#### [DEMO](https://treetop-demo.herokuapp.com/)
+#### [DEMO](https://treetop-demo.fly.dev/)
 
 Since Treetop views are self-contained, they can be rendered in isolation. Treetop
 handlers support rendering template fragments that can be applied to a loaded document.
@@ -133,7 +133,7 @@ the client side of the protocol, passively updating the DOM based on the respons
 
 ### Examples
 
-- Demo Apps ([README](https://github.com/rur/treetop-demo#treetop-demo) / [DEMO](https://treetop-demo.herokuapp.com/))
+- Demo Apps ([README](https://github.com/rur/treetop-demo#treetop-demo) / [DEMO](https://treetop-demo.fly.dev/))
 - [Todo \*Without\* MVC](https://github.com/rur/todowithoutmvc) - Treetop implementation of [TodoMVC](http://todomvc.com) app using the template protocol.
 
 ## Template Executor
