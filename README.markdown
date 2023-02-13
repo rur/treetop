@@ -1,4 +1,4 @@
-[![Go Report Card](https://goreportcard.com/badge/rur/treetop)](https://goreportcard.com/report/rur/treetop) [![Coverage Status](https://coveralls.io/repos/github/rur/treetop/badge.svg?branch=master)](https://coveralls.io/github/rur/treetop?branch=master) [![Build Status](https://travis-ci.org/rur/treetop.svg?branch=master)](https://travis-ci.org/rur/treetop)
+[![Go Report Card](https://goreportcard.com/badge/rur/treetop)](https://goreportcard.com/report/rur/treetop) [![Coverage Status](https://coveralls.io/repos/github/rur/treetop/badge.svg?branch=master)](https://coveralls.io/github/rur/treetop?branch=master) [![Build Status](https://rur.semaphoreci.com/badges/treetop/branches/master.svg)](https://rur.semaphoreci.com/projects/treetop)
 
 # Treetop
 
@@ -43,10 +43,10 @@ _Basic example of a page hierarchy showing content A and B sharing the same 'bas
 
 ### Library Overview
 
-The code example shows how `http.Handler` endpoints are created from 
-a hierarchy of templates and handler pairs. 
+The code example shows how `http.Handler` endpoints are created from
+a hierarchy of templates and handler pairs.
 
-The example binds the `"/content_a"` and `"/content_b"` routes shown in the diagram 
+The example binds the `"/content_a"` and `"/content_b"` routes shown in the diagram
 with additional "nav" and "sidebar" templates.
 
     base := treetop.NewView("base.html", BaseHandler)
@@ -59,9 +59,8 @@ with additional "nav" and "sidebar" templates.
     myMux.Handle("/content_a", exec.NewViewHandler(contentA, nav))
     myMux.Handle("/content_b", exec.NewViewHandler(contentB, nav))
 
-
 Note that `exec := treetop.FileExecutor{}` is responsible for compiling a template tree
-from your view definitions, plumbing togeather handler functions and exposing a `http.Handler` 
+from your view definitions, plumbing togeather handler functions and exposing a `http.Handler`
 interface to your application router.
 
 Example of embedded template blocks in `"base.html"`,
@@ -129,7 +128,7 @@ The following is an illustration of the protocol.
       </template>
 
 A [Client Library](https://github.com/rur/treetop-client) handles the
-the client side of the protocol, passively updating the DOM based on the response. 
+the client side of the protocol, passively updating the DOM based on the response.
 
 ### Examples
 
