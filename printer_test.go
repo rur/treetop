@@ -65,8 +65,8 @@ func TestSprintViewTreeDebug(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			expecting := sanitizeExpectedTreePrint(tt.want)
-			got := sanitizeExpectedTreePrint(SprintViewTree(tt.v))
+			expecting := normalizeTreePrint(tt.want)
+			got := normalizeTreePrint(SprintViewTree(tt.v))
 			if got != expecting {
 				t.Errorf("SprintViewTree() =\n%s\nwant\n%s", got, expecting)
 			}
@@ -188,8 +188,8 @@ func TestSprintViewTree(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			expecting := sanitizeExpectedTreePrint(tt.want)
-			got := sanitizeExpectedTreePrint(SprintViewTree(tt.v))
+			expecting := normalizeTreePrint(tt.want)
+			got := normalizeTreePrint(SprintViewTree(tt.v))
 			if got != expecting {
 				t.Errorf("SprintViewTree() =\n%s\nwant\n%s", got, expecting)
 			}
@@ -203,9 +203,9 @@ func TestSprintViewTree(t *testing.T) {
 
 var funNamePattern = regexp.MustCompile(`github\.com/rur/treet[\w\d.…/]*\.func\d+`)
 
-// sanitizeExpectedTreePrint will trim whitespace from test assertions
+// normalizeTreePrint will trim whitespace from test assertions
 // and account for indentation in multiline raw strings.
-func sanitizeExpectedTreePrint(s string) string {
+func normalizeTreePrint(s string) string {
 	lines := strings.Split(s, "\n")
 	out := make([]string, 0, len(lines))
 	var trimLeader int

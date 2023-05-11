@@ -232,25 +232,25 @@ func TestCompileViews(t *testing.T) {
 	for _, tCase := range cases {
 		t.Run(tCase.name, func(t *testing.T) {
 			page, view, incl := CompileViews(tCase.view, tCase.includes...)
-			pageStr := SprintViewTree(page)
-			expectPage := sanitizeExpectedTreePrint(tCase.expectPage)
+			pageStr := normalizeTreePrint(SprintViewTree(page))
+			expectPage := normalizeTreePrint(tCase.expectPage)
 			if expectPage != pageStr {
 				t.Errorf("Expecting Page =\n%s\nwant\n%s", pageStr, expectPage)
 				return
 			}
-			viewStr := SprintViewTree(view)
-			expectView := sanitizeExpectedTreePrint(tCase.expectView)
+			viewStr := normalizeTreePrint(SprintViewTree(view))
+			expectView := normalizeTreePrint(tCase.expectView)
 			if expectView != viewStr {
 				t.Errorf("Expecting View =\n%s\nwant\n%s", viewStr, expectView)
 				return
 			}
 			inclS := make([]string, len(incl))
 			for i, inc := range incl {
-				inclS[i] = SprintViewTree(inc)
+				inclS[i] = normalizeTreePrint(SprintViewTree(inc))
 			}
 			expectIncl := make([]string, len(tCase.expectIncludes))
 			for i, inc := range tCase.expectIncludes {
-				expectIncl[i] = sanitizeExpectedTreePrint(inc)
+				expectIncl[i] = normalizeTreePrint(inc)
 			}
 			if !reflect.DeepEqual(expectIncl, inclS) {
 				t.Errorf("Expecting Include =\n%v\nwant\n%v", inclS, expectIncl)
@@ -357,7 +357,7 @@ func Test_insertView(t *testing.T) {
 			if found != tt.wantFound {
 				t.Errorf("insetView() got found %v, want %v", found, tt.wantFound)
 			}
-			expect := sanitizeExpectedTreePrint(tt.want)
+			expect := normalizeTreePrint(tt.want)
 			got := SprintViewTree(view)
 			if expect != got {
 				t.Errorf("insertView() got \n%s\nexpecting\n%s", got, expect)
