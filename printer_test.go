@@ -1,6 +1,7 @@
 package treetop
 
 import (
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -11,6 +12,7 @@ func Test_previewString(t *testing.T) {
 		before int
 		after  int
 	}
+
 	tests := []struct {
 		name string
 		args args
@@ -39,6 +41,34 @@ func Test_previewString(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := previewString(tt.args.str, tt.args.before, tt.args.after); got != tt.want {
 				t.Errorf("previewString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSprintViewTreeDebug(t *testing.T) {
+	tests := []struct {
+		name string
+		v    *View
+		want string
+	}{
+		{
+			name: "nil case",
+			v:    nil,
+			want: `- nil`,
+		},
+		{
+			name: "single view usage",
+			v:    NewView("test.html", Constant("test!")),
+			want: `- View("test.html", github.com/rur/treetop.TestSprintViewTreeDebug.func2)`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			expecting := sanitizeExpectedTreePrint(tt.want)
+			got := sanitizeExpectedTreePrint(SprintViewTree(tt.v))
+			if got != expecting {
+				t.Errorf("SprintViewTree() =\n%s\nwant\n%s", got, expecting)
 			}
 		})
 	}
@@ -159,7 +189,8 @@ func TestSprintViewTree(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			expecting := sanitizeExpectedTreePrint(tt.want)
-			if got := SprintViewTree(tt.v); got != expecting {
+			got := sanitizeExpectedTreePrint(SprintViewTree(tt.v))
+			if got != expecting {
 				t.Errorf("SprintViewTree() =\n%s\nwant\n%s", got, expecting)
 			}
 		})
@@ -169,6 +200,8 @@ func TestSprintViewTree(t *testing.T) {
 // -----------
 // helpers
 // -----------
+
+var funNamePattern = regexp.MustCompile(`github\.com/rur/treet[\w\d.…/]*\.func\d+`)
 
 // sanitizeExpectedTreePrint will trim whitespace from test assertions
 // and account for indentation in multiline raw strings.
@@ -193,7 +226,9 @@ FirstLineScan:
 		if len(line) <= trimLeader {
 			continue
 		}
-		out = append(out, line[trimLeader:])
+		modified := line[trimLeader:]
+		modified = funNamePattern.ReplaceAllString(modified, "<func-path-here>")
+		out = append(out, modified)
 	}
 	return strings.Join(out, "\n")
 }
