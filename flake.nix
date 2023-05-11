@@ -1,5 +1,5 @@
 {
-  description = "A very basic flake";
+  description = "Nix based developement env for Treetop library";
 
   inputs.nixpkgs.url = "github:nixos/nixpkgs";
   inputs.flake-utils.url = "github:numtide/flake-utils";
