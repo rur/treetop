@@ -16,6 +16,17 @@
                 go
                 gopls
                 gops
+                delve
+                go-tools
+                errcheck
+                reftools
+                revive
+                golangci-lint
+                gomodifytags
+                gotags
+                impl
+                go-motion
+                iferr
               ];
             };
           }
