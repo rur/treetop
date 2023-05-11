@@ -68,10 +68,9 @@ func (ce *CaptureErrors) AddErrors(errs ExecutorErrors) {
 //
 // Example:
 //
-// 		exec := StringExecutor{}
-// 		v := treetop.NewView("<p>Hello {{ . }}!</p>", Constant("world"))
-// 		mux.Handle("/hello", exec.NewViewHandler(v))
-//
+//	exec := StringExecutor{}
+//	v := treetop.NewView("<p>Hello {{ . }}!</p>", Constant("world"))
+//	mux.Handle("/hello", exec.NewViewHandler(v))
 type StringExecutor struct {
 	CaptureErrors
 	Funcs template.FuncMap

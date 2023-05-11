@@ -10,59 +10,56 @@ package treetop
 //
 // Example of a basic template hierarchy
 //
-//                  baseHandler(...)
-//                | base.html ========================|
-//                | …                                 |
-//                | {{ template "content" .Content }} |
-//                | …               ^                 |
-//                |_________________|_________________|
-//                                  |
-//                           ______/ \______
-//      contentAHandler(...)               contentBHandler(...)
-//    | contentA.html ========== |        | contentB.html ========== |
-//    |                          |        |                          |
-//    | {{ block "content" . }}… |        | {{ block "content" . }}… |
-//    |__________________________|        |__________________________|
+//	              baseHandler(...)
+//	            | base.html ========================|
+//	            | …                                 |
+//	            | {{ template "content" .Content }} |
+//	            | …               ^                 |
+//	            |_________________|_________________|
+//	                              |
+//	                       ______/ \______
+//	  contentAHandler(...)               contentBHandler(...)
+//	| contentA.html ========== |        | contentB.html ========== |
+//	|                          |        |                          |
+//	| {{ block "content" . }}… |        | {{ block "content" . }}… |
+//	|__________________________|        |__________________________|
 //
 // Pseudo request and response:
 //
-//     GET /path/to/a
-//     > HTTP/1.1 200 OK
-//     > ... base.html { Content: contentA.html }
+//	GET /path/to/a
+//	> HTTP/1.1 200 OK
+//	> ... base.html { Content: contentA.html }
 //
-//     GET /path/to/b
-//     > HTTP/1.1 200 OK
-//     > ... base.html { Content: contentB.html }
-//
+//	GET /path/to/b
+//	> HTTP/1.1 200 OK
+//	> ... base.html { Content: contentB.html }
 //
 // Example of using the library to bind constructed handlers to a HTTP router.
 //
-// 		base := treetop.NewView(
-// 			"base.html",
-// 			baseHandler,
-// 		)
+//	base := treetop.NewView(
+//		"base.html",
+//		baseHandler,
+//	)
 //
-// 		contentA := base.NewSubView(
-// 			"content",
-// 			"contentA.html",
-// 			contentAHandler,
-// 		)
+//	contentA := base.NewSubView(
+//		"content",
+//		"contentA.html",
+//		contentAHandler,
+//	)
 //
-// 		contentB := base.NewSubView(
-// 			"content",
-// 			"contentB.html",
-// 			contentBHandler,
-// 		)
+//	contentB := base.NewSubView(
+//		"content",
+//		"contentB.html",
+//		contentBHandler,
+//	)
 //
-//		exec := treetop.FileExecutor{}
-//		mymux.Handle("/path/to/a", exec.ViewHandler(contentA))
-//		mymux.Handle("/path/to/b", exec.ViewHandler(contentB))
-//
+//	exec := treetop.FileExecutor{}
+//	mymux.Handle("/path/to/a", exec.ViewHandler(contentA))
+//	mymux.Handle("/path/to/b", exec.ViewHandler(contentB))
 //
 // This is useful for creating Treetop enabled endpoints because the constructed handler
 // is capable of loading either a full page or just the "content" part of the page depending
 // upon the request.
-//
 type View struct {
 	Template    string
 	HandlerFunc ViewHandlerFunc
@@ -136,7 +133,6 @@ func (v *View) Copy() *View {
 //   - a full-page view instance,
 //   - a partial page view instance, and
 //   - any disconnect fragment views that should be appended to partial requests.
-//
 func CompileViews(view *View, includes ...*View) (page, part *View, postscript []*View) {
 	if view == nil {
 		return nil, nil, nil
@@ -194,7 +190,6 @@ func CompileViews(view *View, includes ...*View) (page, part *View, postscript [
 // insertView attempts to incorporate the child into the template hierarchy of this view.
 // If a match is found for the definition name, views will be copied & modified as necessary and
 // a flag is returned to indicate whether a match was found.
-//
 func insertView(view, child *View) (*View, bool) {
 	if view == nil {
 		return nil, false

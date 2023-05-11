@@ -110,15 +110,14 @@ func (tw *writer) Write(p []byte) (n int, err error) {
 //
 // Example:
 //
-// 	func MyHandler(w http.ResponseWriter, req *http.Request) {
-// 		if ttW, ok := treetop.NewPartialWriter(w, req); ok {
-// 			// this is a treetop request, write a HTML fragment
-// 			fmt.Fprintf(tw, `<h3 id="greeting">Hello, %s</h3>`, "Treetop")
-// 			return
-// 		}
+//	func MyHandler(w http.ResponseWriter, req *http.Request) {
+//		if ttW, ok := treetop.NewPartialWriter(w, req); ok {
+//			// this is a treetop request, write a HTML fragment
+//			fmt.Fprintf(tw, `<h3 id="greeting">Hello, %s</h3>`, "Treetop")
+//			return
+//		}
 //		/* otherwise render a full HTML page as normal */
-// 	}
-//
+//	}
 func NewPartialWriter(w http.ResponseWriter, req *http.Request) (Writer, bool) {
 	ttW, ok := NewFragmentWriter(w, req)
 	if ok {
@@ -132,15 +131,14 @@ func NewPartialWriter(w http.ResponseWriter, req *http.Request) (Writer, bool) {
 //
 // Example:
 //
-// 	func MyHandler(w http.ResponseWriter, req *http.Request) {
-// 		if ttW, ok := treetop.NewFragmentWriter(w, req); ok {
-// 			// this is a treetop request, write a HTML fragment
-// 			fmt.Fprintf(tw, `<h3 id="greeting">Hello, %s</h3>`, "Treetop")
-// 			return
-// 		}
+//	func MyHandler(w http.ResponseWriter, req *http.Request) {
+//		if ttW, ok := treetop.NewFragmentWriter(w, req); ok {
+//			// this is a treetop request, write a HTML fragment
+//			fmt.Fprintf(tw, `<h3 id="greeting">Hello, %s</h3>`, "Treetop")
+//			return
+//		}
 //		/* otherwise handle request in a different way (unspecified) */
-// 	}
-//
+//	}
 func NewFragmentWriter(w http.ResponseWriter, req *http.Request) (Writer, bool) {
 	var ttW *writer
 	for _, accept := range strings.Split(req.Header.Get("Accept"), ";") {

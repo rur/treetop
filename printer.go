@@ -55,27 +55,26 @@ func previewString(str string, before, after int) string {
 //
 // For example, the view definition 'v'
 //
-//		v := NewView("base.html", Constant("base!"))
-//		a := v.NewDefaultSubView("A", "A.html", Constant("A!"))
-//		a.NewDefaultSubView("A1", "A1.html", Constant("A1!"))
-//		a.NewDefaultSubView("A2", "A2.html", Constant("A2!"))
-//		b := v.NewDefaultSubView("B", "B.html", Constant("B!"))
-//		b.NewDefaultSubView("B1", "B1.html", Constant("B1!"))
-//		b.NewDefaultSubView("B2", "B2.html", Constant("B2!"))
+//	v := NewView("base.html", Constant("base!"))
+//	a := v.NewDefaultSubView("A", "A.html", Constant("A!"))
+//	a.NewDefaultSubView("A1", "A1.html", Constant("A1!"))
+//	a.NewDefaultSubView("A2", "A2.html", Constant("A2!"))
+//	b := v.NewDefaultSubView("B", "B.html", Constant("B!"))
+//	b.NewDefaultSubView("B1", "B1.html", Constant("B1!"))
+//	b.NewDefaultSubView("B2", "B2.html", Constant("B2!"))
 //
-//		fmt.Println(treetop.SprintViewTree(v))
+//	fmt.Println(treetop.SprintViewTree(v))
 //
 // will be outputted as the string
 //
-//	- View("base.html", github.com/rur/treetop.Constant.func1)
-//	  |- A: SubView("A", "A.html", github.com/rur/treetop.Constant.func1)
-//	  |  |- A1: SubView("A1", "A1.html", github.com/rur/treetop.Constant.func1)
-//	  |  '- A2: SubView("A2", "A2.html", github.com/rur/treetop.Constant.func1)
-//	  |
-//	  '- B: SubView("B", "B.html", github.com/rur/treetop.Constant.func1)
-//	     |- B1: SubView("B1", "B1.html", github.com/rur/treetop.Constant.func1)
-//	     '- B2: SubView("B2", "B2.html", github.com/rur/treetop.Constant.func1)
-//
+//   - View("base.html", github.com/rur/treetop.Constant.func1)
+//     |- A: SubView("A", "A.html", github.com/rur/treetop.Constant.func1)
+//     |  |- A1: SubView("A1", "A1.html", github.com/rur/treetop.Constant.func1)
+//     |  '- A2: SubView("A2", "A2.html", github.com/rur/treetop.Constant.func1)
+//     |
+//     '- B: SubView("B", "B.html", github.com/rur/treetop.Constant.func1)
+//     |- B1: SubView("B1", "B1.html", github.com/rur/treetop.Constant.func1)
+//     '- B2: SubView("B2", "B2.html", github.com/rur/treetop.Constant.func1)
 func SprintViewTree(v *View) string {
 	if v == nil {
 		return "- nil"

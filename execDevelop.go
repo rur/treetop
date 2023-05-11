@@ -11,9 +11,8 @@ import (
 //
 // Example:
 //
-// 		exec := DeveloperExecutor{FileExecutor{}}
-// 		mux.Handle("/hello", exec.NewViewHandler(v))
-//
+//	exec := DeveloperExecutor{FileExecutor{}}
+//	mux.Handle("/hello", exec.NewViewHandler(v))
 //
 // Note: this is for development use only, it is not suitable for production systems
 type DeveloperExecutor struct {

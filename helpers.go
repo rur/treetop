@@ -52,8 +52,8 @@ func IsTemplateRequest(req *http.Request) bool {
 // is needed a 'X-Treetop-Redirect' header is used.
 //
 // Example:
-// 		treetop.Redirect(w, req, "/some/other/path", http.StatusSeeOther)
 //
+//	treetop.Redirect(w, req, "/some/other/path", http.StatusSeeOther)
 func Redirect(w http.ResponseWriter, req *http.Request, location string, status int) {
 	if IsTemplateRequest(req) {
 		w.Header().Add("X-Treetop-Redirect", "SeeOther")
