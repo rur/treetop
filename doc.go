@@ -14,19 +14,19 @@ HTTP handlers can then be constructed for various page configurations.
 
 Example of a basic template hierarchy
 
-                 baseHandler(...)
-               | base.html ========================|
-               | …                                 |
-               | {{ template "content" .Content }} |
-               | …               ^                 |
-               |_________________|_________________|
-                                 |
-                          ______/ \______
-     contentAHandler(...)               contentBHandler(...)
-   | contentA.html ========== |        | contentB.html ========== |
-   |                          |        |                          |
-   | {{ block "content" . }}… |        | {{ block "content" . }}… |
-   |__________________________|        |__________________________|
+	              baseHandler(...)
+	            | base.html ========================|
+	            | …                                 |
+	            | {{ template "content" .Content }} |
+	            | …               ^                 |
+	            |_________________|_________________|
+	                              |
+	                       ______/ \______
+	  contentAHandler(...)               contentBHandler(...)
+	| contentA.html ========== |        | contentB.html ========== |
+	|                          |        |                          |
+	| {{ block "content" . }}… |        | {{ block "content" . }}… |
+	|__________________________|        |__________________________|
 
 Example of using the library to constructs handlers for HTTP routes.
 
@@ -54,28 +54,27 @@ Example of using the library to constructs handlers for HTTP routes.
 The generated handlers bind togeather related views. Thus views can be mixed and matched
 to create many endpoints.
 
-    GET /path/to/a
-    > HTTP/1.1 200 OK
-    > <!-- base.html --><html>
-    > ...
-    > <!-- contentA.html --><div id="content"> Content A </div>
-    > ...
-    > </html>
+	GET /path/to/a
+	> HTTP/1.1 200 OK
+	> <!-- base.html --><html>
+	> ...
+	> <!-- contentA.html --><div id="content"> Content A </div>
+	> ...
+	> </html>
 
-    GET /path/to/b
-    > HTTP/1.1 200 OK
-    > <!-- base.html --><html>
-    > ...
-    > <!-- contentB.html --><div id="content"> Content B </div>
-    > ...
-    > </html>
+	GET /path/to/b
+	> HTTP/1.1 200 OK
+	> <!-- base.html --><html>
+	> ...
+	> <!-- contentB.html --><div id="content"> Content B </div>
+	> ...
+	> </html>
 
 Note, many levels of nesting are possible once block names remain unique.
 
-HTML Template Protocol
+# HTML Template Protocol
 
 The constructed handlers are capable of rendering just sections of the page depending
 upon the request headers. See the Treetop JS library for more details. (https://github.com/rur/treetop-client)
-
 */
 package treetop
